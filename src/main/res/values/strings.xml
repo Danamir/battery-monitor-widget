@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Battery Monitor</string>
+    <string name="widget_name">Battery Monitor Widget</string>
+    <string name="settings_title">Settings</string>
+    <string name="display_length_title">Display Length (hours)</string>
+    <string name="display_length_summary">How many hours of battery history to display</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <EditTextPreference
+        android:key="display_length_hours"
+        android:title="@string/display_length_title"
+        android:summary="@string/display_length_summary"
+        android:defaultValue="48"
+        android:inputType="number" />
+</PreferenceScreen>
