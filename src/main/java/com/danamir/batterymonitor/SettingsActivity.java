@@ -41,6 +41,10 @@ public class SettingsActivity extends AppCompatActivity {
             // Update widgets when preferences change
             androidx.preference.EditTextPreference displayLengthPref =
                 findPreference("display_length_hours");
+            androidx.preference.EditTextPreference horizontalPaddingPref =
+                findPreference("horizontal_padding");
+            androidx.preference.EditTextPreference verticalPaddingPref =
+                findPreference("vertical_padding");
 
             if (displayLengthPref != null) {
                 displayLengthPref.setOnPreferenceChangeListener((preference, newValue) -> {
@@ -58,6 +62,36 @@ public class SettingsActivity extends AppCompatActivity {
                         BatteryDataManager dataManager = BatteryDataManager.getInstance(getContext());
                         dataManager.clearOldData(hours);
 
+                        return true;
+                    } catch (NumberFormatException e) {
+                        return false;
+                    }
+                });
+            }
+
+            if (horizontalPaddingPref != null) {
+                horizontalPaddingPref.setOnPreferenceChangeListener((preference, newValue) -> {
+                    try {
+                        int padding = Integer.parseInt((String) newValue);
+                        if (padding < 0 || padding > 200) {
+                            return false;
+                        }
+                        BatteryWidgetProvider.updateAllWidgets(getContext());
+                        return true;
+                    } catch (NumberFormatException e) {
+                        return false;
+                    }
+                });
+            }
+
+            if (verticalPaddingPref != null) {
+                verticalPaddingPref.setOnPreferenceChangeListener((preference, newValue) -> {
+                    try {
+                        int padding = Integer.parseInt((String) newValue);
+                        if (padding < 0 || padding > 200) {
+                            return false;
+                        }
+                        BatteryWidgetProvider.updateAllWidgets(getContext());
                         return true;
                     } catch (NumberFormatException e) {
                         return false;

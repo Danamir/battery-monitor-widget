@@ -6,4 +6,18 @@
         android:summary="@string/display_length_summary"
         android:defaultValue="48"
         android:inputType="number" />
+
+    <EditTextPreference
+        android:key="horizontal_padding"
+        android:title="@string/horizontal_padding_title"
+        android:summary="@string/horizontal_padding_summary"
+        android:defaultValue="40"
+        android:inputType="number" />
+
+    <EditTextPreference
+        android:key="vertical_padding"
+        android:title="@string/vertical_padding_title"
+        android:summary="@string/vertical_padding_summary"
+        android:defaultValue="40"
+        android:inputType="number" />
 </PreferenceScreen>

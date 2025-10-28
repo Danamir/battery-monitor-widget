@@ -33,8 +33,10 @@ public class BatteryGraphGenerator {
     }
 
     private static void drawGraph(Context context, Canvas canvas, List<BatteryData> dataPoints, int displayHours, int width, int height) {
-        // Fixed padding in pixels (not scaled)
-        int padding = 40;
+        // Get padding from preferences
+        android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
+        int paddingHorizontal = Integer.parseInt(prefs.getString("horizontal_padding", "40"));
+        int paddingVertical = Integer.parseInt(prefs.getString("vertical_padding", "40"));
 
         // Convert dp to pixels for consistent text sizing only
         float density = context.getResources().getDisplayMetrics().density;
@@ -85,19 +87,20 @@ public class BatteryGraphGenerator {
 
         // Draw grid - horizontal lines for battery percentages
         for (int i = 0; i <= 4; i++) {
-            float y = padding + (height - 2 * padding) * i / 4f;
-            canvas.drawLine(padding, y, width - padding, y, gridPaint);
+            float y = paddingVertical + (height - 2 * paddingVertical) * i / 4f;
+            canvas.drawLine(paddingHorizontal, y, width - paddingHorizontal, y, gridPaint);
 
-            // Draw percentage labels
+            // Draw percentage labels (right-aligned)
             String label = String.valueOf(100 - i * 25);
-            canvas.drawText(label, 5, y + 5, textPaint);
+            float labelWidth = textPaint.measureText(label);
+            canvas.drawText(label, paddingHorizontal - labelWidth - 5, y + 5, textPaint);
         }
 
         // Draw grid - vertical lines for time intervals
         int intervals = Math.min(displayHours / 6, 8);
         for (int i = 0; i <= intervals; i++) {
-            float x = padding + (width - 2 * padding) * i / (float) intervals;
-            canvas.drawLine(x, padding, x, height - padding, gridPaint);
+            float x = paddingHorizontal + (width - 2 * paddingHorizontal) * i / (float) intervals;
+            canvas.drawLine(x, paddingVertical, x, height - paddingVertical, gridPaint);
         }
 
         // Draw battery level graph
@@ -115,12 +118,12 @@ public class BatteryGraphGenerator {
 
                 if (data.getTimestamp() < startTime) continue;
 
-                float x = padding + (width - 2 * padding) * (data.getTimestamp() - startTime) / (float) timeRange;
-                float y = padding + (height - 2 * padding) * (100 - data.getLevel()) / 100f;
+                float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (data.getTimestamp() - startTime) / (float) timeRange;
+                float y = paddingVertical + (height - 2 * paddingVertical) * (100 - data.getLevel()) / 100f;
 
                 if (!pathStarted) {
                     linePath.moveTo(x, y);
-                    fillPath.moveTo(x, height - padding);
+                    fillPath.moveTo(x, height - paddingVertical);
                     fillPath.lineTo(x, y);
                     pathStarted = true;
                 } else {
@@ -136,8 +139,8 @@ public class BatteryGraphGenerator {
 
             // Close fill path
             BatteryData lastData = dataPoints.get(dataPoints.size() - 1);
-            float lastX = padding + (width - 2 * padding) * (lastData.getTimestamp() - startTime) / (float) timeRange;
-            fillPath.lineTo(lastX, height - padding);
+            float lastX = paddingHorizontal + (width - 2 * paddingHorizontal) * (lastData.getTimestamp() - startTime) / (float) timeRange;
+            fillPath.lineTo(lastX, height - paddingVertical);
             fillPath.close();
 
             // Draw fill first, then line
@@ -155,7 +158,7 @@ public class BatteryGraphGenerator {
 
             textPaint.setTextSize(percentTextSize);
             float textWidth = textPaint.measureText(levelText);
-            canvas.drawText(levelText, width - padding - textWidth, padding - 10, textPaint);
+            canvas.drawText(levelText, width - paddingHorizontal - textWidth, paddingVertical + 40, textPaint);
         }
     }
 }
