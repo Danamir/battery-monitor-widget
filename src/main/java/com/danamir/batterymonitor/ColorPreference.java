@@ -14,6 +14,8 @@ import androidx.preference.PreferenceViewHolder;
 
 public class ColorPreference extends Preference {
 
+    private int mDefaultValue = 0x80000000;
+
     public ColorPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
     }
@@ -31,6 +33,24 @@ public class ColorPreference extends Preference {
     }
 
     @Override
+    protected Object onGetDefaultValue(android.content.res.TypedArray a, int index) {
+        mDefaultValue = a.getInt(index, 0x80000000);
+        return mDefaultValue;
+    }
+
+    @Override
+    protected void onSetInitialValue(Object defaultValue) {
+        if (defaultValue instanceof Integer) {
+            mDefaultValue = (Integer) defaultValue;
+        }
+        // Get the persisted value or use default
+        SharedPreferences prefs = getSharedPreferences();
+        if (prefs != null && !prefs.contains(getKey())) {
+            prefs.edit().putInt(getKey(), mDefaultValue).apply();
+        }
+    }
+
+    @Override
     public void onBindViewHolder(PreferenceViewHolder holder) {
         super.onBindViewHolder(holder);
 
@@ -39,7 +59,7 @@ public class ColorPreference extends Preference {
 
         if (colorCheckerBg != null && colorPreviewIcon != null) {
             SharedPreferences prefs = getSharedPreferences();
-            int color = prefs.getInt(getKey(), 0x80000000);
+            int color = prefs.getInt(getKey(), mDefaultValue);
 
             // Set checker pattern background
             colorCheckerBg.setBackground(createCheckerPatternSmall());

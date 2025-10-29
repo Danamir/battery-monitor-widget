@@ -31,17 +31,20 @@
         android:key="main_color"
         android:title="@string/main_color_title"
         android:summary="@string/main_color_summary"
+        android:defaultValue="0xFFFFFFFF"
         android:layout="@layout/preference_color" />
 
     <com.danamir.batterymonitor.ColorPreference
         android:key="text_color"
         android:title="@string/text_color_title"
         android:summary="@string/text_color_summary"
+        android:defaultValue="0xFF424242"
         android:layout="@layout/preference_color" />
 
     <com.danamir.batterymonitor.ColorPreference
         android:key="grid_color"
         android:title="@string/grid_color_title"
         android:summary="@string/grid_color_summary"
+        android:defaultValue="0x33CCCCCC"
         android:layout="@layout/preference_color" />
 </PreferenceScreen>
