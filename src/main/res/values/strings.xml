@@ -20,4 +20,6 @@
     <string name="color_green">Green</string>
     <string name="color_blue">Blue</string>
     <string name="color_alpha">Alpha</string>
+    <string name="show_y_axis_labels_title">Show Y-Axis Labels</string>
+    <string name="show_y_axis_labels_summary">Display percentage labels on the left side of the graph</string>
 </resources>

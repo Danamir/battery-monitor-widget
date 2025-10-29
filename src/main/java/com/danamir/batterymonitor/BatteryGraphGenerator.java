@@ -209,8 +209,7 @@ public class BatteryGraphGenerator {
             }
 
             textPaint.setTextSize(percentTextSize);
-            float textWidth = textPaint.measureText(levelText);
-            canvas.drawText(levelText, width - paddingHorizontal - textWidth, paddingVertical + 40, textPaint);
+            canvas.drawText(levelText, paddingHorizontal + percentTextSize, height - paddingVertical - percentTextSize * 0.5f, textPaint);
         }
     }
 }

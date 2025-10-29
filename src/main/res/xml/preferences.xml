@@ -47,4 +47,10 @@
         android:summary="@string/grid_color_summary"
         android:defaultValue="0x33CCCCCC"
         android:layout="@layout/preference_color" />
+
+    <SwitchPreferenceCompat
+        android:key="show_y_axis_labels"
+        android:title="@string/show_y_axis_labels_title"
+        android:summary="@string/show_y_axis_labels_summary"
+        android:defaultValue="true" />
 </PreferenceScreen>
