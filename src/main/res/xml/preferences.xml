@@ -7,19 +7,25 @@
         android:defaultValue="48"
         android:inputType="number" />
 
-    <EditTextPreference
+    <SeekBarPreference
         android:key="horizontal_padding"
         android:title="@string/horizontal_padding_title"
         android:summary="@string/horizontal_padding_summary"
-        android:defaultValue="40"
-        android:inputType="number" />
+        android:defaultValue="20"
+        android:max="200"
+        android:min="0"
+        app:showSeekBarValue="true"
+        app:seekBarIncrement="2" />
 
-    <EditTextPreference
+    <SeekBarPreference
         android:key="vertical_padding"
         android:title="@string/vertical_padding_title"
         android:summary="@string/vertical_padding_summary"
-        android:defaultValue="40"
-        android:inputType="number" />
+        android:defaultValue="10"
+        android:max="200"
+        android:min="0"
+        app:showSeekBarValue="true"
+        app:seekBarIncrement="2" />
 
     <com.danamir.batterymonitor.ColorPreference
         android:key="main_color"

@@ -35,8 +35,8 @@ public class BatteryGraphGenerator {
     private static void drawGraph(Context context, Canvas canvas, List<BatteryData> dataPoints, int displayHours, int width, int height) {
         // Get padding and background color from preferences
         android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
-        int paddingHorizontalDp = Integer.parseInt(prefs.getString("horizontal_padding", "20"));
-        int paddingVerticalDp = Integer.parseInt(prefs.getString("vertical_padding", "10"));
+        int paddingHorizontalDp = prefs.getInt("horizontal_padding", 20);
+        int paddingVerticalDp = prefs.getInt("vertical_padding", 10);
         int backgroundColor = prefs.getInt("main_color", 0x80000000); // Default: 50% transparent black
 
         // Convert dp to pixels for padding and text sizing

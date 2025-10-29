@@ -57,23 +57,31 @@ public class SettingsActivity extends AppCompatActivity {
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.preferences, rootKey);
 
-            // Register a global preference change listener for immediate updates
             android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext());
 
-            // Migrate old preferences to new color preference
+            // Migrate old preferences
+            android.content.SharedPreferences.Editor editor = prefs.edit();
+            boolean needsMigration = false;
+
+            // Migrate color preferences
             if (!prefs.contains("main_color")) {
                 if (prefs.contains("background_color")) {
-                    // Migrate from background_color to main_color
                     int color = prefs.getInt("background_color", 0x80000000);
-                    prefs.edit().putInt("main_color", color).remove("background_color").apply();
+                    editor.putInt("main_color", color).remove("background_color");
+                    needsMigration = true;
                 } else if (prefs.contains("background_alpha")) {
-                    // Migrate from old alpha preference
                     int alpha = Math.round(prefs.getInt("background_alpha", 100) * 255f / 100f);
-                    int color = Color.argb(alpha, 0, 0, 0); // Black with old alpha
-                    prefs.edit().putInt("main_color", color).remove("background_alpha").apply();
+                    int color = Color.argb(alpha, 0, 0, 0);
+                    editor.putInt("main_color", color).remove("background_alpha");
+                    needsMigration = true;
                 }
             }
 
+            if (needsMigration) {
+                editor.apply();
+            }
+
+			// Register a global preference change listener for immediate updates
             preferenceChangeListener = (sharedPreferences, key) -> {
 				List<String> ignoredKeys = List.of("ignored_pref_key_example");
 				if (ignoredKeys.contains(key)) {
@@ -86,13 +94,13 @@ public class SettingsActivity extends AppCompatActivity {
             };
             prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener);
 
-            // Update widgets when preferences change
+            // Setup preference listeners
             androidx.preference.EditTextPreference displayLengthPref =
                 findPreference("display_length_hours");
-            androidx.preference.EditTextPreference horizontalPaddingPref =
-                findPreference("horizontal_padding");
-            androidx.preference.EditTextPreference verticalPaddingPref =
-                findPreference("vertical_padding");
+			androidx.preference.SeekBarPreference horizontalPaddingPref =
+       			findPreference("horizontal_padding");
+            androidx.preference.SeekBarPreference verticalPaddingPref =
+       			findPreference("vertical_padding");
             androidx.preference.Preference backgroundColorPref =
                 findPreference("main_color");
 
@@ -105,9 +113,6 @@ public class SettingsActivity extends AppCompatActivity {
                             return false;
                         }
 
-                        // Update all widgets with new setting
-                        BatteryWidgetProvider.updateAllWidgets(getContext());
-
                         // Clean up old data beyond the new display length
                         BatteryDataManager dataManager = BatteryDataManager.getInstance(getContext());
                         dataManager.clearOldData(hours);
@@ -119,14 +124,19 @@ public class SettingsActivity extends AppCompatActivity {
                 });
             }
 
-            if (horizontalPaddingPref != null) {
-                horizontalPaddingPref.setOnPreferenceChangeListener((preference, newValue) -> {
+			if (horizontalPaddingPref != null) {
+				horizontalPaddingPref.setOnPreferenceChangeListener((preference, newValue) -> {
                     try {
-                        int padding = Integer.parseInt((String) newValue);
-                        if (padding < 0 || padding > 200) {
-                            return false;
-                        }
-                        BatteryWidgetProvider.updateAllWidgets(getContext());
+                        SeekBarPreference seekBarPreference = (SeekBarPreference) preference;
+						int increment = seekBarPreference.getSeekBarIncrement();
+						float floatValue = (int) newValue;
+						int rounded = Math.round(floatValue / increment);
+						int finalValue = rounded * increment;
+
+						if (finalValue != floatValue) {
+							seekBarPreference.setValue(finalValue);
+							return false;
+						}
                         return true;
                     } catch (NumberFormatException e) {
                         return false;
@@ -135,13 +145,18 @@ public class SettingsActivity extends AppCompatActivity {
             }
 
             if (verticalPaddingPref != null) {
-                verticalPaddingPref.setOnPreferenceChangeListener((preference, newValue) -> {
+				verticalPaddingPref.setOnPreferenceChangeListener((preference, newValue) -> {
                     try {
-                        int padding = Integer.parseInt((String) newValue);
-                        if (padding < 0 || padding > 200) {
-                            return false;
-                        }
-                        BatteryWidgetProvider.updateAllWidgets(getContext());
+                        SeekBarPreference seekBarPreference = (SeekBarPreference) preference;
+						int increment = seekBarPreference.getSeekBarIncrement();
+						float floatValue = (int) newValue;
+						int rounded = Math.round(floatValue / increment);
+						int finalValue = rounded * increment;
+
+						if (finalValue != floatValue) {
+							seekBarPreference.setValue(finalValue);
+							return false;
+						}
                         return true;
                     } catch (NumberFormatException e) {
                         return false;
