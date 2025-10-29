@@ -8,19 +8,26 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class BatteryDataManager {
     private static final String PREF_BATTERY_DATA = "battery_data";
+    private static final String PREF_BATTERY_LOG = "battery_event_log";
     private static final int MAX_DATA_POINTS = 10000;
+    private static final int MAX_LOG_ENTRIES = 1000;
     private static BatteryDataManager instance;
     private final SharedPreferences prefs;
     private List<BatteryData> dataPoints;
+    private List<String> eventLog;
 
     private BatteryDataManager(Context context) {
         prefs = PreferenceManager.getDefaultSharedPreferences(context);
         dataPoints = loadData();
+        eventLog = loadEventLog();
     }
 
     public static synchronized BatteryDataManager getInstance(Context context) {
@@ -41,6 +48,19 @@ public class BatteryDataManager {
                 lastPoint.isCharging() == isCharging) {
                 return; // Skip duplicate data
             }
+
+            // Log battery level changes
+            if (lastPoint.getLevel() != level) {
+                logEvent("Battery level changed: " + lastPoint.getLevel() + "% → " + level + "%");
+            }
+
+            // Log charging status changes
+            if (lastPoint.isCharging() != isCharging) {
+                logEvent("Battery status: " + (isCharging ? "Charging" : "Discharging"));
+            }
+        } else {
+            // First data point
+            logEvent("Battery level: " + level + "% (" + (isCharging ? "Charging" : "Discharging") + ")");
         }
 
         dataPoints.add(new BatteryData(timestamp, level, isCharging));
@@ -117,5 +137,55 @@ public class BatteryDataManager {
 
         dataPoints = filteredData;
         saveData();
+    }
+
+    private synchronized void logEvent(String message) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
+        String timestamp = dateFormat.format(new Date());
+        String logEntry = timestamp + " - " + message;
+
+        eventLog.add(logEntry);
+
+        // Keep only recent log entries
+        if (eventLog.size() > MAX_LOG_ENTRIES) {
+            eventLog = eventLog.subList(eventLog.size() - MAX_LOG_ENTRIES, eventLog.size());
+        }
+
+        saveEventLog();
+    }
+
+    public synchronized List<String> getEventLog() {
+        return new ArrayList<>(eventLog);
+    }
+
+    public synchronized void clearEventLog() {
+        eventLog.clear();
+        saveEventLog();
+    }
+
+    private List<String> loadEventLog() {
+        List<String> log = new ArrayList<>();
+        String jsonString = prefs.getString(PREF_BATTERY_LOG, "[]");
+
+        try {
+            JSONArray jsonArray = new JSONArray(jsonString);
+            for (int i = 0; i < jsonArray.length(); i++) {
+                log.add(jsonArray.getString(i));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return log;
+    }
+
+    private void saveEventLog() {
+        JSONArray jsonArray = new JSONArray();
+
+        for (String entry : eventLog) {
+            jsonArray.put(entry);
+        }
+
+        prefs.edit().putString(PREF_BATTERY_LOG, jsonArray.toString()).apply();
     }
 }

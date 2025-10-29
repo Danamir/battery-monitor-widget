@@ -53,4 +53,9 @@
         android:title="@string/show_y_axis_labels_title"
         android:summary="@string/show_y_axis_labels_summary"
         android:defaultValue="false" />
+
+    <Preference
+        android:key="view_event_log"
+        android:title="@string/view_event_log_title"
+        android:summary="@string/view_event_log_summary" />
 </PreferenceScreen>

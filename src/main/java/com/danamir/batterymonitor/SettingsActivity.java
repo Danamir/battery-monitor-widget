@@ -194,6 +194,14 @@ public class SettingsActivity extends AppCompatActivity {
                     return true;
                 });
             }
+
+            androidx.preference.Preference eventLogPref = findPreference("view_event_log");
+            if (eventLogPref != null) {
+                eventLogPref.setOnPreferenceClickListener(preference -> {
+                    showEventLogDialog();
+                    return true;
+                });
+            }
         }
 
         private void updateColorPreferenceSummary(androidx.preference.Preference colorPref, String key) {
@@ -333,6 +341,52 @@ public class SettingsActivity extends AppCompatActivity {
                     prefs.edit().putInt(colorKey, color).apply();
                 })
                 .setNegativeButton("Cancel", null)
+                .show();
+        }
+
+        private void showEventLogDialog() {
+            BatteryDataManager dataManager = BatteryDataManager.getInstance(getContext());
+            List<String> eventLog = dataManager.getEventLog();
+
+            // Create scrollable text view
+            android.widget.TextView textView = new android.widget.TextView(getContext());
+            textView.setPadding(40, 40, 40, 40);
+            textView.setTextIsSelectable(true);
+            textView.setTextSize(12);
+
+            if (eventLog.isEmpty()) {
+                textView.setText(R.string.event_log_empty);
+            } else {
+                // Display in reverse order (newest first)
+                StringBuilder logText = new StringBuilder();
+                for (int i = eventLog.size() - 1; i >= 0; i--) {
+                    logText.append(eventLog.get(i));
+                    if (i > 0) {
+                        logText.append("\n");
+                    }
+                }
+                textView.setText(logText.toString());
+            }
+
+            // Wrap in ScrollView
+            android.widget.ScrollView scrollView = new android.widget.ScrollView(getContext());
+            scrollView.addView(textView);
+
+            new AlertDialog.Builder(getContext())
+                .setTitle(R.string.event_log_dialog_title)
+                .setView(scrollView)
+                .setPositiveButton("OK", null)
+                .setNeutralButton(R.string.event_log_clear, (dialog, which) -> {
+                    new AlertDialog.Builder(getContext())
+                        .setTitle("Clear Event Log")
+                        .setMessage("Are you sure you want to clear the event log?")
+                        .setPositiveButton("Clear", (d, w) -> {
+                            dataManager.clearEventLog();
+                            android.widget.Toast.makeText(getContext(), "Event log cleared", android.widget.Toast.LENGTH_SHORT).show();
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+                })
                 .show();
         }
 

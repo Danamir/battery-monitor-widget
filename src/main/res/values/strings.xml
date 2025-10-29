@@ -22,4 +22,9 @@
     <string name="color_alpha">Alpha</string>
     <string name="show_y_axis_labels_title">Show Y-Axis Labels</string>
     <string name="show_y_axis_labels_summary">Display percentage labels on the left side of the graph</string>
+    <string name="view_event_log_title">View Event Log</string>
+    <string name="view_event_log_summary">View battery level and status change history</string>
+    <string name="event_log_dialog_title">Battery Event Log</string>
+    <string name="event_log_clear">Clear Log</string>
+    <string name="event_log_empty">No events logged yet</string>
 </resources>
