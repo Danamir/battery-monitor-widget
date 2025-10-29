@@ -64,7 +64,7 @@ public class BatteryDataManager {
             }
 
 			// Log 1 minute auto update
-			if (timeSinceLastPoint > 60000 && !dataChanged) {
+            if (timeSinceLastPoint > 60000 && !dataChanged) {
 				logEvent("Battery level unchanged: " + lastPoint.getLevel() + "%");
 			}
         } else {

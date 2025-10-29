@@ -12,12 +12,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.preference.Preference;
 import androidx.preference.PreferenceFragmentCompat;
-import androidx.preference.PreferenceViewHolder;
 import androidx.preference.SeekBarPreference;
 
 import java.util.List;
@@ -118,10 +115,6 @@ public class SettingsActivity extends AppCompatActivity {
                             return false;
                         }
 
-                        // Clean up old data beyond the new display length
-                        BatteryDataManager dataManager = BatteryDataManager.getInstance(getContext());
-                        dataManager.clearOldData(hours);
-
                         return true;
                     } catch (NumberFormatException e) {
                         return false;
@@ -129,7 +122,7 @@ public class SettingsActivity extends AppCompatActivity {
                 });
             }
 
-			if (horizontalPaddingPref != null) {
+            if (horizontalPaddingPref != null) {
 				horizontalPaddingPref.setOnPreferenceChangeListener((preference, newValue) -> {
                     try {
                         SeekBarPreference seekBarPreference = (SeekBarPreference) preference;
