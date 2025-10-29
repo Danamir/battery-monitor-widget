@@ -1,14 +1,15 @@
 plugins {
-    id("com.android.application") version "8.12.0"
+    id("com.android.application") version "8.12.3"
 }
 
 android {
     namespace = "com.danamir.batterymonitor"
-    compileSdk = 34
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.danamir.batterymonitor"
         minSdk = 26
+        //noinspection OldTargetApi
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"

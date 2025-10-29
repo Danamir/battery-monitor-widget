@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.SeekBarPreference;
 
+import java.util.List;
+
 public class SettingsActivity extends AppCompatActivity {
 
     @Override
@@ -35,9 +37,22 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     public static class SettingsFragment extends PreferenceFragmentCompat {
+        private android.content.SharedPreferences.OnSharedPreferenceChangeListener preferenceChangeListener;
+
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
             setPreferencesFromResource(R.xml.preferences, rootKey);
+
+            // Register a global preference change listener for immediate updates
+            android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext());
+            preferenceChangeListener = (sharedPreferences, key) -> {
+				List<String> ignoredKeys = List.of("ignored_pref_key_example");
+				if (ignoredKeys.contains(key)) {
+					return;
+				}
+				BatteryWidgetProvider.updateAllWidgets(getContext());
+            };
+            prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener);
 
             // Update widgets when preferences change
             androidx.preference.EditTextPreference displayLengthPref =
@@ -114,16 +129,27 @@ public class SettingsActivity extends AppCompatActivity {
 						float floatValue = (int) newValue;
 						int rounded = Math.round(floatValue / increment);
 						int finalValue = rounded * increment;
+
 						if (finalValue != floatValue) {
 							seekBarPreference.setValue(finalValue);
 							return false;
 						}
-                        BatteryWidgetProvider.updateAllWidgets(getContext());
                         return true;
                     } catch (NumberFormatException e) {
                         return false;
                     }
                 });
+            }
+        }
+
+        @Override
+        public void onDestroy() {
+            super.onDestroy();
+            // Unregister listener to prevent memory leaks
+            if (preferenceChangeListener != null) {
+                android.content.SharedPreferences prefs =
+                    androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext());
+                prefs.unregisterOnSharedPreferenceChangeListener(preferenceChangeListener);
             }
         }
     }
