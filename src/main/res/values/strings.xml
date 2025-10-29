@@ -5,8 +5,10 @@
     <string name="settings_title">Settings</string>
     <string name="display_length_title">Display Length (hours)</string>
     <string name="display_length_summary">How many hours of battery history to display</string>
-    <string name="horizontal_padding_title">Horizontal Padding (pixels)</string>
+    <string name="horizontal_padding_title">Horizontal Padding</string>
     <string name="horizontal_padding_summary">Left and right padding for the graph</string>
-    <string name="vertical_padding_title">Vertical Padding (pixels)</string>
+    <string name="vertical_padding_title">Vertical Padding</string>
     <string name="vertical_padding_summary">Top and bottom padding for the graph</string>
+    <string name="background_alpha_title">Background Alpha</string>
+    <string name="background_alpha_summary">Background transparency</string>
 </resources>

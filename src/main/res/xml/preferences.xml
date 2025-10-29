@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
     <EditTextPreference
         android:key="display_length_hours"
         android:title="@string/display_length_title"
@@ -20,4 +20,14 @@
         android:summary="@string/vertical_padding_summary"
         android:defaultValue="40"
         android:inputType="number" />
+
+    <SeekBarPreference
+        android:key="background_alpha"
+        android:title="@string/background_alpha_title"
+        android:summary="@string/background_alpha_summary"
+        android:defaultValue="100"
+        android:max="100"
+        android:min="0"
+        app:showSeekBarValue="true"
+        app:seekBarIncrement="5" />
 </PreferenceScreen>

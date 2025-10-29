@@ -3,6 +3,7 @@ package com.danamir.batterymonitor;
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.SeekBarPreference;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -45,6 +46,8 @@ public class SettingsActivity extends AppCompatActivity {
                 findPreference("horizontal_padding");
             androidx.preference.EditTextPreference verticalPaddingPref =
                 findPreference("vertical_padding");
+            androidx.preference.SeekBarPreference backgroundAlphaPref =
+                findPreference("background_alpha");
 
             if (displayLengthPref != null) {
                 displayLengthPref.setOnPreferenceChangeListener((preference, newValue) -> {
@@ -91,6 +94,30 @@ public class SettingsActivity extends AppCompatActivity {
                         if (padding < 0 || padding > 200) {
                             return false;
                         }
+                        BatteryWidgetProvider.updateAllWidgets(getContext());
+                        return true;
+                    } catch (NumberFormatException e) {
+                        return false;
+                    }
+                });
+            }
+
+            if (backgroundAlphaPref != null) {
+                backgroundAlphaPref.setOnPreferenceChangeListener((preference, newValue) -> {
+                    try {
+                        int alpha = (int)newValue;
+                        if (alpha < 0 || alpha > 100) {
+                            return false;
+                        }
+						SeekBarPreference seekBarPreference = (SeekBarPreference) preference;
+						int increment = seekBarPreference.getSeekBarIncrement();
+						float floatValue = (int) newValue;
+						int rounded = Math.round(floatValue / increment);
+						int finalValue = rounded * increment;
+						if (finalValue != floatValue) {
+							seekBarPreference.setValue(finalValue);
+							return false;
+						}
                         BatteryWidgetProvider.updateAllWidgets(getContext());
                         return true;
                     } catch (NumberFormatException e) {

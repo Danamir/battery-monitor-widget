@@ -33,20 +33,24 @@ public class BatteryGraphGenerator {
     }
 
     private static void drawGraph(Context context, Canvas canvas, List<BatteryData> dataPoints, int displayHours, int width, int height) {
-        // Get padding from preferences
+        // Get padding and alpha from preferences
         android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
-        int paddingHorizontal = Integer.parseInt(prefs.getString("horizontal_padding", "40"));
-        int paddingVertical = Integer.parseInt(prefs.getString("vertical_padding", "40"));
+        int paddingHorizontalDp = Integer.parseInt(prefs.getString("horizontal_padding", "20"));
+        int paddingVerticalDp = Integer.parseInt(prefs.getString("vertical_padding", "10"));
+        int backgroundAlpha = Math.round(prefs.getInt("background_alpha", 100) * 255f / 100f);
 
-        // Convert dp to pixels for consistent text sizing only
+        // Convert dp to pixels for padding and text sizing
         float density = context.getResources().getDisplayMetrics().density;
+        int paddingHorizontal = (int) (paddingHorizontalDp * density);
+        int paddingVertical = (int) (paddingVerticalDp * density);
         float labelTextSize = 12 * density;
         float percentTextSize = 16 * density;
 
         // Initialize paints
         Paint backgroundPaint = new Paint();
         backgroundPaint.setColor(ContextCompat.getColor(context, R.color.widget_background));
-        backgroundPaint.setStyle(Paint.Style.FILL);
+		backgroundPaint.setStyle(Paint.Style.FILL);
+		backgroundPaint.setAlpha(backgroundAlpha);
 
         Paint gridPaint = new Paint();
         gridPaint.setColor(ContextCompat.getColor(context, R.color.battery_graph_grid));
