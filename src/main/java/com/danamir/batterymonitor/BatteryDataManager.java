@@ -2,6 +2,7 @@ package com.danamir.batterymonitor;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 import androidx.preference.PreferenceManager;
 
 import org.json.JSONArray;
@@ -39,14 +40,17 @@ public class BatteryDataManager {
 
     public synchronized void addDataPoint(int level, boolean isCharging) {
         long timestamp = System.currentTimeMillis();
+        boolean shouldAddPoint = true;
 
-        // Check if we should add this point (avoid duplicates within 10 seconds)
+        // Check if we should add this point (allow if 1 minute has passed OR if data changed)
         if (!dataPoints.isEmpty()) {
             BatteryData lastPoint = dataPoints.get(dataPoints.size() - 1);
-            if (timestamp - lastPoint.getTimestamp() < 10000 &&
-                lastPoint.getLevel() == level &&
-                lastPoint.isCharging() == isCharging) {
-                return; // Skip duplicate data
+            long timeSinceLastPoint = timestamp - lastPoint.getTimestamp();
+            boolean dataChanged = lastPoint.getLevel() != level || lastPoint.isCharging() != isCharging;
+
+            // Skip only if less than 1 minute has passed AND data hasn't changed
+            if (timeSinceLastPoint < 60000 && !dataChanged) {
+                shouldAddPoint = false;
             }
 
             // Log battery level changes
@@ -58,19 +62,26 @@ public class BatteryDataManager {
             if (lastPoint.isCharging() != isCharging) {
                 logEvent("Battery status: " + (isCharging ? "Charging" : "Discharging"));
             }
+
+			// Log 1 minute auto update
+			if (timeSinceLastPoint > 60000 && !dataChanged) {
+				logEvent("Battery level unchanged: " + lastPoint.getLevel() + "%");
+			}
         } else {
             // First data point
             logEvent("Battery level: " + level + "% (" + (isCharging ? "Charging" : "Discharging") + ")");
         }
 
-        dataPoints.add(new BatteryData(timestamp, level, isCharging));
+        if (shouldAddPoint) {
+            dataPoints.add(new BatteryData(timestamp, level, isCharging));
 
-        // Keep only recent data
-        if (dataPoints.size() > MAX_DATA_POINTS) {
-            dataPoints = dataPoints.subList(dataPoints.size() - MAX_DATA_POINTS, dataPoints.size());
+            // Keep only recent data
+            if (dataPoints.size() > MAX_DATA_POINTS) {
+                dataPoints = dataPoints.subList(dataPoints.size() - MAX_DATA_POINTS, dataPoints.size());
+            }
+
+            saveData();
         }
-
-        saveData();
     }
 
     public synchronized List<BatteryData> getDataPoints(int hours) {
@@ -143,7 +154,52 @@ public class BatteryDataManager {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         String timestamp = dateFormat.format(new Date());
         String logEntry = timestamp + " - " + message;
+		Log.i("BatteryMonitorService", logEntry);
 
+        // Check if the last log entry has the same message (ignoring timestamp and counter)
+        if (!eventLog.isEmpty()) {
+            String lastEntry = eventLog.get(eventLog.size() - 1);
+
+            // Extract the message part from the last entry (after " - " and before any " (+")
+            int lastDashIndex = lastEntry.indexOf(" - ");
+            if (lastDashIndex != -1) {
+                String lastMessage = lastEntry.substring(lastDashIndex + 3);
+
+                // Remove counter if present
+                int counterIndex = lastMessage.lastIndexOf(" (+");
+                if (counterIndex != -1) {
+                    lastMessage = lastMessage.substring(0, counterIndex);
+                }
+
+                // If messages match, update the last entry with new timestamp and increment counter
+                if (lastMessage.equals(message)) {
+                    // Extract existing counter
+                    int existingCounter = 1;
+                    String lastEntryOriginal = eventLog.get(eventLog.size() - 1);
+                    int existingCounterIndex = lastEntryOriginal.lastIndexOf(" (+");
+                    if (existingCounterIndex != -1) {
+                        int closingParen = lastEntryOriginal.indexOf(")", existingCounterIndex);
+                        if (closingParen != -1) {
+                            String counterStr = lastEntryOriginal.substring(existingCounterIndex + 3, closingParen);
+                            try {
+                                existingCounter = Integer.parseInt(counterStr);
+                            } catch (NumberFormatException e) {
+                                existingCounter = 1;
+                            }
+                        }
+                    }
+
+                    // Update the last entry with new timestamp and incremented counter
+                    existingCounter++;
+                    logEntry = timestamp + " - " + message + " (+" + existingCounter + ")";
+                    eventLog.set(eventLog.size() - 1, logEntry);
+                    saveEventLog();
+                    return;
+                }
+            }
+        }
+
+        // Add new log entry
         eventLog.add(logEntry);
 
         // Keep only recent log entries
