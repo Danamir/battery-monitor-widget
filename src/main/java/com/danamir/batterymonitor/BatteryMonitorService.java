@@ -5,8 +5,11 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -21,6 +24,22 @@ public class BatteryMonitorService extends Service {
     private static final String CHANNEL_ID = "battery_monitor_channel";
     private int currentBatteryLevel = -1;
     private boolean isCharging = false;
+
+    private ServiceConnection guardConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            // Connection established
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            // BatteryMonitorGuardService was killed, restart it
+            restartGuardService();
+
+            // Rebind to continue monitoring
+            bindToGuardService();
+        }
+    };
 
     @Override
     public void onCreate() {
@@ -55,6 +74,10 @@ public class BatteryMonitorService extends Service {
             }
         };
         handler.post(updateRunnable);
+
+        // Start and bind to BatteryMonitorGuardService for mutual protection
+        startGuardService();
+        bindToGuardService();
     }
 
     @Override
@@ -129,6 +152,37 @@ public class BatteryMonitorService extends Service {
         }
     }
 
+    private void startGuardService() {
+        Intent intent = new Intent(this, BatteryMonitorGuardService.class);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent);
+            } else {
+                startService(intent);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void bindToGuardService() {
+        Intent intent = new Intent(this, BatteryMonitorGuardService.class);
+        bindService(intent, guardConnection, Context.BIND_IMPORTANT);
+    }
+
+    private void restartGuardService() {
+        Intent intent = new Intent(this, BatteryMonitorGuardService.class);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent);
+            } else {
+                startService(intent);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -140,10 +194,22 @@ public class BatteryMonitorService extends Service {
         if (handler != null && updateRunnable != null) {
             handler.removeCallbacks(updateRunnable);
         }
+
+        try {
+            unbindService(guardConnection);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        return null; // Not a bound service
+        return new BatteryMonitorBinder();
+    }
+
+    public class BatteryMonitorBinder extends android.os.Binder {
+        BatteryMonitorService getService() {
+            return BatteryMonitorService.this;
+        }
     }
 }

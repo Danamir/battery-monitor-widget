@@ -48,6 +48,14 @@
             android:name=".BatteryMonitorService"
             android:enabled="true"
             android:exported="false"
+            android:process=":battery_monitor"
+            android:foregroundServiceType="dataSync" />
+
+        <service
+            android:name=".BatteryMonitorGuardService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":guard"
             android:foregroundServiceType="dataSync" />
 
     </application>
