@@ -63,10 +63,10 @@ public class BatteryDataManager {
                 logEvent("Battery status: " + (isCharging ? "Charging" : "Discharging"));
             }
 
-			// Log 1 minute auto update
+            // Log 1 minute auto update
             if (timeSinceLastPoint > 60000 && !dataChanged) {
-				logEvent("Battery level unchanged: " + lastPoint.getLevel() + "%");
-			}
+                logEvent("Battery level unchanged: " + lastPoint.getLevel() + "%");
+            }
         } else {
             // First data point
             logEvent("Battery level: " + level + "% (" + (isCharging ? "Charging" : "Discharging") + ")");
@@ -88,10 +88,19 @@ public class BatteryDataManager {
         long cutoffTime = System.currentTimeMillis() - (hours * 60 * 60 * 1000L);
         List<BatteryData> filteredData = new ArrayList<>();
 
+        BatteryData lastPoint = null;
         for (BatteryData data : dataPoints) {
-            if (data.getTimestamp() >= cutoffTime) {
-                filteredData.add(data);
+            if (data.getTimestamp() < cutoffTime) {
+                continue;
             }
+
+            if (lastPoint != null && lastPoint.getLevel() == data.getLevel()
+                    && lastPoint.isCharging() == data.isCharging() && !filteredData.isEmpty()) {
+                filteredData.remove(filteredData.size() - 1);
+            }
+
+            filteredData.add(data);
+            lastPoint = data;
         }
 
         return filteredData;
@@ -154,7 +163,7 @@ public class BatteryDataManager {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
         String timestamp = dateFormat.format(new Date());
         String logEntry = timestamp + " - " + message;
-		Log.i("BatteryMonitorService", logEntry);
+        Log.i("BatteryMonitorService", logEntry);
 
         // Check if the last log entry has the same message (ignoring timestamp and counter)
         if (!eventLog.isEmpty()) {

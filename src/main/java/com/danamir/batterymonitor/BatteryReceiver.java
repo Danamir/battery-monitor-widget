@@ -40,6 +40,8 @@ public class BatteryReceiver extends BroadcastReceiver {
 
                 if (appWidgetIds != null && appWidgetIds.length > 0) {
                     Intent serviceIntent = new Intent(context, BatteryMonitorService.class);
+                    serviceIntent.putExtra("battery_level", batteryPct);
+                    serviceIntent.putExtra("is_charging", isCharging);
                     try {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                             context.startForegroundService(serviceIntent);

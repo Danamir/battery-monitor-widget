@@ -98,7 +98,7 @@ public class BatteryGraphGenerator {
         // Initialize paints
         Paint backgroundPaint = new Paint();
         backgroundPaint.setColor(backgroundColor);
-		backgroundPaint.setStyle(Paint.Style.FILL);
+        backgroundPaint.setStyle(Paint.Style.FILL);
 
         Paint gridPaint = new Paint();
         gridPaint.setColor(gridColor);

@@ -19,6 +19,8 @@ public class BatteryMonitorService extends Service {
     private static final long UPDATE_INTERVAL = 60000; // 1 minute
     private static final int NOTIFICATION_ID = 1;
     private static final String CHANNEL_ID = "battery_monitor_channel";
+    private int currentBatteryLevel = -1;
+    private boolean isCharging = false;
 
     @Override
     public void onCreate() {
@@ -57,6 +59,13 @@ public class BatteryMonitorService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        // Update battery level from intent if available
+        if (intent != null && intent.hasExtra("battery_level")) {
+            int batteryLevel = intent.getIntExtra("battery_level", -1);
+            boolean charging = intent.getBooleanExtra("is_charging", false);
+            updateNotification(batteryLevel, charging);
+        }
+
         // Start as foreground service on Android O+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForeground(NOTIFICATION_ID, createNotification());
@@ -94,13 +103,30 @@ public class BatteryMonitorService extends Service {
             builder = new Notification.Builder(this);
         }
 
+        String contentText;
+        if (currentBatteryLevel >= 0) {
+            contentText = currentBatteryLevel + "%" + (isCharging ? " (Charging)" : "");
+        } else {
+            contentText = "Monitoring battery for widget";
+        }
+
         return builder
             .setContentTitle("Battery Monitor")
-            .setContentText("Monitoring battery for widget")
+            .setContentText(contentText)
             .setSmallIcon(android.R.drawable.ic_menu_info_details)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .build();
+    }
+
+    public void updateNotification(int batteryLevel, boolean charging) {
+        this.currentBatteryLevel = batteryLevel;
+        this.isCharging = charging;
+
+        NotificationManager manager = getSystemService(NotificationManager.class);
+        if (manager != null) {
+            manager.notify(NOTIFICATION_ID, createNotification());
+        }
     }
 
     @Override

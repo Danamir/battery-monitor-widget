@@ -28,9 +28,9 @@ public class SettingsActivity extends AppCompatActivity {
 
         if (savedInstanceState == null) {
             getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.settings_container, new SettingsFragment())
-                .commit();
+                    .beginTransaction()
+                    .replace(R.id.settings_container, new SettingsFragment())
+                    .commit();
         }
 
         // Set up toolbar
@@ -53,11 +53,11 @@ public class SettingsActivity extends AppCompatActivity {
 
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
-			try {
-				setPreferencesFromResource(R.xml.preferences, rootKey);
-			} catch (ClassCastException e) {
-				Log.e("SettingsFragment", "Could not load preferences", e);
-			}
+            try {
+                setPreferencesFromResource(R.xml.preferences, rootKey);
+            } catch (ClassCastException e) {
+                Log.e("SettingsFragment", "Could not load preferences", e);
+            }
 
             android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext());
 
@@ -83,28 +83,28 @@ public class SettingsActivity extends AppCompatActivity {
                 editor.apply();
             }
 
-			// Register a global preference change listener for immediate updates
+            // Register a global preference change listener for immediate updates
             preferenceChangeListener = (sharedPreferences, key) -> {
-				List<String> ignoredKeys = List.of("ignored_pref_key_example");
-				if (ignoredKeys.contains(key)) {
-					return;
-				}
-				BatteryWidgetProvider.updateAllWidgets(getContext());
-				if ("main_color".equals(key) || "text_color".equals(key) || "grid_color".equals(key)) {
-					updateColorPreview();
-				}
+                List<String> ignoredKeys = List.of("ignored_pref_key_example");
+                if (ignoredKeys.contains(key)) {
+                    return;
+                }
+                BatteryWidgetProvider.updateAllWidgets(getContext());
+                if ("main_color".equals(key) || "text_color".equals(key) || "grid_color".equals(key)) {
+                    updateColorPreview();
+                }
             };
             prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener);
 
             // Setup preference listeners
             androidx.preference.EditTextPreference displayLengthPref =
-                findPreference("display_length_hours");
-			androidx.preference.SeekBarPreference horizontalPaddingPref =
-       			findPreference("horizontal_padding");
+                    findPreference("display_length_hours");
+            androidx.preference.SeekBarPreference horizontalPaddingPref =
+                    findPreference("horizontal_padding");
             androidx.preference.SeekBarPreference verticalPaddingPref =
-       			findPreference("vertical_padding");
+                    findPreference("vertical_padding");
             androidx.preference.Preference backgroundColorPref =
-                findPreference("main_color");
+                    findPreference("main_color");
 
             if (displayLengthPref != null) {
                 displayLengthPref.setOnPreferenceChangeListener((preference, newValue) -> {
@@ -123,18 +123,18 @@ public class SettingsActivity extends AppCompatActivity {
             }
 
             if (horizontalPaddingPref != null) {
-				horizontalPaddingPref.setOnPreferenceChangeListener((preference, newValue) -> {
+                horizontalPaddingPref.setOnPreferenceChangeListener((preference, newValue) -> {
                     try {
                         SeekBarPreference seekBarPreference = (SeekBarPreference) preference;
-						int increment = seekBarPreference.getSeekBarIncrement();
-						float floatValue = (int) newValue;
-						int rounded = Math.round(floatValue / increment);
-						int finalValue = rounded * increment;
+                        int increment = seekBarPreference.getSeekBarIncrement();
+                        float floatValue = (int) newValue;
+                        int rounded = Math.round(floatValue / increment);
+                        int finalValue = rounded * increment;
 
-						if (finalValue != floatValue) {
-							seekBarPreference.setValue(finalValue);
-							return false;
-						}
+                        if (finalValue != floatValue) {
+                            seekBarPreference.setValue(finalValue);
+                            return false;
+                        }
                         return true;
                     } catch (NumberFormatException e) {
                         return false;
@@ -143,18 +143,18 @@ public class SettingsActivity extends AppCompatActivity {
             }
 
             if (verticalPaddingPref != null) {
-				verticalPaddingPref.setOnPreferenceChangeListener((preference, newValue) -> {
+                verticalPaddingPref.setOnPreferenceChangeListener((preference, newValue) -> {
                     try {
                         SeekBarPreference seekBarPreference = (SeekBarPreference) preference;
-						int increment = seekBarPreference.getSeekBarIncrement();
-						float floatValue = (int) newValue;
-						int rounded = Math.round(floatValue / increment);
-						int finalValue = rounded * increment;
+                        int increment = seekBarPreference.getSeekBarIncrement();
+                        float floatValue = (int) newValue;
+                        int rounded = Math.round(floatValue / increment);
+                        int finalValue = rounded * increment;
 
-						if (finalValue != floatValue) {
-							seekBarPreference.setValue(finalValue);
-							return false;
-						}
+                        if (finalValue != floatValue) {
+                            seekBarPreference.setValue(finalValue);
+                            return false;
+                        }
                         return true;
                     } catch (NumberFormatException e) {
                         return false;
@@ -200,7 +200,7 @@ public class SettingsActivity extends AppCompatActivity {
         private void updateColorPreferenceSummary(androidx.preference.Preference colorPref, String key) {
             if (colorPref != null) {
                 android.content.SharedPreferences prefs =
-                    androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext());
+                        androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext());
                 int color = prefs.getInt(key, 0x80000000);
                 int alpha = Color.alpha(color);
                 int red = Color.red(color);
@@ -260,7 +260,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         private void showColorPickerDialog(String colorKey, String title) {
             android.content.SharedPreferences prefs =
-                androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext());
+                    androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext());
             int currentColor = prefs.getInt(colorKey, 0x80000000);
 
             View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_color_picker, null);
@@ -301,19 +301,21 @@ public class SettingsActivity extends AppCompatActivity {
 
                     // Update color preview
                     int color = Color.argb(
-                        alphaSeekBar.getProgress(),
-                        redSeekBar.getProgress(),
-                        greenSeekBar.getProgress(),
-                        blueSeekBar.getProgress()
+                            alphaSeekBar.getProgress(),
+                            redSeekBar.getProgress(),
+                            greenSeekBar.getProgress(),
+                            blueSeekBar.getProgress()
                     );
                     colorPreview.setBackgroundColor(color);
                 }
 
                 @Override
-                public void onStartTrackingTouch(SeekBar seekBar) {}
+                public void onStartTrackingTouch(SeekBar seekBar) {
+                }
 
                 @Override
-                public void onStopTrackingTouch(SeekBar seekBar) {}
+                public void onStopTrackingTouch(SeekBar seekBar) {
+                }
             };
 
             alphaSeekBar.setOnSeekBarChangeListener(listener);
@@ -322,19 +324,19 @@ public class SettingsActivity extends AppCompatActivity {
             blueSeekBar.setOnSeekBarChangeListener(listener);
 
             new AlertDialog.Builder(getContext())
-                .setTitle(title)
-                .setView(dialogView)
-                .setPositiveButton("OK", (dialog, which) -> {
-                    int color = Color.argb(
-                        alphaSeekBar.getProgress(),
-                        redSeekBar.getProgress(),
-                        greenSeekBar.getProgress(),
-                        blueSeekBar.getProgress()
-                    );
-                    prefs.edit().putInt(colorKey, color).apply();
-                })
-                .setNegativeButton("Cancel", null)
-                .show();
+                    .setTitle(title)
+                    .setView(dialogView)
+                    .setPositiveButton("OK", (dialog, which) -> {
+                        int color = Color.argb(
+                                alphaSeekBar.getProgress(),
+                                redSeekBar.getProgress(),
+                                greenSeekBar.getProgress(),
+                                blueSeekBar.getProgress()
+                        );
+                        prefs.edit().putInt(colorKey, color).apply();
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
         }
 
         private void showEventLogDialog() {
@@ -366,21 +368,21 @@ public class SettingsActivity extends AppCompatActivity {
             scrollView.addView(textView);
 
             new AlertDialog.Builder(getContext())
-                .setTitle(R.string.event_log_dialog_title)
-                .setView(scrollView)
-                .setPositiveButton("OK", null)
-                .setNeutralButton(R.string.event_log_clear, (dialog, which) -> {
-                    new AlertDialog.Builder(getContext())
-                        .setTitle("Clear Event Log")
-                        .setMessage("Are you sure you want to clear the event log?")
-                        .setPositiveButton("Clear", (d, w) -> {
-                            dataManager.clearEventLog();
-                            android.widget.Toast.makeText(getContext(), "Event log cleared", android.widget.Toast.LENGTH_SHORT).show();
-                        })
-                        .setNegativeButton("Cancel", null)
-                        .show();
-                })
-                .show();
+                    .setTitle(R.string.event_log_dialog_title)
+                    .setView(scrollView)
+                    .setPositiveButton("OK", null)
+                    .setNeutralButton(R.string.event_log_clear, (dialog, which) -> {
+                        new AlertDialog.Builder(getContext())
+                                .setTitle("Clear Event Log")
+                                .setMessage("Are you sure you want to clear the event log?")
+                                .setPositiveButton("Clear", (d, w) -> {
+                                    dataManager.clearEventLog();
+                                    android.widget.Toast.makeText(getContext(), "Event log cleared", android.widget.Toast.LENGTH_SHORT).show();
+                                })
+                                .setNegativeButton("Cancel", null)
+                                .show();
+                    })
+                    .show();
         }
 
         @Override
