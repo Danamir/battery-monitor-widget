@@ -21,13 +21,9 @@
         android:defaultValue="40"
         android:inputType="number" />
 
-    <SeekBarPreference
-        android:key="background_alpha"
-        android:title="@string/background_alpha_title"
-        android:summary="@string/background_alpha_summary"
-        android:defaultValue="100"
-        android:max="100"
-        android:min="0"
-        app:showSeekBarValue="true"
-        app:seekBarIncrement="5" />
+    <com.danamir.batterymonitor.ColorPreference
+        android:key="main_color"
+        android:title="@string/main_color_title"
+        android:summary="@string/main_color_summary"
+        android:layout="@layout/preference_color" />
 </PreferenceScreen>

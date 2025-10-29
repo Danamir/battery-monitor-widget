@@ -9,6 +9,11 @@
     <string name="horizontal_padding_summary">Left and right padding for the graph</string>
     <string name="vertical_padding_title">Vertical Padding</string>
     <string name="vertical_padding_summary">Top and bottom padding for the graph</string>
-    <string name="background_alpha_title">Background Alpha</string>
-    <string name="background_alpha_summary">Background transparency</string>
+    <string name="main_color_title">Main Color</string>
+    <string name="main_color_summary">Main color with transparency</string>
+    <string name="color_preview">Preview</string>
+    <string name="color_red">Red</string>
+    <string name="color_green">Green</string>
+    <string name="color_blue">Blue</string>
+    <string name="color_alpha">Alpha</string>
 </resources>
