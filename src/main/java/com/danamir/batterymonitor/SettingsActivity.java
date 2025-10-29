@@ -88,7 +88,7 @@ public class SettingsActivity extends AppCompatActivity {
 					return;
 				}
 				BatteryWidgetProvider.updateAllWidgets(getContext());
-				if ("main_color".equals(key)) {
+				if ("main_color".equals(key) || "text_color".equals(key) || "grid_color".equals(key)) {
 					updateColorPreview();
 				}
             };
@@ -165,35 +165,65 @@ public class SettingsActivity extends AppCompatActivity {
             }
 
             if (backgroundColorPref != null) {
-                updateColorPreferenceSummary();
+                updateColorPreferenceSummary(backgroundColorPref, "main_color");
                 backgroundColorPref.setOnPreferenceClickListener(preference -> {
-                    showColorPickerDialog();
+                    showColorPickerDialog("main_color", "Background Color");
+                    return true;
+                });
+            }
+
+            androidx.preference.Preference textColorPref = findPreference("text_color");
+            if (textColorPref != null) {
+                updateColorPreferenceSummary(textColorPref, "text_color");
+                textColorPref.setOnPreferenceClickListener(preference -> {
+                    showColorPickerDialog("text_color", "Text Color");
+                    return true;
+                });
+            }
+
+            androidx.preference.Preference gridColorPref = findPreference("grid_color");
+            if (gridColorPref != null) {
+                updateColorPreferenceSummary(gridColorPref, "grid_color");
+                gridColorPref.setOnPreferenceClickListener(preference -> {
+                    showColorPickerDialog("grid_color", "Grid Color");
                     return true;
                 });
             }
         }
 
-        private void updateColorPreferenceSummary() {
-            androidx.preference.Preference colorPref = findPreference("main_color");
+        private void updateColorPreferenceSummary(androidx.preference.Preference colorPref, String key) {
             if (colorPref != null) {
                 android.content.SharedPreferences prefs =
                     androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext());
-                int color = prefs.getInt("main_color", 0x80000000);
+                int color = prefs.getInt(key, 0x80000000);
                 int alpha = Color.alpha(color);
                 int red = Color.red(color);
                 int green = Color.green(color);
                 int blue = Color.blue(color);
-                colorPref.setSummary(String.format("R: %d, G: %d, B: %d, Alpha: %d", red, green, blue, alpha));
+                colorPref.setSummary(String.format("ARGB: %d, %d, %d, %d", alpha, red, green, blue));
             }
         }
 
         private void updateColorPreview() {
-            androidx.preference.Preference colorPref = findPreference("main_color");
-            if (colorPref != null) {
-                // Force preference to recreate its view
-                getPreferenceScreen().removePreference(colorPref);
-                getPreferenceScreen().addPreference(colorPref);
-                updateColorPreferenceSummary();
+            // Update all color preferences
+            androidx.preference.Preference mainColorPref = findPreference("main_color");
+            androidx.preference.Preference textColorPref = findPreference("text_color");
+            androidx.preference.Preference gridColorPref = findPreference("grid_color");
+
+            if (mainColorPref != null) {
+                getPreferenceScreen().removePreference(mainColorPref);
+                getPreferenceScreen().addPreference(mainColorPref);
+                updateColorPreferenceSummary(mainColorPref, "main_color");
+            }
+            if (textColorPref != null) {
+                getPreferenceScreen().removePreference(textColorPref);
+                getPreferenceScreen().addPreference(textColorPref);
+                updateColorPreferenceSummary(textColorPref, "text_color");
+            }
+            if (gridColorPref != null) {
+                getPreferenceScreen().removePreference(gridColorPref);
+                getPreferenceScreen().addPreference(gridColorPref);
+                updateColorPreferenceSummary(gridColorPref, "grid_color");
             }
         }
 
@@ -222,10 +252,10 @@ public class SettingsActivity extends AppCompatActivity {
             return drawable;
         }
 
-        private void showColorPickerDialog() {
+        private void showColorPickerDialog(String colorKey, String title) {
             android.content.SharedPreferences prefs =
                 androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext());
-            int currentColor = prefs.getInt("main_color", 0x80000000);
+            int currentColor = prefs.getInt(colorKey, 0x80000000);
 
             View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_color_picker, null);
             View checkerBackground = dialogView.findViewById(R.id.checker_background);
@@ -286,7 +316,7 @@ public class SettingsActivity extends AppCompatActivity {
             blueSeekBar.setOnSeekBarChangeListener(listener);
 
             new AlertDialog.Builder(getContext())
-                .setTitle("Select Background Color")
+                .setTitle(title)
                 .setView(dialogView)
                 .setPositiveButton("OK", (dialog, which) -> {
                     int color = Color.argb(
@@ -295,8 +325,7 @@ public class SettingsActivity extends AppCompatActivity {
                         greenSeekBar.getProgress(),
                         blueSeekBar.getProgress()
                     );
-                    prefs.edit().putInt("main_color", color).apply();
-                    updateColorPreferenceSummary();
+                    prefs.edit().putInt(colorKey, color).apply();
                 })
                 .setNegativeButton("Cancel", null)
                 .show();

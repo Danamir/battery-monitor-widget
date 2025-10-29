@@ -1,6 +1,7 @@
 package com.danamir.batterymonitor;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -12,6 +13,38 @@ import androidx.core.content.ContextCompat;
 import java.util.List;
 
 public class BatteryGraphGenerator {
+
+    /**
+     * Calculate a contrasting text color based on the background color.
+     * Uses relative luminance to determine if background is light or dark,
+     * then returns a lighter or darker variation of the background color.
+     */
+    private static int getContrastingTextColor(int backgroundColor) {
+        // Extract RGB components
+        int red = Color.red(backgroundColor);
+        int green = Color.green(backgroundColor);
+        int blue = Color.blue(backgroundColor);
+
+        // Calculate relative luminance (perceived brightness)
+        // Using sRGB luminance formula: Y = 0.2126*R + 0.7152*G + 0.0722*B
+        double luminance = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255.0;
+
+        // If background is dark (luminance < 0.5), make text lighter
+        // If background is light (luminance >= 0.5), make text darker
+        if (luminance < 0.5) {
+            // Dark background - make lighter version
+            int newRed = Math.min(255, red + (int)((255 - red) * 0.6));
+            int newGreen = Math.min(255, green + (int)((255 - green) * 0.6));
+            int newBlue = Math.min(255, blue + (int)((255 - blue) * 0.6));
+            return Color.rgb(newRed, newGreen, newBlue);
+        } else {
+            // Light background - make darker version
+            int newRed = (int)(red * 0.3);
+            int newGreen = (int)(green * 0.3);
+            int newBlue = (int)(blue * 0.3);
+            return Color.rgb(newRed, newGreen, newBlue);
+        }
+    }
 
     public static Picture generateGraphAsPicture(Context context, List<BatteryData> dataPoints, int displayHours, int width, int height) {
         Picture picture = new Picture();
@@ -33,10 +66,10 @@ public class BatteryGraphGenerator {
     }
 
     private static void drawGraph(Context context, Canvas canvas, List<BatteryData> dataPoints, int displayHours, int width, int height) {
-        // Get padding and background color from preferences
+        // Get padding and colors from preferences
         android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
-        int paddingHorizontalDp = prefs.getInt("horizontal_padding", 20);
-        int paddingVerticalDp = prefs.getInt("vertical_padding", 10);
+        int paddingHorizontalDp = prefs.getInt("horizontal_padding", 40);
+        int paddingVerticalDp = prefs.getInt("vertical_padding", 40);
         int backgroundColor = prefs.getInt("main_color", 0x80000000); // Default: 50% transparent black
 
         // Convert dp to pixels for padding and text sizing
@@ -46,19 +79,35 @@ public class BatteryGraphGenerator {
         float labelTextSize = 12 * density;
         float percentTextSize = 16 * density;
 
+        // Get custom colors or use auto-calculated ones
+        int textColor;
+        int gridColor;
+
+        if (prefs.contains("text_color")) {
+            textColor = prefs.getInt("text_color", getContrastingTextColor(backgroundColor));
+        } else {
+            textColor = getContrastingTextColor(backgroundColor);
+        }
+
+        if (prefs.contains("grid_color")) {
+            gridColor = prefs.getInt("grid_color", textColor);
+        } else {
+            gridColor = textColor;
+        }
+
         // Initialize paints
         Paint backgroundPaint = new Paint();
         backgroundPaint.setColor(backgroundColor);
 		backgroundPaint.setStyle(Paint.Style.FILL);
 
         Paint gridPaint = new Paint();
-        gridPaint.setColor(ContextCompat.getColor(context, R.color.battery_graph_grid));
+        gridPaint.setColor(gridColor);
         gridPaint.setStrokeWidth(1f * density);
         gridPaint.setStyle(Paint.Style.STROKE);
         gridPaint.setAntiAlias(true);
 
         Paint textPaint = new Paint();
-        textPaint.setColor(ContextCompat.getColor(context, R.color.battery_graph_text));
+        textPaint.setColor(textColor);
         textPaint.setTextSize(labelTextSize);
         textPaint.setAntiAlias(true);
 
