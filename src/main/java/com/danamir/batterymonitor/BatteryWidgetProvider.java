@@ -31,6 +31,26 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
     @Override
     public void onEnabled(Context context) {
         super.onEnabled(context);
+        
+        // Initialize with current battery level
+        android.content.IntentFilter intentFilter = new android.content.IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryIntent = context.registerReceiver(null, intentFilter);
+        
+        if (batteryIntent != null) {
+            int level = batteryIntent.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL, -1);
+            int scale = batteryIntent.getIntExtra(android.os.BatteryManager.EXTRA_SCALE, -1);
+            int status = batteryIntent.getIntExtra(android.os.BatteryManager.EXTRA_STATUS, -1);
+            
+            boolean isCharging = status == android.os.BatteryManager.BATTERY_STATUS_CHARGING ||
+                               status == android.os.BatteryManager.BATTERY_STATUS_FULL;
+            
+            if (level >= 0 && scale > 0) {
+                int batteryPct = (int) ((level / (float) scale) * 100);
+                BatteryDataManager dataManager = BatteryDataManager.getInstance(context);
+                dataManager.addDataPoint(batteryPct, isCharging);
+            }
+        }
+        
         // Service will be started by BatteryReceiver on first battery change
         // No need to start service here to avoid background service restriction
     }

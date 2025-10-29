@@ -24,11 +24,13 @@ public class BatteryMonitorService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        // Create notification channel for foreground service (Android O+)
+        // Create notification channel first (Android O+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             createNotificationChannel();
-            startForeground(NOTIFICATION_ID, createNotification());
         }
+
+        // Start as foreground service immediately
+        startForeground(NOTIFICATION_ID, createNotification());
 
         // Register battery receiver
         batteryReceiver = new BatteryReceiver();
