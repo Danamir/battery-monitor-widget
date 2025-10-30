@@ -58,6 +58,12 @@
             android:process=":guard"
             android:foregroundServiceType="dataSync" />
 
+        <provider
+            android:name=".EventLogProvider"
+            android:authorities="com.danamir.batterymonitor.eventlog"
+            android:enabled="true"
+            android:exported="false" />
+
     </application>
 
 </manifest>

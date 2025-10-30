@@ -1,7 +1,9 @@
 package com.danamir.batterymonitor;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.util.Log;
 import androidx.preference.PreferenceManager;
 
@@ -226,12 +228,7 @@ public class BatteryDataManager {
     }
 
     public synchronized List<String> getEventLog() {
-        // Reload from SharedPreferences to get latest data across processes
-        try {
-            Thread.sleep(100); // Give time for other process to finish writing
-        } catch (InterruptedException e) {
-            // Ignore interruption
-        }
+        // Reload using ContentProvider to get latest data across processes
         eventLog = loadEventLog();
         return new ArrayList<>(eventLog);
     }
@@ -242,19 +239,29 @@ public class BatteryDataManager {
     }
 
     private List<String> loadEventLog() {
-        // Create a fresh SharedPreferences instance to force reload from disk across processes
-        String prefsName = context.getPackageName() + "_preferences";
-        SharedPreferences freshPrefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE | Context.MODE_MULTI_PROCESS);
-
+        // Use ContentProvider to load data across processes
         List<String> log = new ArrayList<>();
-        String jsonString = freshPrefs.getString(PREF_BATTERY_LOG, "[]");
 
         try {
-            JSONArray jsonArray = new JSONArray(jsonString);
-            for (int i = 0; i < jsonArray.length(); i++) {
-                log.add(jsonArray.getString(i));
+            Cursor cursor = context.getContentResolver().query(
+                EventLogProvider.CONTENT_URI,
+                null, null, null, null
+            );
+
+            if (cursor != null) {
+                if (cursor.moveToFirst()) {
+                    int dataIndex = cursor.getColumnIndex("data");
+                    if (dataIndex != -1) {
+                        String jsonString = cursor.getString(dataIndex);
+                        JSONArray jsonArray = new JSONArray(jsonString);
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            log.add(jsonArray.getString(i));
+                        }
+                    }
+                }
+                cursor.close();
             }
-        } catch (JSONException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -269,6 +276,10 @@ public class BatteryDataManager {
         }
 
         String jsonString = jsonArray.toString();
-        prefs.edit().putString(PREF_BATTERY_LOG, jsonString).commit();
+
+        // Use ContentProvider to save data across processes
+        ContentValues values = new ContentValues();
+        values.put("data", jsonString);
+        context.getContentResolver().insert(EventLogProvider.CONTENT_URI, values);
     }
 }
