@@ -67,6 +67,9 @@ public class BatteryMonitorService extends Service {
                 Intent batteryIntent = registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
                 if (batteryIntent != null) {
                     batteryReceiver.onReceive(BatteryMonitorService.this, batteryIntent);
+
+                    // Explicitly update widgets to ensure they stay synchronized
+                    BatteryWidgetProvider.updateAllWidgets(BatteryMonitorService.this);
                 }
 
                 // Schedule next update

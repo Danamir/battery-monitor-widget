@@ -14,6 +14,12 @@ public class BatteryReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
 
+        if (Intent.ACTION_SCREEN_ON.equals(action) || Intent.ACTION_USER_PRESENT.equals(action)) {
+            // User turned on screen or unlocked device - update widgets to show latest data
+            BatteryWidgetProvider.updateAllWidgets(context);
+            return;
+        }
+
         if (Intent.ACTION_BATTERY_CHANGED.equals(action)) {
             int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
             int scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
