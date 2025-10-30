@@ -109,6 +109,9 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         views.setOnClickPendingIntent(R.id.battery_graph, pendingIntent);
 
+        // Force cache invalidation by setting a unique content description
+        views.setContentDescription(R.id.battery_graph, "Updated: " + System.currentTimeMillis());
+
         // Update the widget
         appWidgetManager.updateAppWidget(appWidgetId, views);
     }
