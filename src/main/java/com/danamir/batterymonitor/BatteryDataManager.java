@@ -20,20 +20,26 @@ public class BatteryDataManager {
     private static final String PREF_BATTERY_LOG = "battery_event_log";
     private static final int MAX_DATA_POINTS = 10000;
     private static final int MAX_LOG_ENTRIES = 1000;
-    private static BatteryDataManager instance;
+    private static volatile BatteryDataManager instance;
     private final SharedPreferences prefs;
+    private final Context context;
     private List<BatteryData> dataPoints;
     private List<String> eventLog;
 
     private BatteryDataManager(Context context) {
+        this.context = context.getApplicationContext();
         prefs = PreferenceManager.getDefaultSharedPreferences(context);
         dataPoints = loadData();
         eventLog = loadEventLog();
     }
 
-    public static synchronized BatteryDataManager getInstance(Context context) {
+    public static BatteryDataManager getInstance(Context context) {
         if (instance == null) {
-            instance = new BatteryDataManager(context.getApplicationContext());
+            synchronized (BatteryDataManager.class) {
+                if (instance == null) {
+                    instance = new BatteryDataManager(context.getApplicationContext());
+                }
+            }
         }
         return instance;
     }
@@ -220,6 +226,13 @@ public class BatteryDataManager {
     }
 
     public synchronized List<String> getEventLog() {
+        // Reload from SharedPreferences to get latest data across processes
+        try {
+            Thread.sleep(100); // Give time for other process to finish writing
+        } catch (InterruptedException e) {
+            // Ignore interruption
+        }
+        eventLog = loadEventLog();
         return new ArrayList<>(eventLog);
     }
 
@@ -229,8 +242,12 @@ public class BatteryDataManager {
     }
 
     private List<String> loadEventLog() {
+        // Create a fresh SharedPreferences instance to force reload from disk across processes
+        String prefsName = context.getPackageName() + "_preferences";
+        SharedPreferences freshPrefs = context.getSharedPreferences(prefsName, Context.MODE_PRIVATE | Context.MODE_MULTI_PROCESS);
+
         List<String> log = new ArrayList<>();
-        String jsonString = prefs.getString(PREF_BATTERY_LOG, "[]");
+        String jsonString = freshPrefs.getString(PREF_BATTERY_LOG, "[]");
 
         try {
             JSONArray jsonArray = new JSONArray(jsonString);
@@ -251,6 +268,7 @@ public class BatteryDataManager {
             jsonArray.put(entry);
         }
 
-        prefs.edit().putString(PREF_BATTERY_LOG, jsonArray.toString()).apply();
+        String jsonString = jsonArray.toString();
+        prefs.edit().putString(PREF_BATTERY_LOG, jsonString).commit();
     }
 }
