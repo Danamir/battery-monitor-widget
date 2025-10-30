@@ -6,6 +6,7 @@
     android:targetCellHeight="1"
     android:updatePeriodMillis="60000"
     android:initialLayout="@layout/battery_widget"
+    android:previewLayout="@layout/battery_widget"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
     android:description="@string/widget_name" />

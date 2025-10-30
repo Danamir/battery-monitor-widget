@@ -23,9 +23,9 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
 
     @Override
     public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager, int appWidgetId, android.os.Bundle newOptions) {
-        // Called when widget is resized
-        updateAppWidget(context, appWidgetManager, appWidgetId);
+        // Called when widget is resized - force immediate update
         super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions);
+        updateAppWidget(context, appWidgetManager, appWidgetId);
     }
 
     @Override
@@ -101,6 +101,10 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
         Canvas canvas = new Canvas(bitmap);
         picture.draw(canvas);
 
+        // Force cache invalidation BEFORE setting bitmap
+        long timestamp = System.currentTimeMillis();
+        views.setContentDescription(R.id.battery_graph, "Widget:" + appWidgetId + "@" + timestamp);
+
         // Set the bitmap to the ImageView
         views.setImageViewBitmap(R.id.battery_graph, bitmap);
 
@@ -109,11 +113,8 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         views.setOnClickPendingIntent(R.id.battery_graph, pendingIntent);
 
-        // Force cache invalidation by setting a unique content description
-        views.setContentDescription(R.id.battery_graph, "Updated: " + System.currentTimeMillis());
-
-        // Update the widget
-        appWidgetManager.updateAppWidget(appWidgetId, views);
+        // Update the widget with partial updates flag to force refresh
+        appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views);
     }
 
     public static void updateAllWidgets(Context context) {
