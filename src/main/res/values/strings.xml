@@ -15,6 +15,14 @@
     <string name="text_color_summary">Text color with transparency</string>
     <string name="grid_color_title">Grid Color</string>
     <string name="grid_color_summary">Grid line color with transparency</string>
+    <string name="graph_line_color_title">Graph Line Color</string>
+    <string name="graph_line_color_summary">Battery graph line color with transparency</string>
+    <string name="graph_fill_color_title">Graph Fill Color</string>
+    <string name="graph_fill_color_summary">Battery graph fill color with transparency</string>
+    <string name="charging_line_color_title">Charging Line Color</string>
+    <string name="charging_line_color_summary">Battery charging line color with transparency</string>
+    <string name="user_present_color_title">User Present Color</string>
+    <string name="user_present_color_summary">\"Display on\" status bar color with transparency</string>
     <string name="color_preview">Preview</string>
     <string name="color_red">Red</string>
     <string name="color_green">Green</string>

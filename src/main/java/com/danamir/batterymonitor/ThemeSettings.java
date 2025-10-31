@@ -27,7 +27,9 @@ public class ThemeSettings extends PreferenceFragmentCompat {
         // Register a global preference change listener for immediate updates
         preferenceChangeListener = (sharedPreferences, key) -> {
             BatteryWidgetProvider.updateAllWidgets(getContext());
-            if ("main_color".equals(key) || "text_color".equals(key) || "grid_color".equals(key)) {
+            if ("main_color".equals(key) || "text_color".equals(key) || "grid_color".equals(key) ||
+                "graph_line_color".equals(key) || "graph_fill_color".equals(key) || 
+                "charging_line_color".equals(key) || "user_present_color".equals(key)) {
                 updateColorPreview();
             }
         };
@@ -59,6 +61,42 @@ public class ThemeSettings extends PreferenceFragmentCompat {
                 return true;
             });
         }
+
+        androidx.preference.Preference graphLineColorPref = findPreference("graph_line_color");
+        if (graphLineColorPref != null) {
+            updateColorPreferenceSummary(graphLineColorPref, "graph_line_color");
+            graphLineColorPref.setOnPreferenceClickListener(preference -> {
+                showColorPickerDialog("graph_line_color", "Graph Line Color");
+                return true;
+            });
+        }
+
+        androidx.preference.Preference graphFillColorPref = findPreference("graph_fill_color");
+        if (graphFillColorPref != null) {
+            updateColorPreferenceSummary(graphFillColorPref, "graph_fill_color");
+            graphFillColorPref.setOnPreferenceClickListener(preference -> {
+                showColorPickerDialog("graph_fill_color", "Graph Fill Color");
+                return true;
+            });
+        }
+
+        androidx.preference.Preference chargingLineColorPref = findPreference("charging_line_color");
+        if (chargingLineColorPref != null) {
+            updateColorPreferenceSummary(chargingLineColorPref, "charging_line_color");
+            chargingLineColorPref.setOnPreferenceClickListener(preference -> {
+                showColorPickerDialog("charging_line_color", "Charging Line Color");
+                return true;
+            });
+        }
+
+        androidx.preference.Preference userPresentColorPref = findPreference("user_present_color");
+        if (userPresentColorPref != null) {
+            updateColorPreferenceSummary(userPresentColorPref, "user_present_color");
+            userPresentColorPref.setOnPreferenceClickListener(preference -> {
+                showColorPickerDialog("user_present_color", "User Present Color");
+                return true;
+            });
+        }
     }
 
     private void updateColorPreferenceSummary(androidx.preference.Preference colorPref, String key) {
@@ -73,6 +111,10 @@ public class ThemeSettings extends PreferenceFragmentCompat {
         androidx.preference.Preference mainColorPref = findPreference("main_color");
         androidx.preference.Preference textColorPref = findPreference("text_color");
         androidx.preference.Preference gridColorPref = findPreference("grid_color");
+        androidx.preference.Preference graphLineColorPref = findPreference("graph_line_color");
+        androidx.preference.Preference graphFillColorPref = findPreference("graph_fill_color");
+        androidx.preference.Preference chargingLineColorPref = findPreference("charging_line_color");
+        androidx.preference.Preference userPresentColorPref = findPreference("user_present_color");
 
         if (mainColorPref != null) {
             getPreferenceScreen().removePreference(mainColorPref);
@@ -88,6 +130,26 @@ public class ThemeSettings extends PreferenceFragmentCompat {
             getPreferenceScreen().removePreference(gridColorPref);
             getPreferenceScreen().addPreference(gridColorPref);
             updateColorPreferenceSummary(gridColorPref, "grid_color");
+        }
+        if (graphLineColorPref != null) {
+            getPreferenceScreen().removePreference(graphLineColorPref);
+            getPreferenceScreen().addPreference(graphLineColorPref);
+            updateColorPreferenceSummary(graphLineColorPref, "graph_line_color");
+        }
+        if (graphFillColorPref != null) {
+            getPreferenceScreen().removePreference(graphFillColorPref);
+            getPreferenceScreen().addPreference(graphFillColorPref);
+            updateColorPreferenceSummary(graphFillColorPref, "graph_fill_color");
+        }
+        if (chargingLineColorPref != null) {
+            getPreferenceScreen().removePreference(chargingLineColorPref);
+            getPreferenceScreen().addPreference(chargingLineColorPref);
+            updateColorPreferenceSummary(chargingLineColorPref, "charging_line_color");
+        }
+        if (userPresentColorPref != null) {
+            getPreferenceScreen().removePreference(userPresentColorPref);
+            getPreferenceScreen().addPreference(userPresentColorPref);
+            updateColorPreferenceSummary(userPresentColorPref, "user_present_color");
         }
     }
 

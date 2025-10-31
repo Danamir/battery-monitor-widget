@@ -113,19 +113,18 @@ public class BatteryGraphGenerator {
         textPaint.setAntiAlias(true);
 
         Paint linePaint = new Paint();
-        linePaint.setColor(ContextCompat.getColor(context, R.color.battery_graph_line));
+        linePaint.setColor(prefs.getInt("graph_line_color", ContextCompat.getColor(context, R.color.battery_graph_line)));
         linePaint.setStrokeWidth(2f * density);
         linePaint.setStyle(Paint.Style.STROKE);
         linePaint.setAntiAlias(true);
 
         Paint fillPaint = new Paint();
-        fillPaint.setColor(ContextCompat.getColor(context, R.color.battery_graph_fill));
+        fillPaint.setColor(prefs.getInt("graph_fill_color", ContextCompat.getColor(context, R.color.battery_graph_fill)));
         fillPaint.setStyle(Paint.Style.FILL);
-        fillPaint.setAlpha(100);
         fillPaint.setAntiAlias(true);
 
         Paint chargingPaint = new Paint();
-        chargingPaint.setColor(ContextCompat.getColor(context, R.color.battery_graph_line_charge));
+        chargingPaint.setColor(prefs.getInt("charging_line_color", ContextCompat.getColor(context, R.color.battery_graph_line_charge)));
         chargingPaint.setStrokeWidth(2f * density);
         chargingPaint.setStyle(Paint.Style.STROKE);
         chargingPaint.setAntiAlias(true);
@@ -158,49 +157,6 @@ public class BatteryGraphGenerator {
         for (int i = 0; i <= intervals; i++) {
             float x = paddingHorizontal + (width - 2 * paddingHorizontal) * i / (float) intervals;
             canvas.drawLine(x, paddingVertical, x, height - paddingVertical, gridPaint);
-        }
-
-        // Draw user_present status bar at the bottom
-        if (statusData != null && !statusData.isEmpty()) {
-            long now = System.currentTimeMillis();
-            long timeRange = displayHours * 60 * 60 * 1000L;
-            long startTime = now - timeRange;
-
-            Paint userPresentPaint = new Paint();
-            userPresentPaint.setColor(ContextCompat.getColor(context, R.color.user_present_bar));
-            userPresentPaint.setStyle(Paint.Style.FILL);
-            userPresentPaint.setAntiAlias(true);
-
-            // Height of the status bar
-            float barHeight = 8 * density;
-            float barBottom = height - paddingVertical;
-            float barTop = barBottom - barHeight;
-
-            for (StatusData status : statusData) {
-                if (!status.getStatusName().equals("user_present")) {
-                    continue;
-                }
-
-                long statusStart = Math.max(status.getStartTimestamp(), startTime);
-                long statusEnd = status.getEndTimestamp();
-
-                // Handle ongoing status
-                if (statusEnd == 0 || statusEnd > now) {
-                    statusEnd = now;
-                }
-
-                // Skip if status is entirely outside the time range
-                if (statusStart > now || statusEnd < startTime) {
-                    continue;
-                }
-
-                // Calculate x positions
-                float x1 = paddingHorizontal + (width - 2 * paddingHorizontal) * (statusStart - startTime) / (float) timeRange;
-                float x2 = paddingHorizontal + (width - 2 * paddingHorizontal) * (statusEnd - startTime) / (float) timeRange;
-
-                // Draw the filled bar
-                canvas.drawRect(x1, barTop, x2, barBottom, userPresentPaint);
-            }
         }
 
         // Draw battery level graph
@@ -271,6 +227,49 @@ public class BatteryGraphGenerator {
             for (int i = 0; i < linePaths.size(); i++) {
                 Paint paint = lineIsCharging.get(i) ? chargingPaint : linePaint;
                 canvas.drawPath(linePaths.get(i), paint);
+            }
+        }
+
+        // Draw user_present status bar at the bottom
+        if (statusData != null && !statusData.isEmpty()) {
+            long now = System.currentTimeMillis();
+            long timeRange = displayHours * 60 * 60 * 1000L;
+            long startTime = now - timeRange;
+
+            Paint userPresentPaint = new Paint();
+            userPresentPaint.setColor(prefs.getInt("user_present_color", ContextCompat.getColor(context, R.color.user_present_bar)));
+            userPresentPaint.setStyle(Paint.Style.FILL);
+            userPresentPaint.setAntiAlias(true);
+
+            // Height of the status bar
+            float barHeight = 8 * density;
+            float barBottom = height - paddingVertical;
+            float barTop = barBottom - barHeight;
+
+            for (StatusData status : statusData) {
+                if (!status.getStatusName().equals("user_present")) {
+                    continue;
+                }
+
+                long statusStart = Math.max(status.getStartTimestamp(), startTime);
+                long statusEnd = status.getEndTimestamp();
+
+                // Handle ongoing status
+                if (statusEnd == 0 || statusEnd > now) {
+                    statusEnd = now;
+                }
+
+                // Skip if status is entirely outside the time range
+                if (statusStart > now || statusEnd < startTime) {
+                    continue;
+                }
+
+                // Calculate x positions
+                float x1 = paddingHorizontal + (width - 2 * paddingHorizontal) * (statusStart - startTime) / (float) timeRange;
+                float x2 = paddingHorizontal + (width - 2 * paddingHorizontal) * (statusEnd - startTime) / (float) timeRange;
+
+                // Draw the filled bar
+                canvas.drawRect(x1, barTop, x2, barBottom, userPresentPaint);
             }
         }
 
