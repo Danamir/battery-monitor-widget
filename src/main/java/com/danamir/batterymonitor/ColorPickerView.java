@@ -364,7 +364,6 @@ public class ColorPickerView extends LinearLayout {
 
     // Inner class: Saturation/Lightness picker
     private class SaturationLightnessView extends View {
-        private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private Paint dotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private Bitmap bitmap;
 
@@ -385,7 +384,7 @@ public class ColorPickerView extends LinearLayout {
             if (w <= 0 || h <= 0) return;
 
             bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-            Canvas canvas = new Canvas(bitmap);
+            bitmap.setHasAlpha(false);
 
             // Get the pure hue color at full saturation and 50% lightness
             int pureColor = hslToRgb(hue, 1f, 0.5f);
@@ -410,15 +409,13 @@ public class ColorPickerView extends LinearLayout {
                         // Interpolate based on saturation (left to right)
                         float whiteAmount = (1 - saturationRatio) * lightnessRatio;
                         float colorAmount = saturationRatio * lightnessRatio;
-                        float blackAmount = 1 - lightnessRatio;
 
                         r = (int) (255 * whiteAmount + pureR * colorAmount);
                         g = (int) (255 * whiteAmount + pureG * colorAmount);
                         b = (int) (255 * whiteAmount + pureB * colorAmount);
                     }
 
-                    paint.setColor(Color.rgb(r, g, b));
-                    canvas.drawPoint(x, y, paint);
+                    bitmap.setPixel(x, y, Color.rgb(r, g, b));
                 }
             }
         }
