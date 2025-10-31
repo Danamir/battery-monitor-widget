@@ -18,6 +18,11 @@ public class BatteryReceiver extends BroadcastReceiver {
             // User unlocked device - start user_present status
             StatusManager statusManager = StatusManager.getInstance(context);
             statusManager.startStatus("user_present", System.currentTimeMillis());
+
+            // Log unlock event
+            EventLogManager eventLogManager = EventLogManager.getInstance(context);
+            eventLogManager.logEvent("Device unlocked");
+
             BatteryWidgetProvider.updateAllWidgets(context);
             return;
         }
