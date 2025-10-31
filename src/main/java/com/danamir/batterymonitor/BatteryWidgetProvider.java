@@ -26,6 +26,7 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
         // Called when widget is resized
         updateAppWidget(context, appWidgetManager, appWidgetId);
         super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions);
+        updateAppWidget(context, appWidgetManager, appWidgetId);
     }
 
     @Override
@@ -100,6 +101,10 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
         Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
         picture.draw(canvas);
+
+        // Force cache invalidation
+        long timestamp = System.currentTimeMillis();
+        views.setContentDescription(R.id.battery_graph, "Widget:" + appWidgetId + "@" + timestamp);
 
         // Set the bitmap to the ImageView
         views.setImageViewBitmap(R.id.battery_graph, bitmap);

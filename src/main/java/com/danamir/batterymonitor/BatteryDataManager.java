@@ -1,7 +1,9 @@
 package com.danamir.batterymonitor;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.util.Log;
 import androidx.preference.PreferenceManager;
 
@@ -22,10 +24,12 @@ public class BatteryDataManager {
     private static final int MAX_LOG_ENTRIES = 1000;
     private static BatteryDataManager instance;
     private final SharedPreferences prefs;
+    private final Context context;
     private List<BatteryData> dataPoints;
     private List<String> eventLog;
 
     private BatteryDataManager(Context context) {
+        this.context = context.getApplicationContext();
         prefs = PreferenceManager.getDefaultSharedPreferences(context);
         dataPoints = loadData();
         eventLog = loadEventLog();
@@ -107,18 +111,32 @@ public class BatteryDataManager {
     }
 
     private List<BatteryData> loadData() {
+        // Use ContentProvider to load data
         List<BatteryData> data = new ArrayList<>();
-        String jsonString = prefs.getString(PREF_BATTERY_DATA, "[]");
 
         try {
-            JSONArray jsonArray = new JSONArray(jsonString);
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject obj = jsonArray.getJSONObject(i);
-                data.add(new BatteryData(
-                    obj.getLong("timestamp"),
-                    obj.getInt("level"),
-                    obj.getBoolean("charging")
-                ));
+            Cursor cursor = context.getContentResolver().query(
+                DataProvider.CONTENT_URI,
+                null, null, null, null
+            );
+
+            if (cursor != null) {
+                if (cursor.moveToFirst()) {
+                    int dataIndex = cursor.getColumnIndex("data");
+                    if (dataIndex != -1) {
+                        String jsonString = cursor.getString(dataIndex);
+                        JSONArray jsonArray = new JSONArray(jsonString);
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            JSONObject obj = jsonArray.getJSONObject(i);
+                            data.add(new BatteryData(
+                                obj.getLong("timestamp"),
+                                obj.getInt("level"),
+                                obj.getBoolean("charging")
+                            ));
+                        }
+                    }
+                }
+                cursor.close();
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -139,7 +157,12 @@ public class BatteryDataManager {
                 jsonArray.put(obj);
             }
 
-            prefs.edit().putString(PREF_BATTERY_DATA, jsonArray.toString()).apply();
+            String jsonString = jsonArray.toString();
+
+            // Use ContentProvider to save data
+            ContentValues values = new ContentValues();
+            values.put("data", jsonString);
+            context.getContentResolver().insert(DataProvider.CONTENT_URI, values);
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -220,6 +243,8 @@ public class BatteryDataManager {
     }
 
     public synchronized List<String> getEventLog() {
+        // Reload using ContentProvider to get latest data
+        eventLog = loadEventLog();
         return new ArrayList<>(eventLog);
     }
 
@@ -229,13 +254,27 @@ public class BatteryDataManager {
     }
 
     private List<String> loadEventLog() {
+        // Use ContentProvider to load data
         List<String> log = new ArrayList<>();
-        String jsonString = prefs.getString(PREF_BATTERY_LOG, "[]");
 
         try {
-            JSONArray jsonArray = new JSONArray(jsonString);
-            for (int i = 0; i < jsonArray.length(); i++) {
-                log.add(jsonArray.getString(i));
+            Cursor cursor = context.getContentResolver().query(
+                EventLogProvider.CONTENT_URI,
+                null, null, null, null
+            );
+
+            if (cursor != null) {
+                if (cursor.moveToFirst()) {
+                    int dataIndex = cursor.getColumnIndex("data");
+                    if (dataIndex != -1) {
+                        String jsonString = cursor.getString(dataIndex);
+                        JSONArray jsonArray = new JSONArray(jsonString);
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            log.add(jsonArray.getString(i));
+                        }
+                    }
+                }
+                cursor.close();
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -251,6 +290,11 @@ public class BatteryDataManager {
             jsonArray.put(entry);
         }
 
-        prefs.edit().putString(PREF_BATTERY_LOG, jsonArray.toString()).apply();
+        String jsonString = jsonArray.toString();
+
+        // Use ContentProvider to save data
+        ContentValues values = new ContentValues();
+        values.put("data", jsonString);
+        context.getContentResolver().insert(EventLogProvider.CONTENT_URI, values);
     }
 }
