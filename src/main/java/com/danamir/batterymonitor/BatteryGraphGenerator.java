@@ -120,12 +120,6 @@ public class BatteryGraphGenerator {
         chargingPaint.setStyle(Paint.Style.STROKE);
         chargingPaint.setAntiAlias(true);
 
-        Paint chargingFillPaint = new Paint();
-        chargingFillPaint.setColor(ContextCompat.getColor(context, R.color.battery_graph_fill_charge));
-        chargingFillPaint.setStyle(Paint.Style.FILL);
-        chargingFillPaint.setAlpha(100);
-        chargingFillPaint.setAntiAlias(true);
-
         // Draw background
         canvas.drawRect(0, 0, width, height, backgroundPaint);
 
@@ -163,12 +157,10 @@ public class BatteryGraphGenerator {
             long startTime = now - timeRange;
 
             List<Path> linePaths = new ArrayList<>();
-            List<Path> fillPaths = new ArrayList<>();
             List<Boolean> lineIsCharging = new ArrayList<>();
-            List<Boolean> fillIsCharging = new ArrayList<>();
+            Path fillPath = new Path();
 
             Path currentLinePath = null;
-            Path currentFillPath = null;
             boolean currentIsCharging = false;
             boolean pathStarted = false;
 
@@ -186,45 +178,41 @@ public class BatteryGraphGenerator {
                     if (pathStarted) {
                         // Add the current point to the previous path for continuity
                         currentLinePath.lineTo(x, y);
-                        currentFillPath.lineTo(x, y);
-                        // Close fill path
-                        currentFillPath.lineTo(x, height - paddingVertical);
-                        currentFillPath.close();
                     }
 
-                    // Start new path
+                    // Start new line path
                     currentLinePath = new Path();
-                    currentFillPath = new Path();
                     currentLinePath.moveTo(x, y);
-                    currentFillPath.moveTo(x, height - paddingVertical);
-                    currentFillPath.lineTo(x, y);
                     currentIsCharging = data.isCharging();
 
                     linePaths.add(currentLinePath);
-                    fillPaths.add(currentFillPath);
                     lineIsCharging.add(currentIsCharging);
-                    fillIsCharging.add(currentIsCharging);
+
+                    // Add to fill path
+                    if (!pathStarted) {
+                        fillPath.moveTo(x, height - paddingVertical);
+                        fillPath.lineTo(x, y);
+                    } else {
+                        fillPath.lineTo(x, y);
+                    }
 
                     pathStarted = true;
                 } else {
                     currentLinePath.lineTo(x, y);
-                    currentFillPath.lineTo(x, y);
+                    fillPath.lineTo(x, y);
                 }
             }
 
-            // Close the last fill path
-            if (pathStarted && currentFillPath != null) {
+            // Close the fill path
+            if (pathStarted) {
                 BatteryData lastData = dataPoints.get(dataPoints.size() - 1);
                 float lastX = paddingHorizontal + (width - 2 * paddingHorizontal) * (lastData.getTimestamp() - startTime) / (float) timeRange;
-                currentFillPath.lineTo(lastX, height - paddingVertical);
-                currentFillPath.close();
+                fillPath.lineTo(lastX, height - paddingVertical);
+                fillPath.close();
             }
 
-            // Draw fill paths first
-            for (int i = 0; i < fillPaths.size(); i++) {
-                Paint paint = fillIsCharging.get(i) ? chargingFillPaint : fillPaint;
-                canvas.drawPath(fillPaths.get(i), paint);
-            }
+            // Draw fill path first
+            canvas.drawPath(fillPath, fillPaint);
 
             // Draw line paths with appropriate color
             for (int i = 0; i < linePaths.size(); i++) {
