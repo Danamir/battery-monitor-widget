@@ -14,9 +14,16 @@ import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
+import android.widget.TextView;
+import androidx.annotation.NonNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -107,7 +114,13 @@ public class ColorPickerView extends LinearLayout {
         // Add spacing
         addSpacing(16);
 
-        // Zone 5: Color swatches
+        // Zone 5: Material 3 color selector
+        addMaterial3ColorSelector();
+
+        // Add spacing
+        addSpacing(16);
+
+        // Zone 6: Color swatches
         addColorSwatches();
     }
 
@@ -153,9 +166,7 @@ public class ColorPickerView extends LinearLayout {
         int themeColorPrimary = 0xFF6750A4;
         int themeColorSecondary = 0xFF625B71;
         int themeColorTertiary = 0xFF7D5260;
-        int themeColorError = 0xFFB3261E;
         int themeColorBackground = 0xFFFFFBFE;
-        int themeColorOutline = 0xFF79747E;
 
         try {
             TypedValue typedValue = new TypedValue();
@@ -176,18 +187,10 @@ public class ColorPickerView extends LinearLayout {
                 themeColorTertiary = typedValue.data;
             }
 
-            if (ctx.getTheme().resolveAttribute(R.attr.materialColorError, typedValue, true)) {
-                themeColorError = typedValue.data;
-            }
-
             if (ctx.getTheme().resolveAttribute(R.attr.materialColorBackground, typedValue, true)) {
                 themeColorBackground = typedValue.data;
             } else if (ctx.getTheme().resolveAttribute(android.R.attr.colorBackground, typedValue, true)) {
                 themeColorBackground = typedValue.data;
-            }
-
-            if (ctx.getTheme().resolveAttribute(R.attr.materialColorOutline, typedValue, true)) {
-                themeColorOutline = typedValue.data;
             }
         } catch (Exception e) {
             // Use fallback colors
@@ -201,9 +204,7 @@ public class ColorPickerView extends LinearLayout {
             themeColorPrimary,    // Material 3 Primary
             themeColorSecondary,  // Material 3 Secondary
             themeColorTertiary,   // Material 3 Tertiary
-            themeColorError,      // Material 3 Error
-            themeColorBackground, // Material 3 Background
-            themeColorOutline     // Material 3 Outline
+            themeColorBackground  // Material 3 Background
         };
 
         LinearLayout basicRow = createSwatchRow(basicColors);
@@ -236,6 +237,151 @@ public class ColorPickerView extends LinearLayout {
 
         mainContainer.addView(swatchContainer);
         addView(mainContainer);
+    }
+
+    private void addMaterial3ColorSelector() {
+        Context ctx = getContext();
+
+        // Create label
+        TextView label = new TextView(ctx);
+        label.setText("Material 3 Colors:");
+        label.setTextSize(14);
+        label.setPadding(0, 0, 0, (int) (8 * getResources().getDisplayMetrics().density));
+        addView(label);
+
+        // Create spinner
+        Spinner spinner = new Spinner(ctx);
+        spinner.setLayoutParams(new LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+        ));
+
+        // Build list of Material 3 colors
+        List<Material3Color> m3Colors = buildMaterial3ColorList(ctx);
+
+        // Create adapter
+        Material3ColorAdapter adapter = new Material3ColorAdapter(ctx, m3Colors);
+        spinner.setAdapter(adapter);
+
+        // Set selection listener
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position > 0) { // Skip the first "Select a color..." item
+                    Material3Color selectedColor = m3Colors.get(position);
+                    setColorFromRGB(selectedColor.color);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+
+        addView(spinner);
+    }
+
+    private List<Material3Color> buildMaterial3ColorList(Context ctx) {
+        List<Material3Color> colors = new ArrayList<>();
+        TypedValue typedValue = new TypedValue();
+
+        colors.add(new Material3Color("Select a Material 3 color...", 0));
+
+        // Helper to add color if it resolves
+        class ColorResolver {
+            void add(String name, int attrId) {
+                if (ctx.getTheme().resolveAttribute(attrId, typedValue, true)) {
+                    colors.add(new Material3Color(name, typedValue.data));
+                }
+            }
+        }
+        ColorResolver resolver = new ColorResolver();
+
+        resolver.add("Primary", R.attr.materialColorPrimary);
+        resolver.add("On Primary", R.attr.materialColorOnPrimary);
+        resolver.add("Primary Container", R.attr.materialColorPrimaryContainer);
+        resolver.add("On Primary Container", R.attr.materialColorOnPrimaryContainer);
+        resolver.add("Secondary", R.attr.materialColorSecondary);
+        resolver.add("On Secondary", R.attr.materialColorOnSecondary);
+        resolver.add("Secondary Container", R.attr.materialColorSecondaryContainer);
+        resolver.add("On Secondary Container", R.attr.materialColorOnSecondaryContainer);
+        resolver.add("Tertiary", R.attr.materialColorTertiary);
+        resolver.add("On Tertiary", R.attr.materialColorOnTertiary);
+        resolver.add("Tertiary Container", R.attr.materialColorTertiaryContainer);
+        resolver.add("On Tertiary Container", R.attr.materialColorOnTertiaryContainer);
+        resolver.add("Error", R.attr.materialColorError);
+        resolver.add("On Error", R.attr.materialColorOnError);
+        resolver.add("Error Container", R.attr.materialColorErrorContainer);
+        resolver.add("On Error Container", R.attr.materialColorOnErrorContainer);
+        resolver.add("Background", R.attr.materialColorBackground);
+        resolver.add("On Background", R.attr.materialColorOnBackground);
+        resolver.add("Surface", R.attr.materialColorSurface);
+        resolver.add("On Surface", R.attr.materialColorOnSurface);
+        resolver.add("Surface Variant", R.attr.materialColorSurfaceVariant);
+        resolver.add("On Surface Variant", R.attr.materialColorOnSurfaceVariant);
+        resolver.add("Outline", R.attr.materialColorOutline);
+        resolver.add("Outline Variant", R.attr.materialColorOutlineVariant);
+
+        return colors;
+    }
+
+    private static class Material3Color {
+        String name;
+        int color;
+
+        Material3Color(String name, int color) {
+            this.name = name;
+            this.color = color;
+        }
+    }
+
+    private static class Material3ColorAdapter extends ArrayAdapter<Material3Color> {
+        private final List<Material3Color> colors;
+
+        Material3ColorAdapter(Context context, List<Material3Color> colors) {
+            super(context, android.R.layout.simple_spinner_item, colors);
+            this.colors = colors;
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        }
+
+        @NonNull
+        @Override
+        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+            return createView(position, convertView, parent);
+        }
+
+        @Override
+        public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
+            return createView(position, convertView, parent);
+        }
+
+        private View createView(int position, View convertView, ViewGroup parent) {
+            Material3Color m3Color = colors.get(position);
+
+            LinearLayout layout = new LinearLayout(getContext());
+            layout.setOrientation(LinearLayout.HORIZONTAL);
+            layout.setPadding(16, 12, 16, 12);
+            layout.setGravity(Gravity.CENTER_VERTICAL);
+
+            // Color preview square (only if not first item)
+            if (position > 0) {
+                View colorView = new View(getContext());
+                int size = (int) (32 * getContext().getResources().getDisplayMetrics().density);
+                LinearLayout.LayoutParams colorParams = new LinearLayout.LayoutParams(size, size);
+                colorParams.setMargins(0, 0, (int) (12 * getContext().getResources().getDisplayMetrics().density), 0);
+                colorView.setLayoutParams(colorParams);
+                colorView.setBackgroundColor(m3Color.color);
+                layout.addView(colorView);
+            }
+
+            // Color name
+            TextView textView = new TextView(getContext());
+            textView.setText(m3Color.name);
+            textView.setTextSize(16);
+            layout.addView(textView);
+
+            return layout;
+        }
     }
 
     private LinearLayout createSwatchRow(int[] colors) {
@@ -881,7 +1027,7 @@ public class ColorPickerView extends LinearLayout {
 
     // Inner class: Square Color swatch view that maintains aspect ratio
     private static class SquareColorSwatchView extends View {
-        private static final int CHECKER_SIZE = 8;
+        private static final int CHECKER_SIZE = 18;
         private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private final Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         private int color;

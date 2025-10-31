@@ -4,10 +4,28 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="materialColorPrimary">?attr/colorPrimary</item>
+        <item name="materialColorOnPrimary">?attr/colorOnPrimary</item>
+        <item name="materialColorPrimaryContainer">?attr/colorPrimaryContainer</item>
+        <item name="materialColorOnPrimaryContainer">?attr/colorOnPrimaryContainer</item>
         <item name="materialColorSecondary">?attr/colorSecondary</item>
+        <item name="materialColorOnSecondary">?attr/colorOnSecondary</item>
+        <item name="materialColorSecondaryContainer">?attr/colorSecondaryContainer</item>
+        <item name="materialColorOnSecondaryContainer">?attr/colorOnSecondaryContainer</item>
         <item name="materialColorTertiary">?attr/colorTertiary</item>
+        <item name="materialColorOnTertiary">?attr/colorOnTertiary</item>
+        <item name="materialColorTertiaryContainer">?attr/colorTertiaryContainer</item>
+        <item name="materialColorOnTertiaryContainer">?attr/colorOnTertiaryContainer</item>
         <item name="materialColorError">?attr/colorError</item>
+        <item name="materialColorOnError">?attr/colorOnError</item>
+        <item name="materialColorErrorContainer">?attr/colorErrorContainer</item>
+        <item name="materialColorOnErrorContainer">?attr/colorOnErrorContainer</item>
         <item name="materialColorBackground">?attr/colorSurface</item>
+        <item name="materialColorOnBackground">?attr/colorOnBackground</item>
+        <item name="materialColorSurface">?attr/colorSurface</item>
+        <item name="materialColorOnSurface">?attr/colorOnSurface</item>
+        <item name="materialColorSurfaceVariant">?attr/colorSurfaceVariant</item>
+        <item name="materialColorOnSurfaceVariant">?attr/colorOnSurfaceVariant</item>
         <item name="materialColorOutline">?attr/colorOutline</item>
+        <item name="materialColorOutlineVariant">?attr/colorOutlineVariant</item>
     </style>
 </resources>
