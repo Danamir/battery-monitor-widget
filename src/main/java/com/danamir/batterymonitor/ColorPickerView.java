@@ -10,10 +10,16 @@ import android.graphics.Shader;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import androidx.preference.PreferenceManager;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Color picker view with HSL+Alpha color space selection.
@@ -39,6 +45,7 @@ public class ColorPickerView extends LinearLayout {
     private HueSliderView hueSlider;
     private AlphaSliderView alphaSlider;
     private EditText redEdit, greenEdit, blueEdit, alphaEdit, hexEdit;
+    private ColorSwatchView currentColorPreview;
 
     // Listener
     private OnColorChangedListener listener;
@@ -98,6 +105,12 @@ public class ColorPickerView extends LinearLayout {
 
         // Zone 4: Text inputs
         addTextInputs();
+
+        // Add spacing
+        addSpacing(16);
+
+        // Zone 5: Color swatches
+        addColorSwatches();
     }
 
     private void addSpacing(int dp) {
@@ -107,6 +120,110 @@ public class ColorPickerView extends LinearLayout {
                 (int) (dp * getResources().getDisplayMetrics().density)
         ));
         addView(space);
+    }
+
+    private void addColorSwatches() {
+        Context ctx = getContext();
+
+        // Create main horizontal container
+        LinearLayout mainContainer = new LinearLayout(ctx);
+        mainContainer.setOrientation(HORIZONTAL);
+        mainContainer.setLayoutParams(new LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+        ));
+        mainContainer.setGravity(Gravity.CENTER_VERTICAL);
+
+        // Current color preview (big square on the left)
+        int previewSize = (int) (80 * getResources().getDisplayMetrics().density);
+        currentColorPreview = new ColorSwatchView(ctx, getColor(), true);
+        LayoutParams previewParams = new LayoutParams(previewSize, previewSize);
+        previewParams.setMargins(0, 0, (int) (8 * getResources().getDisplayMetrics().density), 0);
+        currentColorPreview.setLayoutParams(previewParams);
+        mainContainer.addView(currentColorPreview);
+
+        // Create vertical container for the two rows of swatches
+        LinearLayout swatchContainer = new LinearLayout(ctx);
+        swatchContainer.setOrientation(VERTICAL);
+        swatchContainer.setLayoutParams(new LayoutParams(
+                0,
+                LayoutParams.WRAP_CONTENT,
+                1
+        ));
+
+        // Get theme colors
+        TypedValue typedValue = new TypedValue();
+        ctx.getTheme().resolveAttribute(android.R.attr.colorBackground, typedValue, true);
+        int themeLight = typedValue.data;
+        ctx.getTheme().resolveAttribute(android.R.attr.textColorPrimary, typedValue, true);
+        int themeDark = typedValue.data;
+
+        // First row: basic colors
+        int[] basicColors = {
+            0xFFFFFFFF,  // White
+            0xFF000000,  // Black
+            0xFF808080,  // Grey
+            0x80000000,  // 50% black
+            themeLight,  // Android theme light
+            themeDark    // Android theme dark
+        };
+
+        LinearLayout basicRow = createSwatchRow(basicColors);
+        swatchContainer.addView(basicRow);
+
+        // Add spacing between rows
+        View spacer = new View(ctx);
+        spacer.setLayoutParams(new LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                (int) (4 * getResources().getDisplayMetrics().density)
+        ));
+        swatchContainer.addView(spacer);
+
+        // Second row: recent colors
+        ColorSettingsManager colorManager = new ColorSettingsManager(ctx);
+        List<Integer> recentColors = colorManager.getRecentColors();
+        Collections.reverse(recentColors);
+
+        // Ensure we have exactly 6 swatches (fill with grey if needed)
+        int[] recentColorsArray = new int[6];
+        for (int i = 0; i < 6; i++) {
+            if (i < recentColors.size()) {
+                recentColorsArray[i] = recentColors.get(i);
+            } else {
+                recentColorsArray[i] = 0xFFC0C0C0; // grey
+            }
+        }
+
+        LinearLayout recentRow = createSwatchRow(recentColorsArray);
+        swatchContainer.addView(recentRow);
+
+        mainContainer.addView(swatchContainer);
+        addView(mainContainer);
+    }
+
+    private LinearLayout createSwatchRow(int[] colors) {
+        Context ctx = getContext();
+        LinearLayout row = new LinearLayout(ctx);
+        row.setOrientation(HORIZONTAL);
+        row.setLayoutParams(new LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+        ));
+        row.setGravity(Gravity.CENTER);
+
+        int swatchSize = (int) (36 * getResources().getDisplayMetrics().density);
+        int swatchMargin = (int) (2 * getResources().getDisplayMetrics().density);
+
+        for (int color : colors) {
+            View swatch = new ColorSwatchView(ctx, color);
+            LayoutParams params = new LayoutParams(swatchSize, swatchSize);
+            params.setMargins(swatchMargin, swatchMargin, swatchMargin, swatchMargin);
+            swatch.setLayoutParams(params);
+            swatch.setOnClickListener(v -> setColorFromRGB(color));
+            row.addView(swatch);
+        }
+
+        return row;
     }
 
     private void addTextInputs() {
@@ -332,6 +449,12 @@ public class ColorPickerView extends LinearLayout {
         alphaSlider.invalidate();
 
         int color = getColor();
+
+        // Update current color preview
+        if (currentColorPreview != null) {
+            currentColorPreview.setColor(color);
+            currentColorPreview.invalidate();
+        }
 
         // Update text fields while preserving cursor position
         updateEditText(redEdit, String.valueOf(Color.red(color)));
@@ -653,6 +776,68 @@ public class ColorPickerView extends LinearLayout {
                 return true;
             }
             return super.onTouchEvent(event);
+        }
+    }
+
+    // Inner class: Color swatch view
+    private static class ColorSwatchView extends View {
+        private static final int CHECKER_SIZE = 18;
+        private static final int CHECKER_SIZE_BIG = 24;
+        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private int color;
+        private boolean bigChecker = false;
+
+        public ColorSwatchView(Context context, int color) {
+            super(context);
+            this.color = color;
+            borderPaint.setColor(0x80000000);
+            borderPaint.setStyle(Paint.Style.STROKE);
+            borderPaint.setStrokeWidth(2);
+        }
+
+        public ColorSwatchView(Context context, int color, boolean bigChecker) {
+            this(context, color);
+            this.bigChecker = bigChecker;
+        }
+
+        public void setColor(int color) {
+            this.color = color;
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            int w = getWidth();
+            int h = getHeight();
+            int checkerSize = bigChecker ? CHECKER_SIZE_BIG : CHECKER_SIZE;
+
+            // Draw checker background for transparency
+            if (Color.alpha(color) < 255) {
+                paint.setColor(0xFFCCCCCC);
+                for (int y = 0; y < h; y += checkerSize) {
+                    for (int x = 0; x < w; x += checkerSize) {
+                        if ((x / checkerSize + y / checkerSize) % 2 == 0) {
+                            canvas.drawRect(x, y, x + checkerSize, y + checkerSize, paint);
+                        }
+                    }
+                }
+                paint.setColor(0xFF999999);
+                for (int y = 0; y < h; y += checkerSize) {
+                    for (int x = 0; x < w; x += checkerSize) {
+                        if ((x / checkerSize + y / checkerSize) % 2 == 1) {
+                            canvas.drawRect(x, y, x + checkerSize, y + checkerSize, paint);
+                        }
+                    }
+                }
+            }
+
+            // Draw color
+            paint.setColor(color);
+            canvas.drawRect(0, 0, w, h, paint);
+
+            // Draw border
+            canvas.drawRect(0, 0, w, h, borderPaint);
         }
     }
 }

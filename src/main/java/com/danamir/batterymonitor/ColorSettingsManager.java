@@ -13,6 +13,11 @@ import android.view.View;
 import androidx.appcompat.app.AlertDialog;
 import androidx.preference.PreferenceManager;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 /**
  * Manages color settings for the battery monitor widget.
  * Handles color migration, picker dialogs, and color preference updates.
@@ -71,6 +76,52 @@ public class ColorSettingsManager {
      */
     public void setColor(String key, int color) {
         prefs.edit().putInt(key, color).apply();
+        addToRecentColors(color);
+    }
+
+    /**
+     * Gets the list of recent colors (up to 5).
+     *
+     * @return List of recent colors
+     */
+    public List<Integer> getRecentColors() {
+        Set<String> recentSet = prefs.getStringSet("recent_colors", new HashSet<>());
+        List<Integer> colors = new ArrayList<>();
+        for (String colorStr : recentSet) {
+            try {
+                colors.add(Integer.parseInt(colorStr));
+            } catch (NumberFormatException e) {
+                // Ignore invalid entries
+            }
+        }
+        return colors;
+    }
+
+    /**
+     * Adds a color to the recent colors list.
+     *
+     * @param color The color to add
+     */
+    private void addToRecentColors(int color) {
+        List<Integer> recentColors = getRecentColors();
+
+        // Remove if already exists
+        recentColors.remove(Integer.valueOf(color));
+
+        // Add to beginning
+        recentColors.add(0, color);
+
+        // Keep only last 5
+        if (recentColors.size() > 5) {
+            recentColors = recentColors.subList(0, 5);
+        }
+
+        // Save back
+        Set<String> recentSet = new HashSet<>();
+        for (int c : recentColors) {
+            recentSet.add(String.valueOf(c));
+        }
+        prefs.edit().putStringSet("recent_colors", recentSet).apply();
     }
 
     /**
@@ -137,7 +188,7 @@ public class ColorSettingsManager {
                 .setView(dialogView)
                 .setPositiveButton("OK", (dialog, which) -> {
                     int color = colorPicker.getColor();
-                    prefs.edit().putInt(colorKey, color).apply();
+                    setColor(colorKey, color);
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
