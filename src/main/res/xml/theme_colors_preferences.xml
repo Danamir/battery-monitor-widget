@@ -32,20 +32,20 @@
         android:key="graph_fill_color"
         android:title="@string/graph_fill_color_title"
         android:summary="@string/graph_fill_color_summary"
-        android:defaultValue="0x8080C1E8"
+        android:defaultValue="0x33ADD8E6"
         android:layout="@layout/preference_color" />
 
     <com.danamir.batterymonitor.ColorPreference
         android:key="charging_line_color"
         android:title="@string/charging_line_color_title"
         android:summary="@string/charging_line_color_summary"
-        android:defaultValue="0xFF4191CA"
+        android:defaultValue="0xFFADD8E6"
         android:layout="@layout/preference_color" />
 
     <com.danamir.batterymonitor.ColorPreference
         android:key="user_present_color"
         android:title="@string/user_present_color_title"
         android:summary="@string/user_present_color_summary"
-        android:defaultValue="0x4D87CEEB"
+        android:defaultValue="0xFFFFEB3B"
         android:layout="@layout/preference_color" />
 </PreferenceScreen>

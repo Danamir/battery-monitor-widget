@@ -113,18 +113,18 @@ public class BatteryGraphGenerator {
         textPaint.setAntiAlias(true);
 
         Paint linePaint = new Paint();
-        linePaint.setColor(prefs.getInt("graph_line_color", ContextCompat.getColor(context, R.color.battery_graph_line)));
+        linePaint.setColor(prefs.getInt("graph_line_color", 0xFF4CAF50)); // Green
         linePaint.setStrokeWidth(2f * density);
         linePaint.setStyle(Paint.Style.STROKE);
         linePaint.setAntiAlias(true);
 
         Paint fillPaint = new Paint();
-        fillPaint.setColor(prefs.getInt("graph_fill_color", ContextCompat.getColor(context, R.color.battery_graph_fill)));
+        fillPaint.setColor(prefs.getInt("graph_fill_color", 0x33ADD8E6)); // 20% transparent light blue
         fillPaint.setStyle(Paint.Style.FILL);
         fillPaint.setAntiAlias(true);
 
         Paint chargingPaint = new Paint();
-        chargingPaint.setColor(prefs.getInt("charging_line_color", ContextCompat.getColor(context, R.color.battery_graph_line_charge)));
+        chargingPaint.setColor(prefs.getInt("charging_line_color", 0xFFADD8E6)); // Light blue
         chargingPaint.setStrokeWidth(2f * density);
         chargingPaint.setStyle(Paint.Style.STROKE);
         chargingPaint.setAntiAlias(true);
@@ -237,7 +237,7 @@ public class BatteryGraphGenerator {
             long startTime = now - timeRange;
 
             Paint userPresentPaint = new Paint();
-            userPresentPaint.setColor(prefs.getInt("user_present_color", ContextCompat.getColor(context, R.color.user_present_bar)));
+            userPresentPaint.setColor(prefs.getInt("user_present_color", 0xFFFFEB3B)); // Yellow
             userPresentPaint.setStyle(Paint.Style.FILL);
             userPresentPaint.setAntiAlias(true);
 
