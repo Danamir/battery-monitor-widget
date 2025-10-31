@@ -281,13 +281,25 @@ public class ColorPickerView extends LinearLayout {
         alphaSlider.invalidate();
 
         int color = getColor();
-        redEdit.setText(String.valueOf(Color.red(color)));
-        greenEdit.setText(String.valueOf(Color.green(color)));
-        blueEdit.setText(String.valueOf(Color.blue(color)));
-        alphaEdit.setText(String.valueOf((int)(Color.alpha(color) / 2.55f)));
-        hexEdit.setText(String.format("#%08X", color));
+
+        // Update text fields while preserving cursor position
+        updateEditText(redEdit, String.valueOf(Color.red(color)));
+        updateEditText(greenEdit, String.valueOf(Color.green(color)));
+        updateEditText(blueEdit, String.valueOf(Color.blue(color)));
+        updateEditText(alphaEdit, String.valueOf((int)(Color.alpha(color) / 2.55f)));
+        updateEditText(hexEdit, String.format("#%08X", color));
 
         isUpdating = false;
+    }
+
+    private void updateEditText(EditText editText, String newText) {
+        if (!editText.getText().toString().equals(newText)) {
+            int cursorPosition = editText.getSelectionStart();
+            editText.setText(newText);
+            // Restore cursor position, clamped to new text length
+            int newPosition = Math.min(cursorPosition, newText.length());
+            editText.setSelection(newPosition);
+        }
     }
 
     private void notifyColorChanged() {
