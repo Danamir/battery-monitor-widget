@@ -64,6 +64,12 @@
             android:enabled="true"
             android:exported="false" />
 
+        <provider
+            android:name=".StatusProvider"
+            android:authorities="com.danamir.batterymonitor.status"
+            android:enabled="true"
+            android:exported="false" />
+
     </application>
 
 </manifest>
