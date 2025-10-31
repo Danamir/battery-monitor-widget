@@ -43,6 +43,7 @@ public class ColorPickerView extends LinearLayout {
     // Listener
     private OnColorChangedListener listener;
     private boolean isUpdating = false;
+    private EditText currentlyEditingField = null;
 
     public interface OnColorChangedListener {
         void onColorChanged(int color);
@@ -163,6 +164,15 @@ public class ColorPickerView extends LinearLayout {
         edit.setSingleLine();
         edit.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
         edit.setGravity(android.view.Gravity.CENTER);
+        edit.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(3)});
+
+        edit.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                currentlyEditingField = edit;
+            } else if (currentlyEditingField == edit) {
+                currentlyEditingField = null;
+            }
+        });
 
         edit.addTextChangedListener(new TextWatcher() {
             @Override
@@ -174,7 +184,29 @@ public class ColorPickerView extends LinearLayout {
             @Override
             public void afterTextChanged(Editable s) {
                 if (isUpdating) return;
+
+                // Enforce value limits
                 try {
+                    String text = s.toString();
+                    if (text.isEmpty()) return;
+
+                    int value = Integer.parseInt(text);
+                    int max = (edit == alphaEdit) ? 100 : 255;
+
+                    if (value > max) {
+                        isUpdating = true;
+                        edit.setText(String.valueOf(max));
+                        edit.setSelection(edit.getText().length());
+                        isUpdating = false;
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    return;
+                }
+
+                // Update color if all fields are valid
+                try {
+                    currentlyEditingField = edit;
                     int r = Integer.parseInt(redEdit.getText().toString());
                     int g = Integer.parseInt(greenEdit.getText().toString());
                     int b = Integer.parseInt(blueEdit.getText().toString());
@@ -186,6 +218,8 @@ public class ColorPickerView extends LinearLayout {
                     }
                 } catch (NumberFormatException e) {
                     // Ignore invalid input
+                } finally {
+                    currentlyEditingField = null;
                 }
             }
         });
@@ -209,6 +243,19 @@ public class ColorPickerView extends LinearLayout {
         edit.setTextSize(14);
         edit.setSingleLine();
         edit.setGravity(android.view.Gravity.CENTER);
+        edit.setFilters(new android.text.InputFilter[]{
+            new android.text.InputFilter.LengthFilter(9),
+            new android.text.InputFilter.AllCaps()
+        });
+
+        edit.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                currentlyEditingField = edit;
+            } else if (currentlyEditingField == edit) {
+                currentlyEditingField = null;
+            }
+        });
+
         edit.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -220,10 +267,12 @@ public class ColorPickerView extends LinearLayout {
             public void afterTextChanged(Editable s) {
                 if (isUpdating) return;
                 try {
+                    currentlyEditingField = edit;
                     String hex = s.toString().trim();
                     if (hex.startsWith("#")) {
                         hex = hex.substring(1);
                     }
+
                     if (hex.length() == 8 || hex.length() == 6) {
                         int color = (int) Long.parseLong(hex, 16);
                         if (hex.length() == 6) {
@@ -233,6 +282,8 @@ public class ColorPickerView extends LinearLayout {
                     }
                 } catch (NumberFormatException e) {
                     // Ignore invalid input
+                } finally {
+                    currentlyEditingField = null;
                 }
             }
         });
@@ -293,6 +344,10 @@ public class ColorPickerView extends LinearLayout {
     }
 
     private void updateEditText(EditText editText, String newText) {
+        // Skip updating the field that's currently being edited
+        if (editText == currentlyEditingField) {
+            return;
+        }
         if (!editText.getText().toString().equals(newText)) {
             int cursorPosition = editText.getSelectionStart();
             editText.setText(newText);
