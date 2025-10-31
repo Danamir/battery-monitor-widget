@@ -387,12 +387,37 @@ public class ColorPickerView extends LinearLayout {
             bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(bitmap);
 
+            // Get the pure hue color at full saturation and 50% lightness
+            int pureColor = hslToRgb(hue, 1f, 0.5f);
+            int pureR = Color.red(pureColor);
+            int pureG = Color.green(pureColor);
+            int pureB = Color.blue(pureColor);
+
             for (int y = 0; y < h; y++) {
                 for (int x = 0; x < w; x++) {
-                    float s = x / (float) w;
-                    float l = 1 - (y / (float) h);
-                    int color = hslToRgb(hue, s, l);
-                    paint.setColor(color);
+                    float saturationRatio = x / (float) w;  // 0 (left) to 1 (right)
+                    float lightnessRatio = 1 - (y / (float) h);  // 1 (top) to 0 (bottom)
+
+                    // Interpolate between white (top-left), pure color (top-right), and black (bottom)
+                    // Top row: white to pure color
+                    // Bottom row: black to black
+                    int r, g, b;
+
+                    if (lightnessRatio == 0) {
+                        // Bottom row is always black
+                        r = g = b = 0;
+                    } else {
+                        // Interpolate based on saturation (left to right)
+                        float whiteAmount = (1 - saturationRatio) * lightnessRatio;
+                        float colorAmount = saturationRatio * lightnessRatio;
+                        float blackAmount = 1 - lightnessRatio;
+
+                        r = (int) (255 * whiteAmount + pureR * colorAmount);
+                        g = (int) (255 * whiteAmount + pureG * colorAmount);
+                        b = (int) (255 * whiteAmount + pureB * colorAmount);
+                    }
+
+                    paint.setColor(Color.rgb(r, g, b));
                     canvas.drawPoint(x, y, paint);
                 }
             }
