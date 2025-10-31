@@ -1,18 +1,8 @@
 package com.danamir.batterymonitor;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.SeekBar;
-import android.widget.TextView;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceFragmentCompat;
@@ -55,6 +45,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     public static class SettingsFragment extends PreferenceFragmentCompat {
         private android.content.SharedPreferences.OnSharedPreferenceChangeListener preferenceChangeListener;
+        private ColorSettingsManager colorSettingsManager;
 
         @Override
         public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
@@ -66,27 +57,11 @@ public class SettingsActivity extends AppCompatActivity {
 
             android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext());
 
+            // Initialize color settings manager
+            colorSettingsManager = new ColorSettingsManager(getContext());
+
             // Migrate old preferences
-            android.content.SharedPreferences.Editor editor = prefs.edit();
-            boolean needsMigration = false;
-
-            // Migrate color preferences
-            if (!prefs.contains("main_color")) {
-                if (prefs.contains("background_color")) {
-                    int color = prefs.getInt("background_color", 0x80000000);
-                    editor.putInt("main_color", color).remove("background_color");
-                    needsMigration = true;
-                } else if (prefs.contains("background_alpha")) {
-                    int alpha = Math.round(prefs.getInt("background_alpha", 100) * 255f / 100f);
-                    int color = Color.argb(alpha, 0, 0, 0);
-                    editor.putInt("main_color", color).remove("background_alpha");
-                    needsMigration = true;
-                }
-            }
-
-            if (needsMigration) {
-                editor.apply();
-            }
+            colorSettingsManager.migrateColorPreferences();
 
             // Register a global preference change listener for immediate updates
             preferenceChangeListener = (sharedPreferences, key) -> {
@@ -204,14 +179,8 @@ public class SettingsActivity extends AppCompatActivity {
 
         private void updateColorPreferenceSummary(androidx.preference.Preference colorPref, String key) {
             if (colorPref != null) {
-                android.content.SharedPreferences prefs =
-                        androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext());
-                int color = prefs.getInt(key, 0x80000000);
-                int alpha = Color.alpha(color);
-                int red = Color.red(color);
-                int green = Color.green(color);
-                int blue = Color.blue(color);
-                colorPref.setSummary(String.format("ARGB: %d, %d, %d, %d", alpha, red, green, blue));
+                int color = colorSettingsManager.getColor(key, 0x80000000);
+                colorPref.setSummary(colorSettingsManager.formatColorSummary(color));
             }
         }
 
@@ -238,110 +207,8 @@ public class SettingsActivity extends AppCompatActivity {
             }
         }
 
-        private Drawable createCheckerPattern() {
-            int tileSize = 20; // Size of each checker square in pixels
-            int patternSize = tileSize * 2;
-            Bitmap bitmap = Bitmap.createBitmap(patternSize, patternSize, Bitmap.Config.ARGB_8888);
-            Canvas canvas = new Canvas(bitmap);
-
-            Paint lightPaint = new Paint();
-            lightPaint.setColor(0xFFCCCCCC); // Light gray
-            lightPaint.setStyle(Paint.Style.FILL);
-
-            Paint darkPaint = new Paint();
-            darkPaint.setColor(0xFF999999); // Dark gray
-            darkPaint.setStyle(Paint.Style.FILL);
-
-            // Draw checker pattern
-            canvas.drawRect(0, 0, tileSize, tileSize, lightPaint);
-            canvas.drawRect(tileSize, 0, patternSize, tileSize, darkPaint);
-            canvas.drawRect(0, tileSize, tileSize, patternSize, darkPaint);
-            canvas.drawRect(tileSize, tileSize, patternSize, patternSize, lightPaint);
-
-            BitmapDrawable drawable = new BitmapDrawable(getResources(), bitmap);
-            drawable.setTileModeXY(android.graphics.Shader.TileMode.REPEAT, android.graphics.Shader.TileMode.REPEAT);
-            return drawable;
-        }
-
         private void showColorPickerDialog(String colorKey, String title) {
-            android.content.SharedPreferences prefs =
-                    androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext());
-            int currentColor = prefs.getInt(colorKey, 0x80000000);
-
-            View dialogView = LayoutInflater.from(getContext()).inflate(R.layout.dialog_color_picker, null);
-            View checkerBackground = dialogView.findViewById(R.id.checker_background);
-            TextView colorPreview = dialogView.findViewById(R.id.color_preview);
-            SeekBar alphaSeekBar = dialogView.findViewById(R.id.alpha_seekbar);
-            SeekBar redSeekBar = dialogView.findViewById(R.id.red_seekbar);
-            SeekBar greenSeekBar = dialogView.findViewById(R.id.green_seekbar);
-            SeekBar blueSeekBar = dialogView.findViewById(R.id.blue_seekbar);
-            TextView alphaValue = dialogView.findViewById(R.id.alpha_value);
-            TextView redValue = dialogView.findViewById(R.id.red_value);
-            TextView greenValue = dialogView.findViewById(R.id.green_value);
-            TextView blueValue = dialogView.findViewById(R.id.blue_value);
-
-            // Set checker pattern background
-            checkerBackground.setBackground(createCheckerPattern());
-
-            // Set initial values
-            alphaSeekBar.setProgress(Color.alpha(currentColor));
-            redSeekBar.setProgress(Color.red(currentColor));
-            greenSeekBar.setProgress(Color.green(currentColor));
-            blueSeekBar.setProgress(Color.blue(currentColor));
-            alphaValue.setText(String.valueOf(Color.alpha(currentColor)));
-            redValue.setText(String.valueOf(Color.red(currentColor)));
-            greenValue.setText(String.valueOf(Color.green(currentColor)));
-            blueValue.setText(String.valueOf(Color.blue(currentColor)));
-            colorPreview.setBackgroundColor(currentColor);
-
-            // Update preview on seekbar change
-            SeekBar.OnSeekBarChangeListener listener = new SeekBar.OnSeekBarChangeListener() {
-                @Override
-                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                    // Update value displays
-                    alphaValue.setText(String.valueOf(alphaSeekBar.getProgress()));
-                    redValue.setText(String.valueOf(redSeekBar.getProgress()));
-                    greenValue.setText(String.valueOf(greenSeekBar.getProgress()));
-                    blueValue.setText(String.valueOf(blueSeekBar.getProgress()));
-
-                    // Update color preview
-                    int color = Color.argb(
-                            alphaSeekBar.getProgress(),
-                            redSeekBar.getProgress(),
-                            greenSeekBar.getProgress(),
-                            blueSeekBar.getProgress()
-                    );
-                    colorPreview.setBackgroundColor(color);
-                }
-
-                @Override
-                public void onStartTrackingTouch(SeekBar seekBar) {
-                }
-
-                @Override
-                public void onStopTrackingTouch(SeekBar seekBar) {
-                }
-            };
-
-            alphaSeekBar.setOnSeekBarChangeListener(listener);
-            redSeekBar.setOnSeekBarChangeListener(listener);
-            greenSeekBar.setOnSeekBarChangeListener(listener);
-            blueSeekBar.setOnSeekBarChangeListener(listener);
-
-            new AlertDialog.Builder(getContext())
-                    .setTitle(title)
-                    .setView(dialogView)
-                    .setPositiveButton("OK", (dialog, which) -> {
-                        int color = Color.argb(
-                                alphaSeekBar.getProgress(),
-                                redSeekBar.getProgress(),
-                                greenSeekBar.getProgress(),
-                                blueSeekBar.getProgress()
-                        );
-                        prefs.edit().putInt(colorKey, color).apply();
-                    })
-                    .setNegativeButton("Cancel", null)
-                    .show();
+            colorSettingsManager.showColorPickerDialog(colorKey, title);
         }
 
         private void showEventLogDialog() {
