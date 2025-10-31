@@ -14,8 +14,29 @@ public class BatteryReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
 
-        if (Intent.ACTION_SCREEN_ON.equals(action) || Intent.ACTION_USER_PRESENT.equals(action)) {
-            // User turned on screen or unlocked device - update widgets to show latest data
+        if (Intent.ACTION_USER_PRESENT.equals(action)) {
+            // User unlocked device - start user_present status
+            StatusManager statusManager = StatusManager.getInstance(context);
+            statusManager.startStatus("user_present", System.currentTimeMillis());
+
+            // Log unlock event
+            EventLogManager eventLogManager = EventLogManager.getInstance(context);
+            eventLogManager.logEvent("Device unlocked");
+
+            BatteryWidgetProvider.updateAllWidgets(context);
+            return;
+        }
+
+        if (Intent.ACTION_SCREEN_OFF.equals(action)) {
+            // Screen turned off - end user_present status
+            StatusManager statusManager = StatusManager.getInstance(context);
+            statusManager.endStatus("user_present", System.currentTimeMillis());
+            BatteryWidgetProvider.updateAllWidgets(context);
+            return;
+        }
+
+        if (Intent.ACTION_SCREEN_ON.equals(action)) {
+            // Screen turned on - update widgets to show latest data
             BatteryWidgetProvider.updateAllWidgets(context);
             return;
         }

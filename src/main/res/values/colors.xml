@@ -5,7 +5,9 @@
     <color name="colorAccent">#03DAC5</color>
     <color name="battery_graph_line">#4CAF50</color>
     <color name="battery_graph_fill">#80C1E8</color>
+    <color name="battery_graph_line_charge">#4191CA</color>
     <color name="battery_graph_grid">#E0E0E0</color>
     <color name="battery_graph_text">#757575</color>
     <color name="widget_background">#FFFFFF</color>
+    <color name="user_present_bar">#4D87CEEB</color>
 </resources>

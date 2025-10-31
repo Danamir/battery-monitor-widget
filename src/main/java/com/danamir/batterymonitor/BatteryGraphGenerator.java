@@ -2,7 +2,6 @@ package com.danamir.batterymonitor;
 
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
@@ -10,6 +9,7 @@ import android.graphics.Picture;
 
 import androidx.core.content.ContextCompat;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class BatteryGraphGenerator {
@@ -50,22 +50,23 @@ public class BatteryGraphGenerator {
         Picture picture = new Picture();
         Canvas canvas = picture.beginRecording(width, height);
 
-        drawGraph(context, canvas, dataPoints, displayHours, width, height);
+        drawGraph(context, canvas, dataPoints, null, displayHours, width, height);
 
         picture.endRecording();
         return picture;
     }
 
-    public static Bitmap generateGraphAsBitmap(Context context, List<BatteryData> dataPoints, int displayHours, int width, int height) {
-        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
+    public static Picture generateGraphAsPicture(Context context, List<BatteryData> dataPoints, List<StatusData> statusData, int displayHours, int width, int height) {
+        Picture picture = new Picture();
+        Canvas canvas = picture.beginRecording(width, height);
 
-        drawGraph(context, canvas, dataPoints, displayHours, width, height);
+        drawGraph(context, canvas, dataPoints, statusData, displayHours, width, height);
 
-        return bitmap;
+        picture.endRecording();
+        return picture;
     }
 
-    private static void drawGraph(Context context, Canvas canvas, List<BatteryData> dataPoints, int displayHours, int width, int height) {
+    private static void drawGraph(Context context, Canvas canvas, List<BatteryData> dataPoints, List<StatusData> statusData, int displayHours, int width, int height) {
         // Get padding and colors from preferences
         android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
         int paddingHorizontalDp = prefs.getInt("horizontal_padding", 40);
@@ -113,7 +114,7 @@ public class BatteryGraphGenerator {
 
         Paint linePaint = new Paint();
         linePaint.setColor(ContextCompat.getColor(context, R.color.battery_graph_line));
-        linePaint.setStrokeWidth(3f * density);
+        linePaint.setStrokeWidth(2f * density);
         linePaint.setStyle(Paint.Style.STROKE);
         linePaint.setAntiAlias(true);
 
@@ -124,7 +125,7 @@ public class BatteryGraphGenerator {
         fillPaint.setAntiAlias(true);
 
         Paint chargingPaint = new Paint();
-        chargingPaint.setColor(0xFFFFC107); // Amber color
+        chargingPaint.setColor(ContextCompat.getColor(context, R.color.battery_graph_line_charge));
         chargingPaint.setStrokeWidth(2f * density);
         chargingPaint.setStyle(Paint.Style.STROKE);
         chargingPaint.setAntiAlias(true);
@@ -159,14 +160,61 @@ public class BatteryGraphGenerator {
             canvas.drawLine(x, paddingVertical, x, height - paddingVertical, gridPaint);
         }
 
+        // Draw user_present status bar at the bottom
+        if (statusData != null && !statusData.isEmpty()) {
+            long now = System.currentTimeMillis();
+            long timeRange = displayHours * 60 * 60 * 1000L;
+            long startTime = now - timeRange;
+
+            Paint userPresentPaint = new Paint();
+            userPresentPaint.setColor(ContextCompat.getColor(context, R.color.user_present_bar));
+            userPresentPaint.setStyle(Paint.Style.FILL);
+            userPresentPaint.setAntiAlias(true);
+
+            // Height of the status bar
+            float barHeight = 8 * density;
+            float barBottom = height - paddingVertical;
+            float barTop = barBottom - barHeight;
+
+            for (StatusData status : statusData) {
+                if (!status.getStatusName().equals("user_present")) {
+                    continue;
+                }
+
+                long statusStart = Math.max(status.getStartTimestamp(), startTime);
+                long statusEnd = status.getEndTimestamp();
+
+                // Handle ongoing status
+                if (statusEnd == 0 || statusEnd > now) {
+                    statusEnd = now;
+                }
+
+                // Skip if status is entirely outside the time range
+                if (statusStart > now || statusEnd < startTime) {
+                    continue;
+                }
+
+                // Calculate x positions
+                float x1 = paddingHorizontal + (width - 2 * paddingHorizontal) * (statusStart - startTime) / (float) timeRange;
+                float x2 = paddingHorizontal + (width - 2 * paddingHorizontal) * (statusEnd - startTime) / (float) timeRange;
+
+                // Draw the filled bar
+                canvas.drawRect(x1, barTop, x2, barBottom, userPresentPaint);
+            }
+        }
+
         // Draw battery level graph
         if (dataPoints.size() >= 2) {
             long now = System.currentTimeMillis();
             long timeRange = displayHours * 60 * 60 * 1000L;
             long startTime = now - timeRange;
 
-            Path linePath = new Path();
+            List<Path> linePaths = new ArrayList<>();
+            List<Boolean> lineIsCharging = new ArrayList<>();
             Path fillPath = new Path();
+
+            Path currentLinePath = null;
+            boolean currentIsCharging = false;
             boolean pathStarted = false;
 
             for (int i = 0; i < dataPoints.size(); i++) {
@@ -177,31 +225,53 @@ public class BatteryGraphGenerator {
                 float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (data.getTimestamp() - startTime) / (float) timeRange;
                 float y = paddingVertical + (height - 2 * paddingVertical) * (100 - data.getLevel()) / 100f;
 
-                if (!pathStarted) {
-                    linePath.moveTo(x, y);
-                    fillPath.moveTo(x, height - paddingVertical);
-                    fillPath.lineTo(x, y);
+                // Detect charging state change or path start
+                if (!pathStarted || data.isCharging() != currentIsCharging) {
+                    // End previous path if exists
+                    if (pathStarted) {
+                        // Add the current point to the previous path for continuity
+                        currentLinePath.lineTo(x, y);
+                    }
+
+                    // Start new line path
+                    currentLinePath = new Path();
+                    currentLinePath.moveTo(x, y);
+                    currentIsCharging = data.isCharging();
+
+                    linePaths.add(currentLinePath);
+                    lineIsCharging.add(currentIsCharging);
+
+                    // Add to fill path
+                    if (!pathStarted) {
+                        fillPath.moveTo(x, height - paddingVertical);
+                        fillPath.lineTo(x, y);
+                    } else {
+                        fillPath.lineTo(x, y);
+                    }
+
                     pathStarted = true;
                 } else {
-                    linePath.lineTo(x, y);
+                    currentLinePath.lineTo(x, y);
                     fillPath.lineTo(x, y);
-                }
-
-                // Draw charging indicator
-                if (data.isCharging()) {
-                    canvas.drawCircle(x, y, 4, chargingPaint);
                 }
             }
 
-            // Close fill path
-            BatteryData lastData = dataPoints.get(dataPoints.size() - 1);
-            float lastX = paddingHorizontal + (width - 2 * paddingHorizontal) * (lastData.getTimestamp() - startTime) / (float) timeRange;
-            fillPath.lineTo(lastX, height - paddingVertical);
-            fillPath.close();
+            // Close the fill path
+            if (pathStarted) {
+                BatteryData lastData = dataPoints.get(dataPoints.size() - 1);
+                float lastX = paddingHorizontal + (width - 2 * paddingHorizontal) * (lastData.getTimestamp() - startTime) / (float) timeRange;
+                fillPath.lineTo(lastX, height - paddingVertical);
+                fillPath.close();
+            }
 
-            // Draw fill first, then line
+            // Draw fill path first
             canvas.drawPath(fillPath, fillPaint);
-            canvas.drawPath(linePath, linePaint);
+
+            // Draw line paths with appropriate color
+            for (int i = 0; i < linePaths.size(); i++) {
+                Paint paint = lineIsCharging.get(i) ? chargingPaint : linePaint;
+                canvas.drawPath(linePaths.get(i), paint);
+            }
         }
 
         // Draw current battery level

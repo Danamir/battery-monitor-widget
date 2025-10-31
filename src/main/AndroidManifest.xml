@@ -50,19 +50,23 @@
             android:name=".BatteryMonitorService"
             android:enabled="true"
             android:exported="false"
-            android:process=":battery_monitor"
-            android:foregroundServiceType="dataSync" />
-
-        <service
-            android:name=".BatteryMonitorGuardService"
-            android:enabled="true"
-            android:exported="false"
-            android:process=":guard"
             android:foregroundServiceType="dataSync" />
 
         <provider
             android:name=".EventLogProvider"
             android:authorities="com.danamir.batterymonitor.eventlog"
+            android:enabled="true"
+            android:exported="false" />
+
+        <provider
+            android:name=".DataProvider"
+            android:authorities="com.danamir.batterymonitor.data"
+            android:enabled="true"
+            android:exported="false" />
+
+        <provider
+            android:name=".StatusProvider"
+            android:authorities="com.danamir.batterymonitor.status"
             android:enabled="true"
             android:exported="false" />
 

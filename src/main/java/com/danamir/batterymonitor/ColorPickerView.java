@@ -1,0 +1,1140 @@
+package com.danamir.batterymonitor;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.LinearGradient;
+import android.graphics.Paint;
+import android.graphics.Shader;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.AttributeSet;
+import android.util.TypedValue;
+import android.view.Gravity;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.Spinner;
+import android.widget.TextView;
+import androidx.annotation.NonNull;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Color picker view with HSL+Alpha color space selection.
+ * Provides:
+ * - 2:1 rectangular zone for saturation/lightness selection
+ * - Hue slider with rainbow gradient
+ * - Alpha slider with checker background
+ * - Text inputs for R, G, B, Alpha, and Hex values
+ */
+public class ColorPickerView extends LinearLayout {
+    private static final int SL_PICKER_HEIGHT = 300;
+    private static final int SLIDER_HEIGHT = 60;
+    private static final int CHECKER_SIZE = 20;
+
+    // Color components
+    private float hue = 0f;        // 0-360
+    private float saturation = 1f; // 0-1
+    private float lightness = 0.5f; // 0-1
+    private int alpha = 255;       // 0-255
+
+    // Views
+    private SaturationLightnessView slView;
+    private HueSliderView hueSlider;
+    private AlphaSliderView alphaSlider;
+    private EditText redEdit, greenEdit, blueEdit, alphaEdit, hexEdit;
+    private ColorSwatchView currentColorPreview;
+
+    // Listener
+    private OnColorChangedListener listener;
+    private boolean isUpdating = false;
+    private EditText currentlyEditingField = null;
+
+    public interface OnColorChangedListener {
+        void onColorChanged(int color);
+    }
+
+    public ColorPickerView(Context context) {
+        super(context);
+        init();
+    }
+
+    public ColorPickerView(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        init();
+    }
+
+    private void init() {
+        setOrientation(VERTICAL);
+        setPadding(24, 24, 24, 24);
+
+        // Zone 1: Saturation/Lightness picker (2:1 ratio)
+        slView = new SaturationLightnessView(getContext());
+        slView.setLayoutParams(new LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                SL_PICKER_HEIGHT
+        ));
+        addView(slView);
+
+        // Add spacing
+        addSpacing(16);
+
+        // Zone 2: Hue slider
+        hueSlider = new HueSliderView(getContext());
+        hueSlider.setLayoutParams(new LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                SLIDER_HEIGHT
+        ));
+        addView(hueSlider);
+
+        // Add spacing
+        addSpacing(16);
+
+        // Zone 3: Alpha slider
+        alphaSlider = new AlphaSliderView(getContext());
+        alphaSlider.setLayoutParams(new LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                SLIDER_HEIGHT
+        ));
+        addView(alphaSlider);
+
+        // Add spacing
+        addSpacing(16);
+
+        // Zone 4: Text inputs
+        addTextInputs();
+
+        // Add spacing
+        addSpacing(16);
+
+        // Zone 5: Color swatches
+        addColorSwatches();
+
+        // Add spacing
+        addSpacing(16);
+
+        // Zone 6: Material 3 color selector
+        addMaterial3ColorSelector();
+    }
+
+    private void addSpacing(int dp) {
+        View space = new View(getContext());
+        space.setLayoutParams(new LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                (int) (dp * getResources().getDisplayMetrics().density)
+        ));
+        addView(space);
+    }
+
+    private void addColorSwatches() {
+        Context ctx = getContext();
+
+        // Create main horizontal container
+        LinearLayout mainContainer = new LinearLayout(ctx);
+        mainContainer.setOrientation(HORIZONTAL);
+        mainContainer.setLayoutParams(new LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+        ));
+        mainContainer.setGravity(Gravity.CENTER_VERTICAL);
+
+        // Current color preview (big square on the left)
+        int previewSize = (int) (80 * getResources().getDisplayMetrics().density);
+        currentColorPreview = new ColorSwatchView(ctx, getColor(), true);
+        LayoutParams previewParams = new LayoutParams(previewSize, previewSize);
+        previewParams.setMargins(0, 0, (int) (8 * getResources().getDisplayMetrics().density), 0);
+        currentColorPreview.setLayoutParams(previewParams);
+        mainContainer.addView(currentColorPreview);
+
+        // Create vertical container for the two rows of swatches
+        LinearLayout swatchContainer = new LinearLayout(ctx);
+        swatchContainer.setOrientation(VERTICAL);
+        swatchContainer.setLayoutParams(new LayoutParams(
+                0,
+                LayoutParams.WRAP_CONTENT,
+                1
+        ));
+
+        // Get Material 3 dynamic colors from system theme
+        int themeColorPrimary = 0xFF6750A4;
+        int themeColorSecondary = 0xFF625B71;
+        int themeColorTertiary = 0xFF7D5260;
+        int themeColorBackground = 0xFFFFFBFE;
+
+        try {
+            TypedValue typedValue = new TypedValue();
+
+            if (ctx.getTheme().resolveAttribute(R.attr.materialColorPrimary, typedValue, true)) {
+                themeColorPrimary = typedValue.data;
+            } else if (ctx.getTheme().resolveAttribute(android.R.attr.colorPrimary, typedValue, true)) {
+                themeColorPrimary = typedValue.data;
+            }
+
+            if (ctx.getTheme().resolveAttribute(R.attr.materialColorSecondary, typedValue, true)) {
+                themeColorSecondary = typedValue.data;
+            } else if (ctx.getTheme().resolveAttribute(android.R.attr.colorAccent, typedValue, true)) {
+                themeColorSecondary = typedValue.data;
+            }
+
+            if (ctx.getTheme().resolveAttribute(R.attr.materialColorTertiary, typedValue, true)) {
+                themeColorTertiary = typedValue.data;
+            }
+
+            if (ctx.getTheme().resolveAttribute(R.attr.materialColorBackground, typedValue, true)) {
+                themeColorBackground = typedValue.data;
+            } else if (ctx.getTheme().resolveAttribute(android.R.attr.colorBackground, typedValue, true)) {
+                themeColorBackground = typedValue.data;
+            }
+        } catch (Exception e) {
+            // Use fallback colors
+        }
+
+        // First row: basic colors
+        int[] basicColors = {
+            0xFFFFFFFF,           // White
+            0xFF000000,           // Black
+            0x1A000000,           // 10% transparent black
+            themeColorPrimary,    // Material 3 Primary
+            themeColorSecondary,  // Material 3 Secondary
+            themeColorTertiary,   // Material 3 Tertiary
+            themeColorBackground  // Material 3 Background
+        };
+
+        LinearLayout basicRow = createSwatchRow(basicColors);
+        swatchContainer.addView(basicRow);
+
+        // Add spacing between rows
+        View spacer = new View(ctx);
+        spacer.setLayoutParams(new LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                (int) (4 * getResources().getDisplayMetrics().density)
+        ));
+        swatchContainer.addView(spacer);
+
+        // Second row: recent colors (match number of basic colors)
+        ColorSettingsManager colorManager = new ColorSettingsManager(ctx);
+        List<Integer> recentColors = colorManager.getRecentColors();
+
+        int numSwatches = basicColors.length;
+        int[] recentColorsArray = new int[numSwatches];
+        for (int i = 0; i < numSwatches; i++) {
+            if (i < recentColors.size()) {
+                recentColorsArray[i] = recentColors.get(i);
+            } else {
+                recentColorsArray[i] = 0x00000000; // Transparent
+            }
+        }
+
+        LinearLayout recentRow = createSwatchRow(recentColorsArray);
+        swatchContainer.addView(recentRow);
+
+        mainContainer.addView(swatchContainer);
+        addView(mainContainer);
+    }
+
+    private void addMaterial3ColorSelector() {
+        Context ctx = getContext();
+
+        // Create spinner
+        Spinner spinner = new Spinner(ctx);
+        spinner.setLayoutParams(new LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+        ));
+
+        // Build list of Material 3 colors
+        List<Material3Color> m3Colors = buildMaterial3ColorList(ctx);
+
+        // Create adapter
+        Material3ColorAdapter adapter = new Material3ColorAdapter(ctx, m3Colors);
+        spinner.setAdapter(adapter);
+
+        // Set selection listener
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (position > 0) { // Skip the first "Select a color..." item
+                    Material3Color selectedColor = m3Colors.get(position);
+                    setColorFromRGB(selectedColor.color);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+
+        addView(spinner);
+    }
+
+    private List<Material3Color> buildMaterial3ColorList(Context ctx) {
+        List<Material3Color> colors = new ArrayList<>();
+        TypedValue typedValue = new TypedValue();
+
+        colors.add(new Material3Color("Select a Material color...", 0));
+
+        // Helper to add color if it resolves
+        class ColorResolver {
+            void add(String name, int attrId) {
+                if (ctx.getTheme().resolveAttribute(attrId, typedValue, true)) {
+                    colors.add(new Material3Color(name, typedValue.data));
+                }
+            }
+        }
+        ColorResolver resolver = new ColorResolver();
+
+        resolver.add("Primary", R.attr.materialColorPrimary);
+        resolver.add("On Primary", R.attr.materialColorOnPrimary);
+        resolver.add("Primary Container", R.attr.materialColorPrimaryContainer);
+        resolver.add("On Primary Container", R.attr.materialColorOnPrimaryContainer);
+        resolver.add("Secondary", R.attr.materialColorSecondary);
+        resolver.add("On Secondary", R.attr.materialColorOnSecondary);
+        resolver.add("Secondary Container", R.attr.materialColorSecondaryContainer);
+        resolver.add("On Secondary Container", R.attr.materialColorOnSecondaryContainer);
+        resolver.add("Tertiary", R.attr.materialColorTertiary);
+        resolver.add("On Tertiary", R.attr.materialColorOnTertiary);
+        resolver.add("Tertiary Container", R.attr.materialColorTertiaryContainer);
+        resolver.add("On Tertiary Container", R.attr.materialColorOnTertiaryContainer);
+        resolver.add("Error", R.attr.materialColorError);
+        resolver.add("On Error", R.attr.materialColorOnError);
+        resolver.add("Error Container", R.attr.materialColorErrorContainer);
+        resolver.add("On Error Container", R.attr.materialColorOnErrorContainer);
+        resolver.add("Background", R.attr.materialColorBackground);
+        resolver.add("On Background", R.attr.materialColorOnBackground);
+        resolver.add("Surface", R.attr.materialColorSurface);
+        resolver.add("On Surface", R.attr.materialColorOnSurface);
+        resolver.add("Surface Variant", R.attr.materialColorSurfaceVariant);
+        resolver.add("On Surface Variant", R.attr.materialColorOnSurfaceVariant);
+        resolver.add("Outline", R.attr.materialColorOutline);
+        resolver.add("Outline Variant", R.attr.materialColorOutlineVariant);
+
+        return colors;
+    }
+
+    private static class Material3Color {
+        String name;
+        int color;
+
+        Material3Color(String name, int color) {
+            this.name = name;
+            this.color = color;
+        }
+    }
+
+    private static class Material3ColorAdapter extends ArrayAdapter<Material3Color> {
+        private final List<Material3Color> colors;
+
+        Material3ColorAdapter(Context context, List<Material3Color> colors) {
+            super(context, android.R.layout.simple_spinner_item, colors);
+            this.colors = colors;
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        }
+
+        @NonNull
+        @Override
+        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+            return createView(position, convertView, parent);
+        }
+
+        @Override
+        public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
+            return createView(position, convertView, parent);
+        }
+
+        private View createView(int position, View convertView, ViewGroup parent) {
+            Material3Color m3Color = colors.get(position);
+
+            LinearLayout layout = new LinearLayout(getContext());
+            layout.setOrientation(LinearLayout.HORIZONTAL);
+            layout.setPadding(16, 12, 16, 12);
+            layout.setGravity(Gravity.CENTER_VERTICAL);
+
+            // Color preview square (only if not first item)
+            if (position > 0) {
+                View colorView = new View(getContext());
+                int size = (int) (32 * getContext().getResources().getDisplayMetrics().density);
+                LinearLayout.LayoutParams colorParams = new LinearLayout.LayoutParams(size, size);
+                colorParams.setMargins(0, 0, (int) (12 * getContext().getResources().getDisplayMetrics().density), 0);
+                colorView.setLayoutParams(colorParams);
+                colorView.setBackgroundColor(m3Color.color);
+                layout.addView(colorView);
+            }
+
+            // Color name
+            TextView textView = new TextView(getContext());
+            textView.setText(m3Color.name);
+            textView.setTextSize(16);
+            layout.addView(textView);
+
+            return layout;
+        }
+    }
+
+    private LinearLayout createSwatchRow(int[] colors) {
+        Context ctx = getContext();
+        LinearLayout row = new LinearLayout(ctx);
+        row.setOrientation(HORIZONTAL);
+        row.setLayoutParams(new LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+        ));
+        row.setGravity(Gravity.CENTER_VERTICAL);
+
+        int swatchMargin = (int) (2 * getResources().getDisplayMetrics().density);
+
+        for (int color : colors) {
+            SquareColorSwatchView swatch = new SquareColorSwatchView(ctx, color);
+            // Use weight to distribute space evenly
+            LayoutParams params = new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1);
+            params.setMargins(swatchMargin, swatchMargin, swatchMargin, swatchMargin);
+            swatch.setLayoutParams(params);
+            swatch.setOnClickListener(v -> setColorFromRGB(color));
+            row.addView(swatch);
+        }
+
+        return row;
+    }
+
+    private void addTextInputs() {
+        Context ctx = getContext();
+
+        // Create horizontal layout for inputs
+        LinearLayout horizontalLayout = new LinearLayout(ctx);
+        horizontalLayout.setOrientation(HORIZONTAL);
+        horizontalLayout.setLayoutParams(new LayoutParams(
+                LayoutParams.MATCH_PARENT,
+                LayoutParams.WRAP_CONTENT
+        ));
+
+        // R input
+        LinearLayout redContainer = createColorInputWithLabel(ctx, "Red");
+        redEdit = (EditText) redContainer.getChildAt(1);
+        horizontalLayout.addView(redContainer, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1));
+
+        // G input
+        LinearLayout greenContainer = createColorInputWithLabel(ctx, "Green");
+        greenEdit = (EditText) greenContainer.getChildAt(1);
+        horizontalLayout.addView(greenContainer, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1));
+
+        // B input
+        LinearLayout blueContainer = createColorInputWithLabel(ctx, "Blue");
+        blueEdit = (EditText) blueContainer.getChildAt(1);
+        horizontalLayout.addView(blueContainer, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1));
+
+        // Alpha input (0-100)
+        LinearLayout alphaContainer = createColorInputWithLabel(ctx, "Alpha%");
+        alphaEdit = (EditText) alphaContainer.getChildAt(1);
+        horizontalLayout.addView(alphaContainer, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1));
+
+        // Hex input (twice as large)
+        LinearLayout hexContainer = createHexInputWithLabel(ctx);
+        hexEdit = (EditText) hexContainer.getChildAt(1);
+        horizontalLayout.addView(hexContainer, new LayoutParams(0, LayoutParams.WRAP_CONTENT, 2));
+
+        addView(horizontalLayout);
+    }
+
+    private LinearLayout createColorInputWithLabel(Context ctx, String label) {
+        LinearLayout container = new LinearLayout(ctx);
+        container.setOrientation(VERTICAL);
+        container.setPadding(4, 0, 4, 0);
+
+        android.widget.TextView textView = new android.widget.TextView(ctx);
+        textView.setText(label);
+        textView.setTextSize(12);
+        textView.setGravity(android.view.Gravity.CENTER);
+        container.addView(textView);
+
+        EditText edit = new EditText(ctx);
+        edit.setTextSize(14);
+        edit.setSingleLine();
+        edit.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+        edit.setGravity(android.view.Gravity.CENTER);
+        edit.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(3)});
+
+        edit.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                currentlyEditingField = edit;
+            } else if (currentlyEditingField == edit) {
+                currentlyEditingField = null;
+            }
+        });
+
+        edit.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (isUpdating) return;
+
+                // Enforce value limits
+                try {
+                    String text = s.toString();
+                    if (text.isEmpty()) return;
+
+                    int value = Integer.parseInt(text);
+                    int max = (edit == alphaEdit) ? 100 : 255;
+
+                    if (value > max) {
+                        isUpdating = true;
+                        edit.setText(String.valueOf(max));
+                        edit.setSelection(edit.getText().length());
+                        isUpdating = false;
+                        return;
+                    }
+                } catch (NumberFormatException e) {
+                    return;
+                }
+
+                // Update color if all fields are valid
+                try {
+                    currentlyEditingField = edit;
+                    int r = Integer.parseInt(redEdit.getText().toString());
+                    int g = Integer.parseInt(greenEdit.getText().toString());
+                    int b = Integer.parseInt(blueEdit.getText().toString());
+                    int a = Integer.parseInt(alphaEdit.getText().toString());
+
+                    if (r >= 0 && r <= 255 && g >= 0 && g <= 255 &&
+                        b >= 0 && b <= 255 && a >= 0 && a <= 100) {
+                        setColorFromRGB(Color.argb((int)(a * 2.55f), r, g, b));
+                    }
+                } catch (NumberFormatException e) {
+                    // Ignore invalid input
+                } finally {
+                    currentlyEditingField = null;
+                }
+            }
+        });
+
+        container.addView(edit);
+        return container;
+    }
+
+    private LinearLayout createHexInputWithLabel(Context ctx) {
+        LinearLayout container = new LinearLayout(ctx);
+        container.setOrientation(VERTICAL);
+        container.setPadding(4, 0, 4, 0);
+
+        android.widget.TextView textView = new android.widget.TextView(ctx);
+        textView.setText("Hex");
+        textView.setTextSize(12);
+        textView.setGravity(android.view.Gravity.CENTER);
+        container.addView(textView);
+
+        EditText edit = new EditText(ctx);
+        edit.setTextSize(14);
+        edit.setSingleLine();
+        edit.setGravity(android.view.Gravity.CENTER);
+        edit.setFilters(new android.text.InputFilter[]{
+            new android.text.InputFilter.LengthFilter(9),
+            new android.text.InputFilter.AllCaps()
+        });
+
+        edit.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                currentlyEditingField = edit;
+            } else if (currentlyEditingField == edit) {
+                currentlyEditingField = null;
+            }
+        });
+
+        edit.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (isUpdating) return;
+                try {
+                    currentlyEditingField = edit;
+                    String hex = s.toString().trim();
+                    if (hex.startsWith("#")) {
+                        hex = hex.substring(1);
+                    }
+
+                    if (hex.length() == 8 || hex.length() == 6) {
+                        int color = (int) Long.parseLong(hex, 16);
+                        if (hex.length() == 6) {
+                            color |= 0xFF000000; // Add full alpha if not specified
+                        }
+                        setColorFromRGB(color);
+                    }
+                } catch (NumberFormatException e) {
+                    // Ignore invalid input
+                } finally {
+                    currentlyEditingField = null;
+                }
+            }
+        });
+
+        container.addView(edit);
+        return container;
+    }
+
+
+    public void setColor(int color) {
+        alpha = Color.alpha(color);
+
+        // Convert RGB to HSL
+        float[] hsl = new float[3];
+        rgbToHsl(Color.red(color), Color.green(color), Color.blue(color), hsl);
+        hue = hsl[0];
+        saturation = hsl[1];
+        lightness = hsl[2];
+
+        updateAllViews();
+    }
+
+    private void setColorFromRGB(int color) {
+        alpha = Color.alpha(color);
+
+        float[] hsl = new float[3];
+        rgbToHsl(Color.red(color), Color.green(color), Color.blue(color), hsl);
+        hue = hsl[0];
+        saturation = hsl[1];
+        lightness = hsl[2];
+
+        updateAllViews();
+        notifyColorChanged();
+    }
+
+    public int getColor() {
+        int rgb = hslToRgb(hue, saturation, lightness);
+        return Color.argb(alpha, Color.red(rgb), Color.green(rgb), Color.blue(rgb));
+    }
+
+    private void updateAllViews() {
+        isUpdating = true;
+
+        slView.invalidate();
+        hueSlider.invalidate();
+        alphaSlider.invalidate();
+
+        int color = getColor();
+
+        // Update current color preview
+        if (currentColorPreview != null) {
+            currentColorPreview.setColor(color);
+            currentColorPreview.invalidate();
+        }
+
+        // Update text fields while preserving cursor position
+        updateEditText(redEdit, String.valueOf(Color.red(color)));
+        updateEditText(greenEdit, String.valueOf(Color.green(color)));
+        updateEditText(blueEdit, String.valueOf(Color.blue(color)));
+        updateEditText(alphaEdit, String.valueOf((int)(Color.alpha(color) / 2.55f)));
+        updateEditText(hexEdit, String.format("#%08X", color));
+
+        isUpdating = false;
+    }
+
+    private void updateEditText(EditText editText, String newText) {
+        // Skip updating the field that's currently being edited
+        if (editText == currentlyEditingField) {
+            return;
+        }
+        if (!editText.getText().toString().equals(newText)) {
+            int cursorPosition = editText.getSelectionStart();
+            editText.setText(newText);
+            // Restore cursor position, clamped to new text length
+            int newPosition = Math.min(cursorPosition, newText.length());
+            editText.setSelection(newPosition);
+        }
+    }
+
+    private void notifyColorChanged() {
+        if (listener != null && !isUpdating) {
+            listener.onColorChanged(getColor());
+        }
+    }
+
+    public void setOnColorChangedListener(OnColorChangedListener listener) {
+        this.listener = listener;
+    }
+
+    // HSL conversion helpers
+    private static void rgbToHsl(int r, int g, int b, float[] hsl) {
+        float rf = r / 255f;
+        float gf = g / 255f;
+        float bf = b / 255f;
+
+        float max = Math.max(rf, Math.max(gf, bf));
+        float min = Math.min(rf, Math.min(gf, bf));
+        float delta = max - min;
+
+        // Lightness
+        hsl[2] = (max + min) / 2f;
+
+        if (delta == 0) {
+            hsl[0] = 0; // Hue
+            hsl[1] = 0; // Saturation
+        } else {
+            // Saturation
+            hsl[1] = delta / (1 - Math.abs(2 * hsl[2] - 1));
+
+            // Hue
+            if (max == rf) {
+                hsl[0] = 60 * (((gf - bf) / delta) % 6);
+            } else if (max == gf) {
+                hsl[0] = 60 * (((bf - rf) / delta) + 2);
+            } else {
+                hsl[0] = 60 * (((rf - gf) / delta) + 4);
+            }
+
+            if (hsl[0] < 0) {
+                hsl[0] += 360;
+            }
+        }
+    }
+
+    private static int hslToRgb(float h, float s, float l) {
+        float c = (1 - Math.abs(2 * l - 1)) * s;
+        float x = c * (1 - Math.abs((h / 60) % 2 - 1));
+        float m = l - c / 2;
+
+        float r, g, b;
+        if (h < 60) {
+            r = c; g = x; b = 0;
+        } else if (h < 120) {
+            r = x; g = c; b = 0;
+        } else if (h < 180) {
+            r = 0; g = c; b = x;
+        } else if (h < 240) {
+            r = 0; g = x; b = c;
+        } else if (h < 300) {
+            r = x; g = 0; b = c;
+        } else {
+            r = c; g = 0; b = x;
+        }
+
+        return Color.rgb(
+                (int) ((r + m) * 255),
+                (int) ((g + m) * 255),
+                (int) ((b + m) * 255)
+        );
+    }
+
+    // Inner class: Saturation/Lightness picker
+    private class SaturationLightnessView extends View {
+        private Paint dotPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private Bitmap bitmap;
+
+        public SaturationLightnessView(Context context) {
+            super(context);
+            dotPaint.setColor(Color.WHITE);
+            dotPaint.setStyle(Paint.Style.STROKE);
+            dotPaint.setStrokeWidth(3);
+        }
+
+        @Override
+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+            super.onSizeChanged(w, h, oldw, oldh);
+            generateBitmap(w, h);
+        }
+
+        private void generateBitmap(int w, int h) {
+            if (w <= 0 || h <= 0) return;
+
+            bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            bitmap.setHasAlpha(false);
+
+            // Get the pure hue color at full saturation and 50% lightness
+            int pureColor = hslToRgb(hue, 1f, 0.5f);
+            int pureR = Color.red(pureColor);
+            int pureG = Color.green(pureColor);
+            int pureB = Color.blue(pureColor);
+
+            for (int y = 0; y < h; y++) {
+                for (int x = 0; x < w; x++) {
+                    float saturationRatio = x / (float) w;  // 0 (left) to 1 (right)
+                    float lightnessRatio = 1 - (y / (float) h);  // 1 (top) to 0 (bottom)
+
+                    // Interpolate between white (top-left), pure color (top-right), and black (bottom)
+                    // Top row: white to pure color
+                    // Bottom row: black to black
+                    int r, g, b;
+
+                    if (lightnessRatio == 0) {
+                        // Bottom row is always black
+                        r = g = b = 0;
+                    } else {
+                        // Interpolate based on saturation (left to right)
+                        float whiteAmount = (1 - saturationRatio) * lightnessRatio;
+                        float colorAmount = saturationRatio * lightnessRatio;
+
+                        r = (int) (255 * whiteAmount + pureR * colorAmount);
+                        g = (int) (255 * whiteAmount + pureG * colorAmount);
+                        b = (int) (255 * whiteAmount + pureB * colorAmount);
+                    }
+
+                    bitmap.setPixel(x, y, Color.rgb(r, g, b));
+                }
+            }
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            if (bitmap != null) {
+                canvas.drawBitmap(bitmap, 0, 0, null);
+
+                // Get current RGB color
+                int currentRgb = hslToRgb(hue, saturation, lightness);
+                int targetR = Color.red(currentRgb);
+                int targetG = Color.green(currentRgb);
+                int targetB = Color.blue(currentRgb);
+
+                // Get the pure hue color for reference
+                int pureColor = hslToRgb(hue, 1f, 0.5f);
+                int pureR = Color.red(pureColor);
+                int pureG = Color.green(pureColor);
+                int pureB = Color.blue(pureColor);
+
+                float x, y;
+                float maxTarget = Math.max(targetR, Math.max(targetG, targetB));
+
+                if (maxTarget == 0) {
+                    x = 0;
+                    y = 0;
+                } else {
+                    float minPure = Math.min(pureR, Math.min(pureG, pureB));
+                    float minTarget = Math.min(targetR, Math.min(targetG, targetB));
+
+                    y = maxTarget / 255f;
+
+                    if (y > 0) {
+                        float unscaledMin = minTarget / y;
+                        if (minPure != 255) {
+                            x = (unscaledMin - 255f) / (minPure - 255f);
+                            x = Math.max(0, Math.min(1, x));
+                        } else {
+                            x = 0;
+                        }
+                    } else {
+                        x = 0;
+                    }
+                }
+
+                float posX = x * getWidth();
+                float posY = (1 - y) * getHeight();
+
+                dotPaint.setColor(Color.WHITE);
+                canvas.drawCircle(posX, posY, 10, dotPaint);
+                dotPaint.setColor(Color.BLACK);
+                canvas.drawCircle(posX, posY, 8, dotPaint);
+            }
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            if (event.getAction() == MotionEvent.ACTION_DOWN ||
+                event.getAction() == MotionEvent.ACTION_MOVE) {
+
+                float x = Math.max(0, Math.min(event.getX(), getWidth()));
+                float y = Math.max(0, Math.min(event.getY(), getHeight()));
+
+                // Calculate the color at this position using the same formula as bitmap generation
+                float saturationRatio = x / getWidth();  // 0 (left) to 1 (right)
+                float lightnessRatio = 1 - (y / getHeight());  // 1 (top) to 0 (bottom)
+
+                // Get the pure hue color
+                int pureColor = hslToRgb(hue, 1f, 0.5f);
+                int pureR = Color.red(pureColor);
+                int pureG = Color.green(pureColor);
+                int pureB = Color.blue(pureColor);
+
+                // Calculate RGB at this position
+                int r, g, b;
+                if (lightnessRatio == 0) {
+                    r = g = b = 0;
+                } else {
+                    float whiteAmount = (1 - saturationRatio) * lightnessRatio;
+                    float colorAmount = saturationRatio * lightnessRatio;
+
+                    r = (int) (255 * whiteAmount + pureR * colorAmount);
+                    g = (int) (255 * whiteAmount + pureG * colorAmount);
+                    b = (int) (255 * whiteAmount + pureB * colorAmount);
+                }
+
+                // Convert RGB back to HSL
+                float[] hsl = new float[3];
+                rgbToHsl(r, g, b, hsl);
+                saturation = hsl[1];
+                lightness = hsl[2];
+
+                invalidate();
+                updateAllViews();
+                notifyColorChanged();
+                return true;
+            }
+            return super.onTouchEvent(event);
+        }
+    }
+
+    // Inner class: Hue slider
+    private class HueSliderView extends View {
+        private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private Paint indicatorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+        public HueSliderView(Context context) {
+            super(context);
+            indicatorPaint.setColor(Color.WHITE);
+            indicatorPaint.setStyle(Paint.Style.STROKE);
+            indicatorPaint.setStrokeWidth(3);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            int w = getWidth();
+            int h = getHeight();
+
+            // Draw rainbow gradient
+            int[] colors = new int[7];
+            colors[0] = Color.rgb(255, 0, 0);     // Red
+            colors[1] = Color.rgb(255, 255, 0);   // Yellow
+            colors[2] = Color.rgb(0, 255, 0);     // Green
+            colors[3] = Color.rgb(0, 255, 255);   // Cyan
+            colors[4] = Color.rgb(0, 0, 255);     // Blue
+            colors[5] = Color.rgb(255, 0, 255);   // Magenta
+            colors[6] = Color.rgb(255, 0, 0);     // Red
+
+            LinearGradient gradient = new LinearGradient(
+                    0, 0, w, 0, colors, null, Shader.TileMode.CLAMP);
+            paint.setShader(gradient);
+            canvas.drawRect(0, 0, w, h, paint);
+
+            // Draw indicator
+            float x = (hue / 360f) * w;
+            indicatorPaint.setColor(Color.WHITE);
+            canvas.drawLine(x, 0, x, h, indicatorPaint);
+            indicatorPaint.setColor(Color.BLACK);
+            canvas.drawLine(x - 1, 0, x - 1, h, indicatorPaint);
+            canvas.drawLine(x + 1, 0, x + 1, h, indicatorPaint);
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            if (event.getAction() == MotionEvent.ACTION_DOWN ||
+                event.getAction() == MotionEvent.ACTION_MOVE) {
+
+                float x = Math.max(0, Math.min(event.getX(), getWidth()));
+                hue = (x / getWidth()) * 360f;
+
+                slView.generateBitmap(slView.getWidth(), slView.getHeight());
+                invalidate();
+                updateAllViews();
+                notifyColorChanged();
+                return true;
+            }
+            return super.onTouchEvent(event);
+        }
+    }
+
+    // Inner class: Alpha slider
+    private class AlphaSliderView extends View {
+        private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private Paint checkerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private Paint indicatorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+
+        public AlphaSliderView(Context context) {
+            super(context);
+            indicatorPaint.setColor(Color.WHITE);
+            indicatorPaint.setStyle(Paint.Style.STROKE);
+            indicatorPaint.setStrokeWidth(3);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            int w = getWidth();
+            int h = getHeight();
+
+            // Draw checker background
+            checkerPaint.setColor(0xFFCCCCCC);
+            for (int y = 0; y < h; y += CHECKER_SIZE) {
+                for (int x = 0; x < w; x += CHECKER_SIZE) {
+                    if ((x / CHECKER_SIZE + y / CHECKER_SIZE) % 2 == 0) {
+                        canvas.drawRect(x, y, x + CHECKER_SIZE, y + CHECKER_SIZE, checkerPaint);
+                    }
+                }
+            }
+            checkerPaint.setColor(0xFF999999);
+            for (int y = 0; y < h; y += CHECKER_SIZE) {
+                for (int x = 0; x < w; x += CHECKER_SIZE) {
+                    if ((x / CHECKER_SIZE + y / CHECKER_SIZE) % 2 == 1) {
+                        canvas.drawRect(x, y, x + CHECKER_SIZE, y + CHECKER_SIZE, checkerPaint);
+                    }
+                }
+            }
+
+            // Draw alpha gradient
+            int rgb = hslToRgb(hue, saturation, lightness);
+            int transparentColor = Color.argb(0, Color.red(rgb), Color.green(rgb), Color.blue(rgb));
+            int opaqueColor = Color.argb(255, Color.red(rgb), Color.green(rgb), Color.blue(rgb));
+
+            LinearGradient gradient = new LinearGradient(
+                    0, 0, w, 0,
+                    new int[]{transparentColor, opaqueColor},
+                    null,
+                    Shader.TileMode.CLAMP);
+            paint.setShader(gradient);
+            canvas.drawRect(0, 0, w, h, paint);
+
+            // Draw indicator
+            float x = (alpha / 255f) * w;
+            indicatorPaint.setColor(Color.WHITE);
+            canvas.drawLine(x, 0, x, h, indicatorPaint);
+            indicatorPaint.setColor(Color.BLACK);
+            canvas.drawLine(x - 1, 0, x - 1, h, indicatorPaint);
+            canvas.drawLine(x + 1, 0, x + 1, h, indicatorPaint);
+        }
+
+        @Override
+        public boolean onTouchEvent(MotionEvent event) {
+            if (event.getAction() == MotionEvent.ACTION_DOWN ||
+                event.getAction() == MotionEvent.ACTION_MOVE) {
+
+                float x = Math.max(0, Math.min(event.getX(), getWidth()));
+                alpha = (int) ((x / getWidth()) * 255);
+
+                invalidate();
+                updateAllViews();
+                notifyColorChanged();
+                return true;
+            }
+            return super.onTouchEvent(event);
+        }
+    }
+
+    // Inner class: Square Color swatch view that maintains aspect ratio
+    private static class SquareColorSwatchView extends View {
+        private static final int CHECKER_SIZE = 18;
+        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private int color;
+
+        public SquareColorSwatchView(Context context, int color) {
+            super(context);
+            this.color = color;
+            borderPaint.setColor(0x80000000);
+            borderPaint.setStyle(Paint.Style.STROKE);
+            borderPaint.setStrokeWidth(2);
+        }
+
+        @Override
+        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+            // Force square aspect ratio based on width
+            int width = getMeasuredWidth();
+            setMeasuredDimension(width, width);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            int w = getWidth();
+            int h = getHeight();
+
+            // Draw checker background for transparency
+            if (Color.alpha(color) < 255) {
+                paint.setColor(0xFFCCCCCC);
+                for (int y = 0; y < h; y += CHECKER_SIZE) {
+                    for (int x = 0; x < w; x += CHECKER_SIZE) {
+                        if ((x / CHECKER_SIZE + y / CHECKER_SIZE) % 2 == 0) {
+                            canvas.drawRect(x, y, x + CHECKER_SIZE, y + CHECKER_SIZE, paint);
+                        }
+                    }
+                }
+                paint.setColor(0xFF999999);
+                for (int y = 0; y < h; y += CHECKER_SIZE) {
+                    for (int x = 0; x < w; x += CHECKER_SIZE) {
+                        if ((x / CHECKER_SIZE + y / CHECKER_SIZE) % 2 == 1) {
+                            canvas.drawRect(x, y, x + CHECKER_SIZE, y + CHECKER_SIZE, paint);
+                        }
+                    }
+                }
+            }
+
+            // Draw color
+            paint.setColor(color);
+            canvas.drawRect(0, 0, w, h, paint);
+
+            // Draw border
+            canvas.drawRect(0, 0, w, h, borderPaint);
+        }
+    }
+
+    // Inner class: Color swatch view
+    private static class ColorSwatchView extends View {
+        private static final int CHECKER_SIZE = 18;
+        private static final int CHECKER_SIZE_BIG = 24;
+        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private int color;
+        private boolean bigChecker = false;
+
+        public ColorSwatchView(Context context, int color) {
+            super(context);
+            this.color = color;
+            borderPaint.setColor(0x80000000);
+            borderPaint.setStyle(Paint.Style.STROKE);
+            borderPaint.setStrokeWidth(2);
+        }
+
+        public ColorSwatchView(Context context, int color, boolean bigChecker) {
+            this(context, color);
+            this.bigChecker = bigChecker;
+        }
+
+        public void setColor(int color) {
+            this.color = color;
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            int w = getWidth();
+            int h = getHeight();
+            int checkerSize = bigChecker ? CHECKER_SIZE_BIG : CHECKER_SIZE;
+
+            // Draw checker background for transparency
+            if (Color.alpha(color) < 255) {
+                paint.setColor(0xFFCCCCCC);
+                for (int y = 0; y < h; y += checkerSize) {
+                    for (int x = 0; x < w; x += checkerSize) {
+                        if ((x / checkerSize + y / checkerSize) % 2 == 0) {
+                            canvas.drawRect(x, y, x + checkerSize, y + checkerSize, paint);
+                        }
+                    }
+                }
+                paint.setColor(0xFF999999);
+                for (int y = 0; y < h; y += checkerSize) {
+                    for (int x = 0; x < w; x += checkerSize) {
+                        if ((x / checkerSize + y / checkerSize) % 2 == 1) {
+                            canvas.drawRect(x, y, x + checkerSize, y + checkerSize, paint);
+                        }
+                    }
+                }
+            }
+
+            // Draw color
+            paint.setColor(color);
+            canvas.drawRect(0, 0, w, h, paint);
+
+            // Draw border
+            canvas.drawRect(0, 0, w, h, borderPaint);
+        }
+    }
+}

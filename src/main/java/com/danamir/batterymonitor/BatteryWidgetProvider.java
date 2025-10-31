@@ -23,7 +23,8 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
 
     @Override
     public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager, int appWidgetId, android.os.Bundle newOptions) {
-        // Called when widget is resized - force immediate update
+        // Called when widget is resized
+        updateAppWidget(context, appWidgetManager, appWidgetId);
         super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions);
         updateAppWidget(context, appWidgetManager, appWidgetId);
     }
@@ -73,6 +74,10 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
         // Get battery data
         BatteryDataManager dataManager = BatteryDataManager.getInstance(context);
 
+        // Get status data
+        StatusManager statusManager = StatusManager.getInstance(context);
+        java.util.List<StatusData> statusData = statusManager.getStatusData("user_present", displayHours);
+
         // Get actual widget size
         android.os.Bundle options = appWidgetManager.getAppWidgetOptions(appWidgetId);
         int widgetWidthDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 250);
@@ -91,6 +96,7 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
         Picture picture = BatteryGraphGenerator.generateGraphAsPicture(
             context,
             dataManager.getDataPoints(displayHours),
+            statusData,
             displayHours,
             width,
             height
@@ -101,7 +107,7 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
         Canvas canvas = new Canvas(bitmap);
         picture.draw(canvas);
 
-        // Force cache invalidation BEFORE setting bitmap
+        // Force cache invalidation
         long timestamp = System.currentTimeMillis();
         views.setContentDescription(R.id.battery_graph, "Widget:" + appWidgetId + "@" + timestamp);
 
@@ -113,8 +119,8 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         views.setOnClickPendingIntent(R.id.battery_graph, pendingIntent);
 
-        // Update the widget with partial updates flag to force refresh
-        appWidgetManager.partiallyUpdateAppWidget(appWidgetId, views);
+        // Update the widget
+        appWidgetManager.updateAppWidget(appWidgetId, views);
     }
 
     public static void updateAllWidgets(Context context) {

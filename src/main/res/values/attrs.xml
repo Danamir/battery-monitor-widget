@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Reference to Material 3 dynamic color attributes -->
+    <attr name="materialColorPrimary" format="color" />
+    <attr name="materialColorOnPrimary" format="color" />
+    <attr name="materialColorPrimaryContainer" format="color" />
+    <attr name="materialColorOnPrimaryContainer" format="color" />
+    <attr name="materialColorSecondary" format="color" />
+    <attr name="materialColorOnSecondary" format="color" />
+    <attr name="materialColorSecondaryContainer" format="color" />
+    <attr name="materialColorOnSecondaryContainer" format="color" />
+    <attr name="materialColorTertiary" format="color" />
+    <attr name="materialColorOnTertiary" format="color" />
+    <attr name="materialColorTertiaryContainer" format="color" />
+    <attr name="materialColorOnTertiaryContainer" format="color" />
+    <attr name="materialColorError" format="color" />
+    <attr name="materialColorOnError" format="color" />
+    <attr name="materialColorErrorContainer" format="color" />
+    <attr name="materialColorOnErrorContainer" format="color" />
+    <attr name="materialColorBackground" format="color" />
+    <attr name="materialColorOnBackground" format="color" />
+    <attr name="materialColorSurface" format="color" />
+    <attr name="materialColorOnSurface" format="color" />
+    <attr name="materialColorSurfaceVariant" format="color" />
+    <attr name="materialColorOnSurfaceVariant" format="color" />
+    <attr name="materialColorOutline" format="color" />
+    <attr name="materialColorOutlineVariant" format="color" />
+</resources>
