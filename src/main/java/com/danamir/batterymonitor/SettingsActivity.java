@@ -1,5 +1,6 @@
 package com.danamir.batterymonitor;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -40,6 +41,10 @@ public class SettingsActivity extends AppCompatActivity {
             getSupportActionBar().setTitle(R.string.settings_title);
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
+
+        // Start battery monitor service to display notification
+        Intent serviceIntent = new Intent(this, BatteryMonitorService.class);
+        startService(serviceIntent);
     }
 
     @Override
