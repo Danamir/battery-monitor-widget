@@ -77,7 +77,7 @@ public class ColorSettingsManager {
     }
 
     /**
-     * Gets the list of recent colors (up to 5).
+     * Gets the list of recent colors (up to 9).
      *
      * @return List of recent colors
      */
@@ -140,9 +140,9 @@ public class ColorSettingsManager {
         // Add to beginning
         recentColors.add(0, color);
 
-        // Keep only last 6
-        if (recentColors.size() > 6) {
-            recentColors = recentColors.subList(0, 6);
+        // Keep only last 9
+        if (recentColors.size() > 9) {
+            recentColors = recentColors.subList(0, 9);
         }
 
         // Save back as comma-separated string

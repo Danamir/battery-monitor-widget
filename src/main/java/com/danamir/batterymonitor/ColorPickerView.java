@@ -16,9 +16,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import androidx.preference.PreferenceManager;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -151,21 +149,61 @@ public class ColorPickerView extends LinearLayout {
                 1
         ));
 
-        // Get theme colors
-        TypedValue typedValue = new TypedValue();
-        ctx.getTheme().resolveAttribute(android.R.attr.colorBackground, typedValue, true);
-        int themeLight = typedValue.data;
-        ctx.getTheme().resolveAttribute(android.R.attr.textColorPrimary, typedValue, true);
-        int themeDark = typedValue.data;
+        // Get Material 3 dynamic colors from system theme
+        int themeColorPrimary = 0xFF6750A4;
+        int themeColorSecondary = 0xFF625B71;
+        int themeColorTertiary = 0xFF7D5260;
+        int themeColorError = 0xFFB3261E;
+        int themeColorBackground = 0xFFFFFBFE;
+        int themeColorOutline = 0xFF79747E;
+
+        try {
+            TypedValue typedValue = new TypedValue();
+
+            if (ctx.getTheme().resolveAttribute(R.attr.materialColorPrimary, typedValue, true)) {
+                themeColorPrimary = typedValue.data;
+            } else if (ctx.getTheme().resolveAttribute(android.R.attr.colorPrimary, typedValue, true)) {
+                themeColorPrimary = typedValue.data;
+            }
+
+            if (ctx.getTheme().resolveAttribute(R.attr.materialColorSecondary, typedValue, true)) {
+                themeColorSecondary = typedValue.data;
+            } else if (ctx.getTheme().resolveAttribute(android.R.attr.colorAccent, typedValue, true)) {
+                themeColorSecondary = typedValue.data;
+            }
+
+            if (ctx.getTheme().resolveAttribute(R.attr.materialColorTertiary, typedValue, true)) {
+                themeColorTertiary = typedValue.data;
+            }
+
+            if (ctx.getTheme().resolveAttribute(R.attr.materialColorError, typedValue, true)) {
+                themeColorError = typedValue.data;
+            }
+
+            if (ctx.getTheme().resolveAttribute(R.attr.materialColorBackground, typedValue, true)) {
+                themeColorBackground = typedValue.data;
+            } else if (ctx.getTheme().resolveAttribute(android.R.attr.colorBackground, typedValue, true)) {
+                themeColorBackground = typedValue.data;
+            }
+
+            if (ctx.getTheme().resolveAttribute(R.attr.materialColorOutline, typedValue, true)) {
+                themeColorOutline = typedValue.data;
+            }
+        } catch (Exception e) {
+            // Use fallback colors
+        }
 
         // First row: basic colors
         int[] basicColors = {
-            0xFFFFFFFF,  // White
-            0xFF000000,  // Black
-            0xFF808080,  // Grey
-            0x20000000,  // 10% black
-            themeLight,  // Android theme light
-            themeDark    // Android theme dark
+            0xFFFFFFFF,           // White
+            0xFF000000,           // Black
+            0x1A000000,           // 10% transparent black
+            themeColorPrimary,    // Material 3 Primary
+            themeColorSecondary,  // Material 3 Secondary
+            themeColorTertiary,   // Material 3 Tertiary
+            themeColorError,      // Material 3 Error
+            themeColorBackground, // Material 3 Background
+            themeColorOutline     // Material 3 Outline
         };
 
         LinearLayout basicRow = createSwatchRow(basicColors);
@@ -179,17 +217,17 @@ public class ColorPickerView extends LinearLayout {
         ));
         swatchContainer.addView(spacer);
 
-        // Second row: recent colors
+        // Second row: recent colors (match number of basic colors)
         ColorSettingsManager colorManager = new ColorSettingsManager(ctx);
         List<Integer> recentColors = colorManager.getRecentColors();
 
-        // Ensure we have exactly 6 swatches (fill with grey if needed)
-        int[] recentColorsArray = new int[6];
-        for (int i = 0; i < 6; i++) {
+        int numSwatches = basicColors.length;
+        int[] recentColorsArray = new int[numSwatches];
+        for (int i = 0; i < numSwatches; i++) {
             if (i < recentColors.size()) {
                 recentColorsArray[i] = recentColors.get(i);
             } else {
-                recentColorsArray[i] = 0xFFC0C0C0; // grey
+                recentColorsArray[i] = 0x00000000; // Transparent
             }
         }
 
@@ -208,14 +246,14 @@ public class ColorPickerView extends LinearLayout {
                 LayoutParams.MATCH_PARENT,
                 LayoutParams.WRAP_CONTENT
         ));
-        row.setGravity(Gravity.CENTER);
+        row.setGravity(Gravity.CENTER_VERTICAL);
 
-        int swatchSize = (int) (36 * getResources().getDisplayMetrics().density);
         int swatchMargin = (int) (2 * getResources().getDisplayMetrics().density);
 
         for (int color : colors) {
-            View swatch = new ColorSwatchView(ctx, color);
-            LayoutParams params = new LayoutParams(swatchSize, swatchSize);
+            SquareColorSwatchView swatch = new SquareColorSwatchView(ctx, color);
+            // Use weight to distribute space evenly
+            LayoutParams params = new LayoutParams(0, LayoutParams.WRAP_CONTENT, 1);
             params.setMargins(swatchMargin, swatchMargin, swatchMargin, swatchMargin);
             swatch.setLayoutParams(params);
             swatch.setOnClickListener(v -> setColorFromRGB(color));
@@ -838,6 +876,64 @@ public class ColorPickerView extends LinearLayout {
                 return true;
             }
             return super.onTouchEvent(event);
+        }
+    }
+
+    // Inner class: Square Color swatch view that maintains aspect ratio
+    private static class SquareColorSwatchView extends View {
+        private static final int CHECKER_SIZE = 8;
+        private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private int color;
+
+        public SquareColorSwatchView(Context context, int color) {
+            super(context);
+            this.color = color;
+            borderPaint.setColor(0x80000000);
+            borderPaint.setStyle(Paint.Style.STROKE);
+            borderPaint.setStrokeWidth(2);
+        }
+
+        @Override
+        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec);
+            // Force square aspect ratio based on width
+            int width = getMeasuredWidth();
+            setMeasuredDimension(width, width);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            super.onDraw(canvas);
+            int w = getWidth();
+            int h = getHeight();
+
+            // Draw checker background for transparency
+            if (Color.alpha(color) < 255) {
+                paint.setColor(0xFFCCCCCC);
+                for (int y = 0; y < h; y += CHECKER_SIZE) {
+                    for (int x = 0; x < w; x += CHECKER_SIZE) {
+                        if ((x / CHECKER_SIZE + y / CHECKER_SIZE) % 2 == 0) {
+                            canvas.drawRect(x, y, x + CHECKER_SIZE, y + CHECKER_SIZE, paint);
+                        }
+                    }
+                }
+                paint.setColor(0xFF999999);
+                for (int y = 0; y < h; y += CHECKER_SIZE) {
+                    for (int x = 0; x < w; x += CHECKER_SIZE) {
+                        if ((x / CHECKER_SIZE + y / CHECKER_SIZE) % 2 == 1) {
+                            canvas.drawRect(x, y, x + CHECKER_SIZE, y + CHECKER_SIZE, paint);
+                        }
+                    }
+                }
+            }
+
+            // Draw color
+            paint.setColor(color);
+            canvas.drawRect(0, 0, w, h, paint);
+
+            // Draw border
+            canvas.drawRect(0, 0, w, h, borderPaint);
         }
     }
 

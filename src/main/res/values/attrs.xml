@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Reference to Material 3 dynamic color attributes -->
+    <attr name="materialColorPrimary" format="color" />
+    <attr name="materialColorSecondary" format="color" />
+    <attr name="materialColorTertiary" format="color" />
+    <attr name="materialColorError" format="color" />
+    <attr name="materialColorBackground" format="color" />
+    <attr name="materialColorOutline" format="color" />
+</resources>
