@@ -29,7 +29,8 @@ public class ThemeSettings extends PreferenceFragmentCompat {
             BatteryWidgetProvider.updateAllWidgets(getContext());
             if ("main_color".equals(key) || "text_color".equals(key) || "grid_color".equals(key) ||
                 "graph_line_color".equals(key) || "graph_fill_color".equals(key) || 
-                "charging_line_color".equals(key) || "user_present_color".equals(key)) {
+                "charging_line_color".equals(key) || "battery_low_color".equals(key) ||
+                "battery_critical_color".equals(key) || "user_present_color".equals(key)) {
                 updateColorPreview();
             }
         };
@@ -89,6 +90,24 @@ public class ThemeSettings extends PreferenceFragmentCompat {
             });
         }
 
+        androidx.preference.Preference batteryLowColorPref = findPreference("battery_low_color");
+        if (batteryLowColorPref != null) {
+            updateColorPreferenceSummary(batteryLowColorPref, "battery_low_color");
+            batteryLowColorPref.setOnPreferenceClickListener(preference -> {
+                showColorPickerDialog("battery_low_color", "Battery Low Color");
+                return true;
+            });
+        }
+
+        androidx.preference.Preference batteryCriticalColorPref = findPreference("battery_critical_color");
+        if (batteryCriticalColorPref != null) {
+            updateColorPreferenceSummary(batteryCriticalColorPref, "battery_critical_color");
+            batteryCriticalColorPref.setOnPreferenceClickListener(preference -> {
+                showColorPickerDialog("battery_critical_color", "Battery Critical Color");
+                return true;
+            });
+        }
+
         androidx.preference.Preference userPresentColorPref = findPreference("user_present_color");
         if (userPresentColorPref != null) {
             updateColorPreferenceSummary(userPresentColorPref, "user_present_color");
@@ -114,6 +133,8 @@ public class ThemeSettings extends PreferenceFragmentCompat {
         androidx.preference.Preference graphLineColorPref = findPreference("graph_line_color");
         androidx.preference.Preference graphFillColorPref = findPreference("graph_fill_color");
         androidx.preference.Preference chargingLineColorPref = findPreference("charging_line_color");
+        androidx.preference.Preference batteryLowColorPref = findPreference("battery_low_color");
+        androidx.preference.Preference batteryCriticalColorPref = findPreference("battery_critical_color");
         androidx.preference.Preference userPresentColorPref = findPreference("user_present_color");
 
         if (mainColorPref != null) {
@@ -145,6 +166,16 @@ public class ThemeSettings extends PreferenceFragmentCompat {
             getPreferenceScreen().removePreference(chargingLineColorPref);
             getPreferenceScreen().addPreference(chargingLineColorPref);
             updateColorPreferenceSummary(chargingLineColorPref, "charging_line_color");
+        }
+        if (batteryLowColorPref != null) {
+            getPreferenceScreen().removePreference(batteryLowColorPref);
+            getPreferenceScreen().addPreference(batteryLowColorPref);
+            updateColorPreferenceSummary(batteryLowColorPref, "battery_low_color");
+        }
+        if (batteryCriticalColorPref != null) {
+            getPreferenceScreen().removePreference(batteryCriticalColorPref);
+            getPreferenceScreen().addPreference(batteryCriticalColorPref);
+            updateColorPreferenceSummary(batteryCriticalColorPref, "battery_critical_color");
         }
         if (userPresentColorPref != null) {
             getPreferenceScreen().removePreference(userPresentColorPref);

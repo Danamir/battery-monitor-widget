@@ -43,6 +43,20 @@
         android:layout="@layout/preference_color" />
 
     <com.danamir.batterymonitor.ColorPreference
+        android:key="battery_low_color"
+        android:title="@string/battery_low_color_title"
+        android:summary="@string/battery_low_color_summary"
+        android:defaultValue="0xFFFFF9C4"
+        android:layout="@layout/preference_color" />
+
+    <com.danamir.batterymonitor.ColorPreference
+        android:key="battery_critical_color"
+        android:title="@string/battery_critical_color_title"
+        android:summary="@string/battery_critical_color_summary"
+        android:defaultValue="0xFFFF5722"
+        android:layout="@layout/preference_color" />
+
+    <com.danamir.batterymonitor.ColorPreference
         android:key="user_present_color"
         android:title="@string/user_present_color_title"
         android:summary="@string/user_present_color_summary"
