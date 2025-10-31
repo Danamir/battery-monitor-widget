@@ -31,7 +31,7 @@
         android:key="theme_colors"
         android:title="@string/theme_colors_title"
         android:summary="@string/theme_colors_summary"
-        android:fragment="com.danamir.batterymonitor.SettingsActivity$ThemeColorsFragment" />
+        android:fragment="com.danamir.batterymonitor.ThemeSettings" />
 
     <SwitchPreferenceCompat
         android:key="show_y_axis_labels"
