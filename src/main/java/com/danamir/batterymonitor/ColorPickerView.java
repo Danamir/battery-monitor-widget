@@ -163,7 +163,7 @@ public class ColorPickerView extends LinearLayout {
             0xFFFFFFFF,  // White
             0xFF000000,  // Black
             0xFF808080,  // Grey
-            0x80000000,  // 50% black
+            0x20000000,  // 10% black
             themeLight,  // Android theme light
             themeDark    // Android theme dark
         };

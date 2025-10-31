@@ -82,15 +82,47 @@ public class ColorSettingsManager {
      * @return List of recent colors
      */
     public List<Integer> getRecentColors() {
-        Set<String> recentSet = prefs.getStringSet("recent_colors", new HashSet<>());
         List<Integer> colors = new ArrayList<>();
-        for (String colorStr : recentSet) {
+
+        try {
+            // Try to read as String (new format)
+            String recentStr = prefs.getString("recent_colors", "");
+            if (!recentStr.isEmpty()) {
+                String[] colorStrs = recentStr.split(",");
+                for (String colorStr : colorStrs) {
+                    try {
+                        colors.add(Integer.parseInt(colorStr));
+                    } catch (NumberFormatException e) {
+                        // Ignore invalid entries
+                    }
+                }
+            }
+        } catch (ClassCastException e) {
+            // Old format was StringSet, migrate it
             try {
-                colors.add(Integer.parseInt(colorStr));
-            } catch (NumberFormatException e) {
-                // Ignore invalid entries
+                Set<String> recentSet = prefs.getStringSet("recent_colors", new HashSet<>());
+                for (String colorStr : recentSet) {
+                    try {
+                        colors.add(Integer.parseInt(colorStr));
+                    } catch (NumberFormatException ex) {
+                        // Ignore invalid entries
+                    }
+                }
+                // Save in new format and remove old
+                if (!colors.isEmpty()) {
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; i < colors.size(); i++) {
+                        if (i > 0) sb.append(",");
+                        sb.append(colors.get(i));
+                    }
+                    prefs.edit().putString("recent_colors", sb.toString()).apply();
+                }
+            } catch (Exception ex) {
+                // If migration fails, clear the preference
+                prefs.edit().remove("recent_colors").apply();
             }
         }
+
         return colors;
     }
 
@@ -113,12 +145,13 @@ public class ColorSettingsManager {
             recentColors = recentColors.subList(0, 6);
         }
 
-        // Save back
-        Set<String> recentSet = new HashSet<>();
-        for (int c : recentColors) {
-            recentSet.add(String.valueOf(c));
+        // Save back as comma-separated string
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < recentColors.size(); i++) {
+            if (i > 0) sb.append(",");
+            sb.append(recentColors.get(i));
         }
-        prefs.edit().putStringSet("recent_colors", recentSet).apply();
+        prefs.edit().putString("recent_colors", sb.toString()).apply();
     }
 
     /**
