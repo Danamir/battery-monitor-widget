@@ -93,19 +93,26 @@ public class StatusManager {
     }
 
     /**
-     * Get all status data for a specific status name within the specified time range
+     * Get all status data for specific status names within the specified time range
      */
-    public synchronized List<StatusData> getStatusData(String statusName, int hours) {
+    public synchronized List<StatusData> getStatusData(List<String> statusNames, int hours) {
         List<StatusData> allData = getStatusData(hours);
         List<StatusData> filteredData = new ArrayList<>();
 
         for (StatusData status : allData) {
-            if (status.getStatusName().equals(statusName)) {
+            if (statusNames.contains(status.getStatusName())) {
                 filteredData.add(status);
             }
         }
 
         return filteredData;
+    }
+
+    /**
+     * Get all status data for a specific status name within the specified time range
+     */
+    public synchronized List<StatusData> getStatusData(String statusName, int hours) {
+        return getStatusData(List.of(statusName), hours);
     }
 
     private List<StatusData> loadData() {

@@ -9,4 +9,5 @@
     <color name="battery_graph_grid">#E0E0E0</color>
     <color name="battery_graph_text">#757575</color>
     <color name="widget_background">#FFFFFF</color>
+    <color name="user_present_bar">#4D87CEEB</color>
 </resources>

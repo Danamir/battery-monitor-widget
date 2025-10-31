@@ -74,6 +74,10 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
         // Get battery data
         BatteryDataManager dataManager = BatteryDataManager.getInstance(context);
 
+        // Get status data
+        StatusManager statusManager = StatusManager.getInstance(context);
+        java.util.List<StatusData> statusData = statusManager.getStatusData("user_present", displayHours);
+
         // Get actual widget size
         android.os.Bundle options = appWidgetManager.getAppWidgetOptions(appWidgetId);
         int widgetWidthDp = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 250);
@@ -92,6 +96,7 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
         Picture picture = BatteryGraphGenerator.generateGraphAsPicture(
             context,
             dataManager.getDataPoints(displayHours),
+            statusData,
             displayHours,
             width,
             height
