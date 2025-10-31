@@ -13,10 +13,7 @@ import android.view.View;
 import androidx.appcompat.app.AlertDialog;
 import androidx.preference.PreferenceManager;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Manages color settings for the battery monitor widget.
@@ -111,9 +108,9 @@ public class ColorSettingsManager {
         // Add to beginning
         recentColors.add(0, color);
 
-        // Keep only last 5
-        if (recentColors.size() > 5) {
-            recentColors = recentColors.subList(0, 5);
+        // Keep only last 6
+        if (recentColors.size() > 6) {
+            recentColors = recentColors.subList(0, 6);
         }
 
         // Save back
