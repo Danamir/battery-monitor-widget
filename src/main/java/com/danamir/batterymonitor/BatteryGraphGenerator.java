@@ -129,6 +129,18 @@ public class BatteryGraphGenerator {
         chargingPaint.setStyle(Paint.Style.STROKE);
         chargingPaint.setAntiAlias(true);
 
+        Paint batteryLowPaint = new Paint();
+        batteryLowPaint.setColor(prefs.getInt("battery_low_color", 0xFFFFFF3A)); // Yellow
+        batteryLowPaint.setStrokeWidth(2f * density);
+        batteryLowPaint.setStyle(Paint.Style.STROKE);
+        batteryLowPaint.setAntiAlias(true);
+
+        Paint batteryCriticalPaint = new Paint();
+        batteryCriticalPaint.setColor(prefs.getInt("battery_critical_color", 0xFFFF3C1C)); // Red
+        batteryCriticalPaint.setStrokeWidth(2f * density);
+        batteryCriticalPaint.setStyle(Paint.Style.STROKE);
+        batteryCriticalPaint.setAntiAlias(true);
+
         // Draw background
         canvas.drawRect(0, 0, width, height, backgroundPaint);
 
@@ -166,11 +178,11 @@ public class BatteryGraphGenerator {
             long startTime = now - timeRange;
 
             List<Path> linePaths = new ArrayList<>();
-            List<Boolean> lineIsCharging = new ArrayList<>();
+            List<Integer> lineStates = new ArrayList<>(); // 0=normal, 1=charging, 2=low, 3=critical
             Path fillPath = new Path();
 
             Path currentLinePath = null;
-            boolean currentIsCharging = false;
+            int currentState = -1;
             boolean pathStarted = false;
 
             for (int i = 0; i < dataPoints.size(); i++) {
@@ -181,8 +193,20 @@ public class BatteryGraphGenerator {
                 float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (data.getTimestamp() - startTime) / (float) timeRange;
                 float y = paddingVertical + (height - 2 * paddingVertical) * (100 - data.getLevel()) / 100f;
 
-                // Detect charging state change or path start
-                if (!pathStarted || data.isCharging() != currentIsCharging) {
+                // Determine battery state: charging, critical, low, or normal
+                int batteryState;
+                if (data.isCharging()) {
+                    batteryState = 1; // Charging
+                } else if (data.getLevel() < 15) {
+                    batteryState = 3; // Critical
+                } else if (data.getLevel() < 35) {
+                    batteryState = 2; // Low
+                } else {
+                    batteryState = 0; // Normal
+                }
+
+                // Detect state change or path start
+                if (!pathStarted || batteryState != currentState) {
                     // End previous path if exists
                     if (pathStarted) {
                         // Add the current point to the previous path for continuity
@@ -192,10 +216,10 @@ public class BatteryGraphGenerator {
                     // Start new line path
                     currentLinePath = new Path();
                     currentLinePath.moveTo(x, y);
-                    currentIsCharging = data.isCharging();
+                    currentState = batteryState;
 
                     linePaths.add(currentLinePath);
-                    lineIsCharging.add(currentIsCharging);
+                    lineStates.add(currentState);
 
                     // Add to fill path
                     if (!pathStarted) {
@@ -223,9 +247,24 @@ public class BatteryGraphGenerator {
             // Draw fill path first
             canvas.drawPath(fillPath, fillPaint);
 
-            // Draw line paths with appropriate color
+            // Draw line paths with appropriate color based on battery state
             for (int i = 0; i < linePaths.size(); i++) {
-                Paint paint = lineIsCharging.get(i) ? chargingPaint : linePaint;
+                Paint paint;
+                int state = lineStates.get(i);
+                switch (state) {
+                    case 1: // Charging
+                        paint = chargingPaint;
+                        break;
+                    case 2: // Low battery
+                        paint = batteryLowPaint;
+                        break;
+                    case 3: // Critical battery
+                        paint = batteryCriticalPaint;
+                        break;
+                    default: // Normal
+                        paint = linePaint;
+                        break;
+                }
                 canvas.drawPath(linePaths.get(i), paint);
             }
         }
