@@ -21,7 +21,7 @@ public class BatteryDataManager {
     private static final String PREF_BATTERY_DATA = "battery_data";
     private static final String PREF_BATTERY_LOG = "battery_event_log";
     private static final int MAX_DATA_POINTS = 10000;
-    private static final int MAX_LOG_ENTRIES = 1000;
+    private static final int MAX_LOG_ENTRIES = 40;
     private static BatteryDataManager instance;
     private final SharedPreferences prefs;
     private final Context context;
