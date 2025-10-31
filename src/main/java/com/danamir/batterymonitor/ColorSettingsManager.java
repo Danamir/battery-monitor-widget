@@ -10,8 +10,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.SeekBar;
-import android.widget.TextView;
 import androidx.appcompat.app.AlertDialog;
 import androidx.preference.PreferenceManager;
 
@@ -129,75 +127,16 @@ public class ColorSettingsManager {
         int currentColor = prefs.getInt(colorKey, 0x80000000);
 
         View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_color_picker, null);
-        View checkerBackground = dialogView.findViewById(R.id.checker_background);
-        TextView colorPreview = dialogView.findViewById(R.id.color_preview);
-        SeekBar alphaSeekBar = dialogView.findViewById(R.id.alpha_seekbar);
-        SeekBar redSeekBar = dialogView.findViewById(R.id.red_seekbar);
-        SeekBar greenSeekBar = dialogView.findViewById(R.id.green_seekbar);
-        SeekBar blueSeekBar = dialogView.findViewById(R.id.blue_seekbar);
-        TextView alphaValue = dialogView.findViewById(R.id.alpha_value);
-        TextView redValue = dialogView.findViewById(R.id.red_value);
-        TextView greenValue = dialogView.findViewById(R.id.green_value);
-        TextView blueValue = dialogView.findViewById(R.id.blue_value);
+        ColorPickerView colorPicker = dialogView.findViewById(R.id.color_picker);
 
-        // Set checker pattern background
-        checkerBackground.setBackground(createCheckerPattern());
-
-        // Set initial values
-        alphaSeekBar.setProgress(Color.alpha(currentColor));
-        redSeekBar.setProgress(Color.red(currentColor));
-        greenSeekBar.setProgress(Color.green(currentColor));
-        blueSeekBar.setProgress(Color.blue(currentColor));
-        alphaValue.setText(String.valueOf(Color.alpha(currentColor)));
-        redValue.setText(String.valueOf(Color.red(currentColor)));
-        greenValue.setText(String.valueOf(Color.green(currentColor)));
-        blueValue.setText(String.valueOf(Color.blue(currentColor)));
-        colorPreview.setBackgroundColor(currentColor);
-
-        // Update preview on seekbar change
-        SeekBar.OnSeekBarChangeListener listener = new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                // Update value displays
-                alphaValue.setText(String.valueOf(alphaSeekBar.getProgress()));
-                redValue.setText(String.valueOf(redSeekBar.getProgress()));
-                greenValue.setText(String.valueOf(greenSeekBar.getProgress()));
-                blueValue.setText(String.valueOf(blueSeekBar.getProgress()));
-
-                // Update color preview
-                int color = Color.argb(
-                        alphaSeekBar.getProgress(),
-                        redSeekBar.getProgress(),
-                        greenSeekBar.getProgress(),
-                        blueSeekBar.getProgress()
-                );
-                colorPreview.setBackgroundColor(color);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-            }
-        };
-
-        alphaSeekBar.setOnSeekBarChangeListener(listener);
-        redSeekBar.setOnSeekBarChangeListener(listener);
-        greenSeekBar.setOnSeekBarChangeListener(listener);
-        blueSeekBar.setOnSeekBarChangeListener(listener);
+        // Set initial color
+        colorPicker.setColor(currentColor);
 
         new AlertDialog.Builder(context)
                 .setTitle(title)
                 .setView(dialogView)
                 .setPositiveButton("OK", (dialog, which) -> {
-                    int color = Color.argb(
-                            alphaSeekBar.getProgress(),
-                            redSeekBar.getProgress(),
-                            greenSeekBar.getProgress(),
-                            blueSeekBar.getProgress()
-                    );
+                    int color = colorPicker.getColor();
                     prefs.edit().putInt(colorKey, color).apply();
                 })
                 .setNegativeButton("Cancel", null)
