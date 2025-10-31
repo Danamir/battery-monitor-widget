@@ -182,7 +182,6 @@ public class ColorPickerView extends LinearLayout {
         // Second row: recent colors
         ColorSettingsManager colorManager = new ColorSettingsManager(ctx);
         List<Integer> recentColors = colorManager.getRecentColors();
-        Collections.reverse(recentColors);
 
         // Ensure we have exactly 6 swatches (fill with grey if needed)
         int[] recentColorsArray = new int[6];
@@ -615,13 +614,50 @@ public class ColorPickerView extends LinearLayout {
             if (bitmap != null) {
                 canvas.drawBitmap(bitmap, 0, 0, null);
 
-                // Draw selection dot
-                float x = saturation * getWidth();
-                float y = (1 - lightness) * getHeight();
+                // Get current RGB color
+                int currentRgb = hslToRgb(hue, saturation, lightness);
+                int targetR = Color.red(currentRgb);
+                int targetG = Color.green(currentRgb);
+                int targetB = Color.blue(currentRgb);
+
+                // Get the pure hue color for reference
+                int pureColor = hslToRgb(hue, 1f, 0.5f);
+                int pureR = Color.red(pureColor);
+                int pureG = Color.green(pureColor);
+                int pureB = Color.blue(pureColor);
+
+                float x, y;
+                float maxTarget = Math.max(targetR, Math.max(targetG, targetB));
+
+                if (maxTarget == 0) {
+                    x = 0;
+                    y = 0;
+                } else {
+                    float minPure = Math.min(pureR, Math.min(pureG, pureB));
+                    float minTarget = Math.min(targetR, Math.min(targetG, targetB));
+
+                    y = maxTarget / 255f;
+
+                    if (y > 0) {
+                        float unscaledMin = minTarget / y;
+                        if (minPure != 255) {
+                            x = (unscaledMin - 255f) / (minPure - 255f);
+                            x = Math.max(0, Math.min(1, x));
+                        } else {
+                            x = 0;
+                        }
+                    } else {
+                        x = 0;
+                    }
+                }
+
+                float posX = x * getWidth();
+                float posY = (1 - y) * getHeight();
+
                 dotPaint.setColor(Color.WHITE);
-                canvas.drawCircle(x, y, 10, dotPaint);
+                canvas.drawCircle(posX, posY, 10, dotPaint);
                 dotPaint.setColor(Color.BLACK);
-                canvas.drawCircle(x, y, 8, dotPaint);
+                canvas.drawCircle(posX, posY, 8, dotPaint);
             }
         }
 
@@ -633,8 +669,34 @@ public class ColorPickerView extends LinearLayout {
                 float x = Math.max(0, Math.min(event.getX(), getWidth()));
                 float y = Math.max(0, Math.min(event.getY(), getHeight()));
 
-                saturation = x / getWidth();
-                lightness = 1 - (y / getHeight());
+                // Calculate the color at this position using the same formula as bitmap generation
+                float saturationRatio = x / getWidth();  // 0 (left) to 1 (right)
+                float lightnessRatio = 1 - (y / getHeight());  // 1 (top) to 0 (bottom)
+
+                // Get the pure hue color
+                int pureColor = hslToRgb(hue, 1f, 0.5f);
+                int pureR = Color.red(pureColor);
+                int pureG = Color.green(pureColor);
+                int pureB = Color.blue(pureColor);
+
+                // Calculate RGB at this position
+                int r, g, b;
+                if (lightnessRatio == 0) {
+                    r = g = b = 0;
+                } else {
+                    float whiteAmount = (1 - saturationRatio) * lightnessRatio;
+                    float colorAmount = saturationRatio * lightnessRatio;
+
+                    r = (int) (255 * whiteAmount + pureR * colorAmount);
+                    g = (int) (255 * whiteAmount + pureG * colorAmount);
+                    b = (int) (255 * whiteAmount + pureB * colorAmount);
+                }
+
+                // Convert RGB back to HSL
+                float[] hsl = new float[3];
+                rgbToHsl(r, g, b, hsl);
+                saturation = hsl[1];
+                lightness = hsl[2];
 
                 invalidate();
                 updateAllViews();
