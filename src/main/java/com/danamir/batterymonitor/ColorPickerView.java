@@ -114,14 +114,14 @@ public class ColorPickerView extends LinearLayout {
         // Add spacing
         addSpacing(16);
 
-        // Zone 5: Material 3 color selector
-        addMaterial3ColorSelector();
+        // Zone 5: Color swatches
+        addColorSwatches();
 
         // Add spacing
         addSpacing(16);
 
-        // Zone 6: Color swatches
-        addColorSwatches();
+        // Zone 6: Material 3 color selector
+        addMaterial3ColorSelector();
     }
 
     private void addSpacing(int dp) {
@@ -242,13 +242,6 @@ public class ColorPickerView extends LinearLayout {
     private void addMaterial3ColorSelector() {
         Context ctx = getContext();
 
-        // Create label
-        TextView label = new TextView(ctx);
-        label.setText("Material 3 Colors:");
-        label.setTextSize(14);
-        label.setPadding(0, 0, 0, (int) (8 * getResources().getDisplayMetrics().density));
-        addView(label);
-
         // Create spinner
         Spinner spinner = new Spinner(ctx);
         spinner.setLayoutParams(new LayoutParams(
@@ -285,7 +278,7 @@ public class ColorPickerView extends LinearLayout {
         List<Material3Color> colors = new ArrayList<>();
         TypedValue typedValue = new TypedValue();
 
-        colors.add(new Material3Color("Select a Material 3 color...", 0));
+        colors.add(new Material3Color("Select a Material color...", 0));
 
         // Helper to add color if it resolves
         class ColorResolver {
