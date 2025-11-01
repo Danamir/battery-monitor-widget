@@ -84,34 +84,35 @@ public class BatteryGraphGenerator {
             return chargingColor;
         }
 
-        // Critical level blending (between criticalColor and lowColor)
-        if (level < criticalLevel) {
-            // Calculate the blend range, limited by the delta between 0 and critical level
-            int criticalBlendRange = Math.min(blendValue, criticalLevel);
+        // Pure critical color below critical level
+        if (level <= criticalLevel) {
+            return criticalColor;
+        }
 
-            if (level <= criticalLevel - criticalBlendRange) {
-                // Below blend range - pure critical color
-                return criticalColor;
-            } else {
+        // Blending between critical and low (above critical level)
+        if (level < criticalLevel + blendValue && level <= lowLevel) {
+            // Calculate the blend range, limited by the delta between critical and low levels
+            int criticalBlendRange = Math.min(blendValue, lowLevel - criticalLevel);
+
+            if (level <= criticalLevel + criticalBlendRange) {
                 // Within blend range - blend between critical and low colors
-                float ratio = (float)(level - (criticalLevel - criticalBlendRange)) / criticalBlendRange;
+                float ratio = (float)(level - criticalLevel) / criticalBlendRange;
                 return blendColors(criticalColor, lowColor, ratio);
+            } else {
+                // Above blend range - pure low color
+                return lowColor;
             }
         }
 
-        // Low level blending (between lowColor and normalColor)
-        if (level < lowLevel) {
-            // Calculate the blend range, limited by the delta between critical and low levels
-            int lowBlendRange = Math.min(blendValue, lowLevel - criticalLevel);
+        // Pure low color at or below low level (and outside critical blend range)
+        if (level <= lowLevel) {
+            return lowColor;
+        }
 
-            if (level <= lowLevel - lowBlendRange) {
-                // Below blend range - pure low color
-                return lowColor;
-            } else {
-                // Within blend range - blend between low and normal colors
-                float ratio = (float)(level - (lowLevel - lowBlendRange)) / lowBlendRange;
-                return blendColors(lowColor, normalColor, ratio);
-            }
+        // Blending between low and normal (above low level)
+        if (level < lowLevel + blendValue) {
+            float ratio = (float)(level - lowLevel) / blendValue;
+            return blendColors(lowColor, normalColor, ratio);
         }
 
         // Normal level
