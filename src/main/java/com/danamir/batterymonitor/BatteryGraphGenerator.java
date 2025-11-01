@@ -46,6 +46,78 @@ public class BatteryGraphGenerator {
         }
     }
 
+    /**
+     * Linearly blend between two colors based on a ratio.
+     * @param color1 The first color
+     * @param color2 The second color
+     * @param ratio The blend ratio (0.0 = color1, 1.0 = color2)
+     * @return The blended color
+     */
+    private static int blendColors(int color1, int color2, float ratio) {
+        float inverseRatio = 1.0f - ratio;
+
+        int r = (int) (Color.red(color1) * inverseRatio + Color.red(color2) * ratio);
+        int g = (int) (Color.green(color1) * inverseRatio + Color.green(color2) * ratio);
+        int b = (int) (Color.blue(color1) * inverseRatio + Color.blue(color2) * ratio);
+        int a = (int) (Color.alpha(color1) * inverseRatio + Color.alpha(color2) * ratio);
+
+        return Color.argb(a, r, g, b);
+    }
+
+    /**
+     * Get the appropriate line color for a given battery level with blending.
+     * @param level The battery level (0-100)
+     * @param isCharging Whether the battery is charging
+     * @param normalColor The normal line color
+     * @param lowColor The low battery color
+     * @param criticalColor The critical battery color
+     * @param chargingColor The charging color
+     * @param lowLevel The low battery threshold
+     * @param criticalLevel The critical battery threshold
+     * @param blendValue The blend range
+     * @return The color to use for this battery level
+     */
+    private static int getBlendedLineColor(int level, boolean isCharging,
+                                          int normalColor, int lowColor, int criticalColor, int chargingColor,
+                                          int lowLevel, int criticalLevel, int blendValue) {
+        if (isCharging) {
+            return chargingColor;
+        }
+
+        // Critical level blending (between criticalColor and lowColor)
+        if (level < criticalLevel) {
+            // Calculate the blend range, limited by the delta between 0 and critical level
+            int criticalBlendRange = Math.min(blendValue, criticalLevel);
+
+            if (level <= criticalLevel - criticalBlendRange) {
+                // Below blend range - pure critical color
+                return criticalColor;
+            } else {
+                // Within blend range - blend between critical and low colors
+                float ratio = (float)(level - (criticalLevel - criticalBlendRange)) / criticalBlendRange;
+                return blendColors(criticalColor, lowColor, ratio);
+            }
+        }
+
+        // Low level blending (between lowColor and normalColor)
+        if (level < lowLevel) {
+            // Calculate the blend range, limited by the delta between critical and low levels
+            int lowBlendRange = Math.min(blendValue, lowLevel - criticalLevel);
+
+            if (level <= lowLevel - lowBlendRange) {
+                // Below blend range - pure low color
+                return lowColor;
+            } else {
+                // Within blend range - blend between low and normal colors
+                float ratio = (float)(level - (lowLevel - lowBlendRange)) / lowBlendRange;
+                return blendColors(lowColor, normalColor, ratio);
+            }
+        }
+
+        // Normal level
+        return normalColor;
+    }
+
     public static Picture generateGraphAsPicture(Context context, List<BatteryData> dataPoints, int displayHours, int width, int height) {
         Picture picture = new Picture();
         Canvas canvas = picture.beginRecording(width, height);
@@ -141,9 +213,16 @@ public class BatteryGraphGenerator {
         batteryCriticalPaint.setStyle(Paint.Style.STROKE);
         batteryCriticalPaint.setAntiAlias(true);
 
-        // Get battery level thresholds
+        // Get battery level thresholds and blend value
         int batteryLowLevel = prefs.getInt("battery_low_level", 30);
         int batteryCriticalLevel = prefs.getInt("battery_critical_level", 15);
+        int blendValue = prefs.getInt("battery_blend_value", 10);
+
+        // Get base colors for blending
+        int normalColor = prefs.getInt("graph_line_color", 0xFF4CAF50);
+        int lowColor = prefs.getInt("battery_low_color", 0xFFFFFF3A);
+        int criticalColor = prefs.getInt("battery_critical_color", 0xFFFF3C1C);
+        int chargingColor = prefs.getInt("charging_line_color", 0xFFADD8E6);
 
         // Draw background
         canvas.drawRect(0, 0, width, height, backgroundPaint);
@@ -181,13 +260,9 @@ public class BatteryGraphGenerator {
             long timeRange = displayHours * 60 * 60 * 1000L;
             long startTime = now - timeRange;
 
-            List<Path> linePaths = new ArrayList<>();
-            List<Integer> lineStates = new ArrayList<>(); // 0=normal, 1=charging, 2=low, 3=critical
+            // Build fill path
             Path fillPath = new Path();
-
-            Path currentLinePath = null;
-            int currentState = -1;
-            boolean pathStarted = false;
+            boolean fillPathStarted = false;
 
             for (int i = 0; i < dataPoints.size(); i++) {
                 BatteryData data = dataPoints.get(i);
@@ -197,51 +272,18 @@ public class BatteryGraphGenerator {
                 float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (data.getTimestamp() - startTime) / (float) timeRange;
                 float y = paddingVertical + (height - 2 * paddingVertical) * (100 - data.getLevel()) / 100f;
 
-                // Determine battery state: charging, critical, low, or normal
-                int batteryState;
-                if (data.isCharging()) {
-                    batteryState = 1; // Charging
-                } else if (data.getLevel() < batteryCriticalLevel) {
-                    batteryState = 3; // Critical
-                } else if (data.getLevel() < batteryLowLevel) {
-                    batteryState = 2; // Low
+                // Add to fill path
+                if (!fillPathStarted) {
+                    fillPath.moveTo(x, height - paddingVertical);
+                    fillPath.lineTo(x, y);
+                    fillPathStarted = true;
                 } else {
-                    batteryState = 0; // Normal
-                }
-
-                // Detect state change or path start
-                if (!pathStarted || batteryState != currentState) {
-                    // End previous path if exists
-                    if (pathStarted) {
-                        // Add the current point to the previous path for continuity
-                        currentLinePath.lineTo(x, y);
-                    }
-
-                    // Start new line path
-                    currentLinePath = new Path();
-                    currentLinePath.moveTo(x, y);
-                    currentState = batteryState;
-
-                    linePaths.add(currentLinePath);
-                    lineStates.add(currentState);
-
-                    // Add to fill path
-                    if (!pathStarted) {
-                        fillPath.moveTo(x, height - paddingVertical);
-                        fillPath.lineTo(x, y);
-                    } else {
-                        fillPath.lineTo(x, y);
-                    }
-
-                    pathStarted = true;
-                } else {
-                    currentLinePath.lineTo(x, y);
                     fillPath.lineTo(x, y);
                 }
             }
 
             // Close the fill path
-            if (pathStarted) {
+            if (fillPathStarted) {
                 BatteryData lastData = dataPoints.get(dataPoints.size() - 1);
                 float lastX = paddingHorizontal + (width - 2 * paddingHorizontal) * (lastData.getTimestamp() - startTime) / (float) timeRange;
                 fillPath.lineTo(lastX, height - paddingVertical);
@@ -251,25 +293,44 @@ public class BatteryGraphGenerator {
             // Draw fill path first
             canvas.drawPath(fillPath, fillPaint);
 
-            // Draw line paths with appropriate color based on battery state
-            for (int i = 0; i < linePaths.size(); i++) {
-                Paint paint;
-                int state = lineStates.get(i);
-                switch (state) {
-                    case 1: // Charging
-                        paint = chargingPaint;
-                        break;
-                    case 2: // Low battery
-                        paint = batteryLowPaint;
-                        break;
-                    case 3: // Critical battery
-                        paint = batteryCriticalPaint;
-                        break;
-                    default: // Normal
-                        paint = linePaint;
-                        break;
+            // Create a paint for drawing line segments with blended colors
+            Paint segmentPaint = new Paint();
+            segmentPaint.setStrokeWidth(2f * density);
+            segmentPaint.setStyle(Paint.Style.STROKE);
+            segmentPaint.setAntiAlias(true);
+
+            // Draw line segments with blended colors
+            Float prevX = null;
+            Float prevY = null;
+
+            for (int i = 0; i < dataPoints.size(); i++) {
+                BatteryData data = dataPoints.get(i);
+
+                if (data.getTimestamp() < startTime) continue;
+
+                float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (data.getTimestamp() - startTime) / (float) timeRange;
+                float y = paddingVertical + (height - 2 * paddingVertical) * (100 - data.getLevel()) / 100f;
+
+                // Draw line segment from previous point to current point with blended color
+                if (prevX != null && prevY != null) {
+                    // Use the color for the current battery level
+                    int blendedColor = getBlendedLineColor(
+                        data.getLevel(),
+                        data.isCharging(),
+                        normalColor,
+                        lowColor,
+                        criticalColor,
+                        chargingColor,
+                        batteryLowLevel,
+                        batteryCriticalLevel,
+                        blendValue
+                    );
+                    segmentPaint.setColor(blendedColor);
+                    canvas.drawLine(prevX, prevY, x, y, segmentPaint);
                 }
-                canvas.drawPath(linePaths.get(i), paint);
+
+                prevX = x;
+                prevY = y;
             }
         }
 
