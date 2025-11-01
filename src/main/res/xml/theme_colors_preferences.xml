@@ -44,41 +44,37 @@
         android:layout="@layout/preference_color" />
 
     <com.danamir.batterymonitor.ColorPreference
-        android:key="battery_low_color"
-        android:title="@string/battery_low_color_title"
-        android:summary="@string/battery_low_color_summary"
-        android:defaultValue="0xFFFFFF3A"
-        android:layout="@layout/preference_color" />
-
-    <SeekBarPreference
-        android:key="battery_low_level"
-        android:title="@string/battery_low_level_title"
-        android:summary="@string/battery_low_level_summary"
-        android:defaultValue="30"
-        android:min="0"
-        android:max="100"
-        app:showSeekBarValue="true" />
-
-    <com.danamir.batterymonitor.ColorPreference
-        android:key="battery_critical_color"
-        android:title="@string/battery_critical_color_title"
-        android:summary="@string/battery_critical_color_summary"
-        android:defaultValue="0xFFFF3C1C"
-        android:layout="@layout/preference_color" />
-
-    <SeekBarPreference
-        android:key="battery_critical_level"
-        android:title="@string/battery_critical_level_title"
-        android:summary="@string/battery_critical_level_summary"
-        android:defaultValue="15"
-        android:min="0"
-        android:max="100"
-        app:showSeekBarValue="true" />
-
-    <com.danamir.batterymonitor.ColorPreference
         android:key="user_present_color"
         android:title="@string/user_present_color_title"
         android:summary="@string/user_present_color_summary"
         android:defaultValue="0xFFFFEB3B"
         android:layout="@layout/preference_color" />
+
+    <PreferenceCategory
+        android:title="@string/battery_state_colors_title" />
+
+    <SeekBarPreference
+        android:key="battery_blend_value"
+        android:title="@string/battery_blend_value_title"
+        android:summary="@string/battery_blend_value_summary"
+        android:defaultValue="10"
+        android:min="0"
+        android:max="50"
+        app:showSeekBarValue="true" />
+
+    <com.danamir.batterymonitor.BatteryThresholdPreference
+        android:key="battery_low_threshold"
+        android:title="@string/battery_low_level_title"
+        app:colorKey="battery_low_color"
+        app:thresholdKey="battery_low_level"
+        app:defaultColor="0xFFFFFF3A"
+        app:defaultThreshold="30" />
+
+    <com.danamir.batterymonitor.BatteryThresholdPreference
+        android:key="battery_critical_threshold"
+        android:title="@string/battery_critical_level_title"
+        app:colorKey="battery_critical_color"
+        app:thresholdKey="battery_critical_level"
+        app:defaultColor="0xFFFF3C1C"
+        app:defaultThreshold="15" />
 </PreferenceScreen>

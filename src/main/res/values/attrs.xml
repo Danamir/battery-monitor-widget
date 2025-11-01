@@ -25,4 +25,12 @@
     <attr name="materialColorOnSurfaceVariant" format="color" />
     <attr name="materialColorOutline" format="color" />
     <attr name="materialColorOutlineVariant" format="color" />
+
+    <!-- BatteryThresholdPreference attributes -->
+    <declare-styleable name="BatteryThresholdPreference">
+        <attr name="colorKey" format="string" />
+        <attr name="thresholdKey" format="string" />
+        <attr name="defaultColor" format="integer" />
+        <attr name="defaultThreshold" format="integer" />
+    </declare-styleable>
 </resources>
