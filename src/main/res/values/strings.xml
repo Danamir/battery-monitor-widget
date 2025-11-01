@@ -52,6 +52,8 @@
     <string name="show_y_axis_labels_summary">Display percentage labels on the left side of the graph</string>
     <string name="static_grid_title">Static Grid</string>
     <string name="static_grid_summary">Static or time-aligned vertical grid lines</string>
+    <string name="grid_vertical_interval_title">Grid Vertical Interval</string>
+    <string name="grid_vertical_interval_summary">Time interval for vertical grid lines (e.g., "6 hours", "30m", "1h")</string>
     <string name="theme_colors_title">Theme colors</string>
     <string name="theme_colors_summary">Configure background, text, and grid colors</string>
     <string name="view_event_log_title">View Event Log</string>

@@ -84,6 +84,64 @@ public class BatteryGraphGenerator {
     }
 
     /**
+     * Parse human-readable time interval to milliseconds.
+     * Supports formats like: "10 seconds", "10s", "20m", "30mn", "60 minutes", "1h", "6 hours"
+     * @param intervalStr Time interval string
+     * @return Milliseconds, or -1 if invalid
+     */
+    private static long parseIntervalToMillis(String intervalStr) {
+        if (intervalStr == null || intervalStr.trim().isEmpty()) {
+            return -1;
+        }
+
+        String str = intervalStr.trim().toLowerCase();
+
+        try {
+            // Extract number and unit
+            String numberPart = "";
+            String unitPart = "";
+
+            for (int i = 0; i < str.length(); i++) {
+                char c = str.charAt(i);
+                if (Character.isDigit(c) || c == '.') {
+                    numberPart += c;
+                } else if (Character.isLetter(c)) {
+                    unitPart = str.substring(i).trim();
+                    break;
+                } else if (c == ' ' && !numberPart.isEmpty()) {
+                    unitPart = str.substring(i).trim();
+                    break;
+                }
+            }
+
+            if (numberPart.isEmpty()) {
+                return -1;
+            }
+
+            double value = Double.parseDouble(numberPart);
+
+            // Parse unit
+            long multiplier;
+            if (unitPart.isEmpty() || unitPart.equals("h") || unitPart.equals("hrs") ||
+                unitPart.equals("hour") || unitPart.equals("hours")) {
+                multiplier = 60 * 60 * 1000L; // hours
+            } else if (unitPart.equals("m") || unitPart.equals("mn") || unitPart.equals("min") ||
+                       unitPart.equals("minute") || unitPart.equals("minutes")) {
+                multiplier = 60 * 1000L; // minutes
+            } else if (unitPart.equals("s") || unitPart.equals("sec") || unitPart.equals("second") ||
+                       unitPart.equals("seconds")) {
+                multiplier = 1000L; // seconds
+            } else {
+                return -1; // Unknown unit
+            }
+
+            return (long) (value * multiplier);
+        } catch (Exception e) {
+            return -1;
+        }
+    }
+
+    /**
      * Check if a given timestamp is during night time based on preferences.
      * @param timestamp The timestamp to check
      * @param nightStartMinutes Night start time in minutes since midnight
@@ -300,46 +358,71 @@ public class BatteryGraphGenerator {
         // Draw grid vertical lines for time intervals
         boolean staticGrid = prefs.getBoolean("staticGridPref", true);
 
+        // Parse grid interval from human-readable format
+        String intervalStr = prefs.getString("gridVerticalIntervalPref", "6 hours");
+        long intervalMillis = parseIntervalToMillis(intervalStr);
+        if (intervalMillis <= 0) {
+            intervalMillis = 6 * 60 * 60 * 1000L; // Default to 6 hours
+        }
+
+        long now = System.currentTimeMillis();
+        long timeRange = displayHours * 60 * 60 * 1000L;
+        long startTime = now - timeRange;
+
         if (staticGrid) {
             // Static grid: evenly spaced lines
-            int intervals = Math.min(displayHours / 6, 8);
+            int intervals = Math.max(1, (int) (timeRange / intervalMillis));
+            intervals = Math.min(intervals, 100); // Cap at 100 intervals
             for (int i = 0; i <= intervals; i++) {
                 float x = paddingHorizontal + (width - 2 * paddingHorizontal) * i / (float) intervals;
                 canvas.drawLine(x, paddingVertical, x, height - paddingVertical, gridPaint);
             }
         } else {
-            // Time-aligned grid: lines at 0:00, 6:00, 12:00, 18:00
-            long now = System.currentTimeMillis();
-            long timeRange = displayHours * 60 * 60 * 1000L;
-            long startTime = now - timeRange;
-
+            // Time-aligned grid: lines at regular time marks
             java.util.Calendar cal = java.util.Calendar.getInstance();
             cal.setTimeInMillis(startTime);
 
-            // Round down to the previous 6-hour mark
-            int currentHour = cal.get(java.util.Calendar.HOUR_OF_DAY);
-            int alignedHour = (currentHour / 6) * 6;
-            cal.set(java.util.Calendar.HOUR_OF_DAY, alignedHour);
-            cal.set(java.util.Calendar.MINUTE, 0);
-            cal.set(java.util.Calendar.SECOND, 0);
-            cal.set(java.util.Calendar.MILLISECOND, 0);
+            // Convert interval to hours for alignment (if >= 1 hour)
+            if (intervalMillis >= 60 * 60 * 1000L) {
+                int intervalHours = (int) (intervalMillis / (60 * 60 * 1000L));
 
-            // Draw grid lines at 6-hour intervals
-            while (cal.getTimeInMillis() <= now) {
-                long gridTime = cal.getTimeInMillis();
-                if (gridTime >= startTime) {
-                    float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (gridTime - startTime) / (float) timeRange;
-                    canvas.drawLine(x, paddingVertical, x, height - paddingVertical, gridPaint);
+                // Round down to the previous interval mark
+                int currentHour = cal.get(java.util.Calendar.HOUR_OF_DAY);
+                int alignedHour = (currentHour / intervalHours) * intervalHours;
+                cal.set(java.util.Calendar.HOUR_OF_DAY, alignedHour);
+                cal.set(java.util.Calendar.MINUTE, 0);
+                cal.set(java.util.Calendar.SECOND, 0);
+                cal.set(java.util.Calendar.MILLISECOND, 0);
+
+                // Draw grid lines at specified intervals
+                while (cal.getTimeInMillis() <= now) {
+                    long gridTime = cal.getTimeInMillis();
+                    if (gridTime >= startTime) {
+                        float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (gridTime - startTime) / (float) timeRange;
+                        canvas.drawLine(x, paddingVertical, x, height - paddingVertical, gridPaint);
+                    }
+                    cal.add(java.util.Calendar.HOUR_OF_DAY, intervalHours);
                 }
-                cal.add(java.util.Calendar.HOUR_OF_DAY, 6);
+            } else {
+                // For intervals < 1 hour, use millisecond-based alignment
+                // Round down to the previous interval mark
+                long alignedTime = (startTime / intervalMillis) * intervalMillis;
+
+                // Draw grid lines at specified intervals
+                for (long gridTime = alignedTime; gridTime <= now; gridTime += intervalMillis) {
+                    if (gridTime >= startTime) {
+                        float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (gridTime - startTime) / (float) timeRange;
+                        canvas.drawLine(x, paddingVertical, x, height - paddingVertical, gridPaint);
+                    }
+                }
             }
         }
 
         // Draw battery level graph
         if (dataPoints.size() >= 2) {
-            long now = System.currentTimeMillis();
-            long timeRange = displayHours * 60 * 60 * 1000L;
-            long startTime = now - timeRange;
+            now = System.currentTimeMillis();
+            timeRange = displayHours * 60 * 60 * 1000L;
+            startTime = now - timeRange;
 
             // Build fill paths with day/night detection
             Path currentPath = null;
@@ -435,9 +518,9 @@ public class BatteryGraphGenerator {
 
         // Draw user_present status bar at the bottom
         if (statusData != null && !statusData.isEmpty()) {
-            long now = System.currentTimeMillis();
-            long timeRange = displayHours * 60 * 60 * 1000L;
-            long startTime = now - timeRange;
+            now = System.currentTimeMillis();
+            timeRange = displayHours * 60 * 60 * 1000L;
+            startTime = now - timeRange;
 
             Paint userPresentPaint = new Paint();
             userPresentPaint.setColor(prefs.getInt("user_present_color", 0xFFFFEB3B)); // Yellow

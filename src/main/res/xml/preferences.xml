@@ -45,6 +45,14 @@
         android:summary="@string/static_grid_summary"
         android:defaultValue="true" />
 
+    <EditTextPreference
+        android:key="gridVerticalIntervalPref"
+        android:title="@string/grid_vertical_interval_title"
+        android:summary="@string/grid_vertical_interval_summary"
+        android:defaultValue="6 hours"
+        android:inputType="text"
+        android:maxLength="16" />
+
     <Preference
         android:key="view_event_log"
         android:title="@string/view_event_log_title"
