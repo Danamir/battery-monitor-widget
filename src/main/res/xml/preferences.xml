@@ -53,6 +53,16 @@
         android:inputType="text"
         android:maxLength="16" />
 
+    <SeekBarPreference
+        android:key="gridHorizontalIntervalPref"
+        android:title="@string/grid_horizontal_interval_title"
+        android:summary="@string/grid_horizontal_interval_summary"
+        android:defaultValue="25"
+        android:max="100"
+        android:min="0"
+        app:showSeekBarValue="true"
+        app:seekBarIncrement="1" />
+
     <Preference
         android:key="view_event_log"
         android:title="@string/view_event_log_title"

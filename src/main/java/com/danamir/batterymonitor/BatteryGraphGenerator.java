@@ -342,14 +342,21 @@ public class BatteryGraphGenerator {
 
         // Draw grid - horizontal lines for battery percentages
         boolean showYAxisLabels = prefs.getBoolean("show_y_axis_labels", false);
-        
-        for (int i = 0; i <= 4; i++) {
-            float y = paddingVertical + (height - 2 * paddingVertical) * i / 4f;
+        int horizontalInterval = prefs.getInt("gridHorizontalIntervalPref", 25);
+
+        // Ensure valid interval (avoid division by zero)
+        if (horizontalInterval <= 0) {
+            horizontalInterval = 25;
+        }
+
+        // Draw horizontal grid lines at specified percentage intervals
+        for (int percentage = 0; percentage <= 100; percentage += horizontalInterval) {
+            float y = paddingVertical + (height - 2 * paddingVertical) * (100 - percentage) / 100f;
             canvas.drawLine(paddingHorizontal, y, width - paddingHorizontal, y, gridPaint);
 
             // Draw percentage labels (right-aligned) if enabled
             if (showYAxisLabels) {
-                String label = String.valueOf(100 - i * 25);
+                String label = String.valueOf(percentage);
                 float labelWidth = textPaint.measureText(label);
                 canvas.drawText(label, paddingHorizontal + labelWidth + 5, y + 5, textPaint);
             }
