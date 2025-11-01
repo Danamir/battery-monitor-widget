@@ -178,10 +178,7 @@ public class SettingsActivity extends AppCompatActivity {
         }
 
         private void updateColorPreferenceSummary(androidx.preference.Preference colorPref, String key) {
-            if (colorPref != null) {
-                int color = colorSettingsManager.getColor(key, 0x80000000);
-                colorPref.setSummary(colorSettingsManager.formatColorSummary(color));
-            }
+            // Summary is now displayed from XML, no need to set it dynamically
         }
 
         private void updateColorPreview() {

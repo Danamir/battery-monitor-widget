@@ -244,11 +244,11 @@ public class BatteryGraphGenerator {
             if (showYAxisLabels) {
                 String label = String.valueOf(100 - i * 25);
                 float labelWidth = textPaint.measureText(label);
-                canvas.drawText(label, paddingHorizontal - labelWidth - 5, y + 5, textPaint);
+                canvas.drawText(label, paddingHorizontal + labelWidth + 5, y + 5, textPaint);
             }
         }
 
-        // Draw grid - vertical lines for time intervals
+        // Draw grid vertical lines for time intervals
         int intervals = Math.min(displayHours / 6, 8);
         for (int i = 0; i <= intervals; i++) {
             float x = paddingHorizontal + (width - 2 * paddingHorizontal) * i / (float) intervals;
@@ -387,7 +387,7 @@ public class BatteryGraphGenerator {
             }
 
             textPaint.setTextSize(percentTextSize);
-            canvas.drawText(levelText, paddingHorizontal + percentTextSize, height - paddingVertical - percentTextSize * 0.5f, textPaint);
+            canvas.drawText(levelText, paddingHorizontal + percentTextSize + (showYAxisLabels ? labelTextSize * 3 : 0), height - paddingVertical - percentTextSize * 0.5f, textPaint);
         }
     }
 }

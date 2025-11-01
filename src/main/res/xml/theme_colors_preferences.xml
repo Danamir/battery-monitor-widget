@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory
+            android:title="@string/battery_main_colors_title" />
+
     <com.danamir.batterymonitor.ColorPreference
         android:key="main_color"
         android:title="@string/main_color_title"
@@ -21,6 +24,9 @@
         android:summary="@string/grid_color_summary"
         android:defaultValue="0x33CCCCCC"
         android:layout="@layout/preference_color" />
+
+    <PreferenceCategory
+            android:title="@string/battery_graph_colors_title" />
 
     <com.danamir.batterymonitor.ColorPreference
         android:key="graph_line_color"
