@@ -298,10 +298,41 @@ public class BatteryGraphGenerator {
         }
 
         // Draw grid vertical lines for time intervals
-        int intervals = Math.min(displayHours / 6, 8);
-        for (int i = 0; i <= intervals; i++) {
-            float x = paddingHorizontal + (width - 2 * paddingHorizontal) * i / (float) intervals;
-            canvas.drawLine(x, paddingVertical, x, height - paddingVertical, gridPaint);
+        boolean staticGrid = prefs.getBoolean("staticGridPref", true);
+
+        if (staticGrid) {
+            // Static grid: evenly spaced lines
+            int intervals = Math.min(displayHours / 6, 8);
+            for (int i = 0; i <= intervals; i++) {
+                float x = paddingHorizontal + (width - 2 * paddingHorizontal) * i / (float) intervals;
+                canvas.drawLine(x, paddingVertical, x, height - paddingVertical, gridPaint);
+            }
+        } else {
+            // Time-aligned grid: lines at 0:00, 6:00, 12:00, 18:00
+            long now = System.currentTimeMillis();
+            long timeRange = displayHours * 60 * 60 * 1000L;
+            long startTime = now - timeRange;
+
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            cal.setTimeInMillis(startTime);
+
+            // Round down to the previous 6-hour mark
+            int currentHour = cal.get(java.util.Calendar.HOUR_OF_DAY);
+            int alignedHour = (currentHour / 6) * 6;
+            cal.set(java.util.Calendar.HOUR_OF_DAY, alignedHour);
+            cal.set(java.util.Calendar.MINUTE, 0);
+            cal.set(java.util.Calendar.SECOND, 0);
+            cal.set(java.util.Calendar.MILLISECOND, 0);
+
+            // Draw grid lines at 6-hour intervals
+            while (cal.getTimeInMillis() <= now) {
+                long gridTime = cal.getTimeInMillis();
+                if (gridTime >= startTime) {
+                    float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (gridTime - startTime) / (float) timeRange;
+                    canvas.drawLine(x, paddingVertical, x, height - paddingVertical, gridPaint);
+                }
+                cal.add(java.util.Calendar.HOUR_OF_DAY, 6);
+            }
         }
 
         // Draw battery level graph

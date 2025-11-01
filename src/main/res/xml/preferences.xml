@@ -39,6 +39,12 @@
         android:summary="@string/show_y_axis_labels_summary"
         android:defaultValue="false" />
 
+    <SwitchPreferenceCompat
+        android:key="staticGridPref"
+        android:title="@string/static_grid_title"
+        android:summary="@string/static_grid_summary"
+        android:defaultValue="true" />
+
     <Preference
         android:key="view_event_log"
         android:title="@string/view_event_log_title"
