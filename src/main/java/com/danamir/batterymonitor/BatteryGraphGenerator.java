@@ -345,47 +345,84 @@ public class BatteryGraphGenerator {
         nightBackgroundPaint.setColor(nightFillColor);
         nightBackgroundPaint.setStyle(Paint.Style.FILL);
 
-        // Iterate through each day in the time range
-        java.util.Calendar cal = java.util.Calendar.getInstance();
-        cal.setTimeInMillis(startTime);
-        cal.set(java.util.Calendar.HOUR_OF_DAY, 0);
-        cal.set(java.util.Calendar.MINUTE, 0);
-        cal.set(java.util.Calendar.SECOND, 0);
-        cal.set(java.util.Calendar.MILLISECOND, 0);
+        if (nightStartMinutes == nightEndMinutes) {
+            // Equal start and end times: alternating 24-hour periods starting at the defined time
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            cal.setTimeInMillis(startTime);
+            cal.set(java.util.Calendar.HOUR_OF_DAY, nightStartMinutes / 60);
+            cal.set(java.util.Calendar.MINUTE, nightStartMinutes % 60);
+            cal.set(java.util.Calendar.SECOND, 0);
+            cal.set(java.util.Calendar.MILLISECOND, 0);
 
-        // Go back one day to catch any night period that might overlap
-        cal.add(java.util.Calendar.DAY_OF_MONTH, -1);
-
-        while (cal.getTimeInMillis() <= now) {
-            // Calculate night start and end for this day
-            java.util.Calendar nightStart = (java.util.Calendar) cal.clone();
-            nightStart.set(java.util.Calendar.HOUR_OF_DAY, nightStartMinutes / 60);
-            nightStart.set(java.util.Calendar.MINUTE, nightStartMinutes % 60);
-
-            java.util.Calendar nightEnd = (java.util.Calendar) cal.clone();
-            if (nightStartMinutes > nightEndMinutes) {
-                // Night spans midnight - end is next day
-                nightEnd.add(java.util.Calendar.DAY_OF_MONTH, 1);
-            }
-            nightEnd.set(java.util.Calendar.HOUR_OF_DAY, nightEndMinutes / 60);
-            nightEnd.set(java.util.Calendar.MINUTE, nightEndMinutes % 60);
-
-            long nightStartTime = nightStart.getTimeInMillis();
-            long nightEndTime = nightEnd.getTimeInMillis();
-
-            // Clip to visible time range
-            long visibleNightStart = Math.max(nightStartTime, startTime);
-            long visibleNightEnd = Math.min(nightEndTime, now);
-
-            // Draw night section if it's visible
-            if (visibleNightStart < visibleNightEnd) {
-                float x1 = paddingHorizontal + (width - 2 * paddingHorizontal) * (visibleNightStart - startTime) / (float) timeRange;
-                float x2 = paddingHorizontal + (width - 2 * paddingHorizontal) * (visibleNightEnd - startTime) / (float) timeRange;
-                canvas.drawRect(x1, 0, x2, height, nightBackgroundPaint);
+            // Go back to find the first period boundary before startTime
+            while (cal.getTimeInMillis() > startTime) {
+                cal.add(java.util.Calendar.DAY_OF_MONTH, -1);
             }
 
-            // Move to next day
-            cal.add(java.util.Calendar.DAY_OF_MONTH, 1);
+            // Determine if we should start with night (odd periods) or day (even periods)
+            int periodIndex = 0;
+            while (cal.getTimeInMillis() <= now) {
+                long periodStart = cal.getTimeInMillis();
+                cal.add(java.util.Calendar.DAY_OF_MONTH, 1);
+                long periodEnd = cal.getTimeInMillis();
+
+                // Draw night background for odd periods (1st, 3rd, 5th, etc.)
+                if (periodIndex % 2 == 1) {
+                    long visibleStart = Math.max(periodStart, startTime);
+                    long visibleEnd = Math.min(periodEnd, now);
+
+                    if (visibleStart < visibleEnd) {
+                        float x1 = paddingHorizontal + (width - 2 * paddingHorizontal) * (visibleStart - startTime) / (float) timeRange;
+                        float x2 = paddingHorizontal + (width - 2 * paddingHorizontal) * (visibleEnd - startTime) / (float) timeRange;
+                        canvas.drawRect(x1, 0, x2, height, nightBackgroundPaint);
+                    }
+                }
+
+                periodIndex++;
+            }
+        } else {
+            // Normal mode: night period between start and end times
+            java.util.Calendar cal = java.util.Calendar.getInstance();
+            cal.setTimeInMillis(startTime);
+            cal.set(java.util.Calendar.HOUR_OF_DAY, 0);
+            cal.set(java.util.Calendar.MINUTE, 0);
+            cal.set(java.util.Calendar.SECOND, 0);
+            cal.set(java.util.Calendar.MILLISECOND, 0);
+
+            // Go back one day to catch any night period that might overlap
+            cal.add(java.util.Calendar.DAY_OF_MONTH, -1);
+
+            while (cal.getTimeInMillis() <= now) {
+                // Calculate night start and end for this day
+                java.util.Calendar nightStart = (java.util.Calendar) cal.clone();
+                nightStart.set(java.util.Calendar.HOUR_OF_DAY, nightStartMinutes / 60);
+                nightStart.set(java.util.Calendar.MINUTE, nightStartMinutes % 60);
+
+                java.util.Calendar nightEnd = (java.util.Calendar) cal.clone();
+                if (nightStartMinutes > nightEndMinutes) {
+                    // Night spans midnight - end is next day
+                    nightEnd.add(java.util.Calendar.DAY_OF_MONTH, 1);
+                }
+                nightEnd.set(java.util.Calendar.HOUR_OF_DAY, nightEndMinutes / 60);
+                nightEnd.set(java.util.Calendar.MINUTE, nightEndMinutes % 60);
+
+                long nightStartTime = nightStart.getTimeInMillis();
+                long nightEndTime = nightEnd.getTimeInMillis();
+
+                // Clip to visible time range
+                long visibleNightStart = Math.max(nightStartTime, startTime);
+                long visibleNightEnd = Math.min(nightEndTime, now);
+
+                // Draw night section if it's visible
+                if (visibleNightStart < visibleNightEnd) {
+                    float x1 = paddingHorizontal + (width - 2 * paddingHorizontal) * (visibleNightStart - startTime) / (float) timeRange;
+                    float x2 = paddingHorizontal + (width - 2 * paddingHorizontal) * (visibleNightEnd - startTime) / (float) timeRange;
+                    canvas.drawRect(x1, 0, x2, height, nightBackgroundPaint);
+                }
+
+                // Move to next day
+                cal.add(java.util.Calendar.DAY_OF_MONTH, 1);
+            }
         }
 
         if (dataPoints == null || dataPoints.isEmpty()) {
@@ -439,7 +476,7 @@ public class BatteryGraphGenerator {
             }
         } else {
             // Time-aligned grid: lines at regular time marks
-            cal = java.util.Calendar.getInstance();
+            java.util.Calendar cal = java.util.Calendar.getInstance();
             cal.setTimeInMillis(startTime);
 
             // Convert interval to hours for alignment (if >= 1 hour)

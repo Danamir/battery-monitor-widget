@@ -19,9 +19,9 @@
     <string name="graph_line_color_summary">Battery graph line color</string>
     <string name="graph_fill_color_title">Fill Color</string>
     <string name="graph_fill_color_summary">Battery graph fill color</string>
-    <string name="graph_night_fill_color_title">Night Fill Color</string>
-    <string name="graph_night_fill_color_summary">Battery graph fill color during night time</string>
-    <string name="night_time_title">Night Time Period</string>
+    <string name="graph_night_fill_color_title">Night Color / Alternating Days Color</string>
+    <string name="graph_night_fill_color_summary">Background color during night time, or alternating days color if start time = end time</string>
+    <string name="night_time_title">Time Period</string>
     <string name="night_time_summary">Set the start and end times for night mode</string>
     <string name="night_start_title">Start</string>
     <string name="night_end_title">End</string>
