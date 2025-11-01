@@ -29,6 +29,7 @@ public class ThemeSettings extends PreferenceFragmentCompat {
             BatteryWidgetProvider.updateAllWidgets(getContext());
             if ("main_color".equals(key) || "text_color".equals(key) || "grid_color".equals(key) ||
                 "graph_line_color".equals(key) || "graph_fill_color".equals(key) ||
+                "graph_night_fill_color".equals(key) || "night_start".equals(key) || "night_end".equals(key) ||
                 "charging_line_color".equals(key) || "battery_low_color".equals(key) ||
                 "battery_critical_color".equals(key) || "user_present_color".equals(key) ||
                 "battery_low_level".equals(key) || "battery_critical_level".equals(key) ||
@@ -83,6 +84,15 @@ public class ThemeSettings extends PreferenceFragmentCompat {
             });
         }
 
+        androidx.preference.Preference graphNightFillColorPref = findPreference("graph_night_fill_color");
+        if (graphNightFillColorPref != null) {
+            updateColorPreferenceSummary(graphNightFillColorPref, "graph_night_fill_color");
+            graphNightFillColorPref.setOnPreferenceClickListener(preference -> {
+                showColorPickerDialog("graph_night_fill_color", "Night Fill Color");
+                return true;
+            });
+        }
+
         androidx.preference.Preference chargingLineColorPref = findPreference("charging_line_color");
         if (chargingLineColorPref != null) {
             updateColorPreferenceSummary(chargingLineColorPref, "charging_line_color");
@@ -113,6 +123,7 @@ public class ThemeSettings extends PreferenceFragmentCompat {
         androidx.preference.Preference gridColorPref = findPreference("grid_color");
         androidx.preference.Preference graphLineColorPref = findPreference("graph_line_color");
         androidx.preference.Preference graphFillColorPref = findPreference("graph_fill_color");
+        androidx.preference.Preference graphNightFillColorPref = findPreference("graph_night_fill_color");
         androidx.preference.Preference chargingLineColorPref = findPreference("charging_line_color");
         androidx.preference.Preference batteryLowColorPref = findPreference("battery_low_color");
         androidx.preference.Preference batteryCriticalColorPref = findPreference("battery_critical_color");
@@ -142,6 +153,11 @@ public class ThemeSettings extends PreferenceFragmentCompat {
             getPreferenceScreen().removePreference(graphFillColorPref);
             getPreferenceScreen().addPreference(graphFillColorPref);
             updateColorPreferenceSummary(graphFillColorPref, "graph_fill_color");
+        }
+        if (graphNightFillColorPref != null) {
+            getPreferenceScreen().removePreference(graphNightFillColorPref);
+            getPreferenceScreen().addPreference(graphNightFillColorPref);
+            updateColorPreferenceSummary(graphNightFillColorPref, "graph_night_fill_color");
         }
         if (chargingLineColorPref != null) {
             getPreferenceScreen().removePreference(chargingLineColorPref);

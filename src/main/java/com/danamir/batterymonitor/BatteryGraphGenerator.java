@@ -65,6 +65,45 @@ public class BatteryGraphGenerator {
     }
 
     /**
+     * Parse time string in HH:mm format to minutes since midnight.
+     * @param timeStr Time string (e.g., "20:00" or "08:00")
+     * @return Minutes since midnight, or -1 if invalid
+     */
+    private static int parseTimeToMinutes(String timeStr) {
+        try {
+            String[] parts = timeStr.split(":");
+            if (parts.length == 2) {
+                int hours = Integer.parseInt(parts[0]);
+                int minutes = Integer.parseInt(parts[1]);
+                return hours * 60 + minutes;
+            }
+        } catch (Exception e) {
+            // Invalid format
+        }
+        return -1;
+    }
+
+    /**
+     * Check if a given timestamp is during night time based on preferences.
+     * @param timestamp The timestamp to check
+     * @param nightStartMinutes Night start time in minutes since midnight
+     * @param nightEndMinutes Night end time in minutes since midnight
+     * @return true if timestamp is during night time
+     */
+    private static boolean isNightTime(long timestamp, int nightStartMinutes, int nightEndMinutes) {
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        cal.setTimeInMillis(timestamp);
+        int currentMinutes = cal.get(java.util.Calendar.HOUR_OF_DAY) * 60 + cal.get(java.util.Calendar.MINUTE);
+
+        // Handle cases where night spans midnight (e.g., 20:00 to 08:00)
+        if (nightStartMinutes > nightEndMinutes) {
+            return currentMinutes >= nightStartMinutes || currentMinutes < nightEndMinutes;
+        } else {
+            return currentMinutes >= nightStartMinutes && currentMinutes < nightEndMinutes;
+        }
+    }
+
+    /**
      * Get the appropriate line color for a given battery level with blending.
      * @param level The battery level (0-100)
      * @param isCharging Whether the battery is charging
@@ -191,8 +230,18 @@ public class BatteryGraphGenerator {
         linePaint.setStyle(Paint.Style.STROKE);
         linePaint.setAntiAlias(true);
 
+        // Get night time settings
+        String nightStartStr = prefs.getString("night_start", "20:00");
+        String nightEndStr = prefs.getString("night_end", "08:00");
+        int nightStartMinutes = parseTimeToMinutes(nightStartStr);
+        int nightEndMinutes = parseTimeToMinutes(nightEndStr);
+        if (nightStartMinutes == -1) nightStartMinutes = 20 * 60; // Default 20:00
+        if (nightEndMinutes == -1) nightEndMinutes = 8 * 60; // Default 08:00
+
+        int dayFillColor = prefs.getInt("graph_fill_color", 0x33ADD8E6); // 20% transparent light blue
+        int nightFillColor = prefs.getInt("graph_night_fill_color", 0x33000080); // 20% transparent dark blue
+
         Paint fillPaint = new Paint();
-        fillPaint.setColor(prefs.getInt("graph_fill_color", 0x33ADD8E6)); // 20% transparent light blue
         fillPaint.setStyle(Paint.Style.FILL);
         fillPaint.setAntiAlias(true);
 
@@ -261,9 +310,11 @@ public class BatteryGraphGenerator {
             long timeRange = displayHours * 60 * 60 * 1000L;
             long startTime = now - timeRange;
 
-            // Build fill path
-            Path fillPath = new Path();
-            boolean fillPathStarted = false;
+            // Build fill paths with day/night detection
+            Path currentPath = null;
+            Boolean isCurrentNight = null;
+            List<Path> fillPaths = new ArrayList<>();
+            List<Boolean> pathIsNight = new ArrayList<>();
 
             for (int i = 0; i < dataPoints.size(); i++) {
                 BatteryData data = dataPoints.get(i);
@@ -273,26 +324,42 @@ public class BatteryGraphGenerator {
                 float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (data.getTimestamp() - startTime) / (float) timeRange;
                 float y = paddingVertical + (height - 2 * paddingVertical) * (100 - data.getLevel()) / 100f;
 
-                // Add to fill path
-                if (!fillPathStarted) {
-                    fillPath.moveTo(x, height - paddingVertical);
-                    fillPath.lineTo(x, y);
-                    fillPathStarted = true;
+                boolean isNight = isNightTime(data.getTimestamp(), nightStartMinutes, nightEndMinutes);
+
+                // Check if we need to start a new path (day/night transition or first point)
+                if (isCurrentNight == null || isCurrentNight != isNight) {
+                    // Close previous path if exists
+                    if (currentPath != null) {
+                        currentPath.lineTo(x, y);
+                        currentPath.lineTo(x, height - paddingVertical);
+                        currentPath.close();
+                    }
+
+                    // Start new path
+                    currentPath = new Path();
+                    currentPath.moveTo(x, height - paddingVertical);
+                    currentPath.lineTo(x, y);
+                    isCurrentNight = isNight;
+                    fillPaths.add(currentPath);
+                    pathIsNight.add(isNight);
                 } else {
-                    fillPath.lineTo(x, y);
+                    currentPath.lineTo(x, y);
                 }
             }
 
-            // Close the fill path
-            if (fillPathStarted) {
+            // Close the last path
+            if (currentPath != null) {
                 BatteryData lastData = dataPoints.get(dataPoints.size() - 1);
                 float lastX = paddingHorizontal + (width - 2 * paddingHorizontal) * (lastData.getTimestamp() - startTime) / (float) timeRange;
-                fillPath.lineTo(lastX, height - paddingVertical);
-                fillPath.close();
+                currentPath.lineTo(lastX, height - paddingVertical);
+                currentPath.close();
             }
 
-            // Draw fill path first
-            canvas.drawPath(fillPath, fillPaint);
+            // Draw fill paths with appropriate colors
+            for (int i = 0; i < fillPaths.size(); i++) {
+                fillPaint.setColor(pathIsNight.get(i) ? nightFillColor : dayFillColor);
+                canvas.drawPath(fillPaths.get(i), fillPaint);
+            }
 
             // Create a paint for drawing line segments with blended colors
             Paint segmentPaint = new Paint();
