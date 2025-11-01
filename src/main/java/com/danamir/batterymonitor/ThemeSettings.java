@@ -28,9 +28,10 @@ public class ThemeSettings extends PreferenceFragmentCompat {
         preferenceChangeListener = (sharedPreferences, key) -> {
             BatteryWidgetProvider.updateAllWidgets(getContext());
             if ("main_color".equals(key) || "text_color".equals(key) || "grid_color".equals(key) ||
-                "graph_line_color".equals(key) || "graph_fill_color".equals(key) || 
+                "graph_line_color".equals(key) || "graph_fill_color".equals(key) ||
                 "charging_line_color".equals(key) || "battery_low_color".equals(key) ||
-                "battery_critical_color".equals(key) || "user_present_color".equals(key)) {
+                "battery_critical_color".equals(key) || "user_present_color".equals(key) ||
+                "battery_low_level".equals(key) || "battery_critical_level".equals(key)) {
                 updateColorPreview();
             }
         };

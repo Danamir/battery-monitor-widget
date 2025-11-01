@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <com.danamir.batterymonitor.ColorPreference
         android:key="main_color"
         android:title="@string/main_color_title"
@@ -39,7 +40,7 @@
         android:key="charging_line_color"
         android:title="@string/charging_line_color_title"
         android:summary="@string/charging_line_color_summary"
-        android:defaultValue="0xFFADD8E6"
+        android:defaultValue="0xFF09A6D9"
         android:layout="@layout/preference_color" />
 
     <com.danamir.batterymonitor.ColorPreference
@@ -49,12 +50,30 @@
         android:defaultValue="0xFFFFFF3A"
         android:layout="@layout/preference_color" />
 
+    <SeekBarPreference
+        android:key="battery_low_level"
+        android:title="@string/battery_low_level_title"
+        android:summary="@string/battery_low_level_summary"
+        android:defaultValue="30"
+        android:min="0"
+        android:max="100"
+        app:showSeekBarValue="true" />
+
     <com.danamir.batterymonitor.ColorPreference
         android:key="battery_critical_color"
         android:title="@string/battery_critical_color_title"
         android:summary="@string/battery_critical_color_summary"
         android:defaultValue="0xFFFF3C1C"
         android:layout="@layout/preference_color" />
+
+    <SeekBarPreference
+        android:key="battery_critical_level"
+        android:title="@string/battery_critical_level_title"
+        android:summary="@string/battery_critical_level_summary"
+        android:defaultValue="15"
+        android:min="0"
+        android:max="100"
+        app:showSeekBarValue="true" />
 
     <com.danamir.batterymonitor.ColorPreference
         android:key="user_present_color"

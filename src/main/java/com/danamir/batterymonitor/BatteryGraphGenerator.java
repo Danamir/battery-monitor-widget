@@ -141,6 +141,10 @@ public class BatteryGraphGenerator {
         batteryCriticalPaint.setStyle(Paint.Style.STROKE);
         batteryCriticalPaint.setAntiAlias(true);
 
+        // Get battery level thresholds
+        int batteryLowLevel = prefs.getInt("battery_low_level", 30);
+        int batteryCriticalLevel = prefs.getInt("battery_critical_level", 15);
+
         // Draw background
         canvas.drawRect(0, 0, width, height, backgroundPaint);
 
@@ -197,9 +201,9 @@ public class BatteryGraphGenerator {
                 int batteryState;
                 if (data.isCharging()) {
                     batteryState = 1; // Charging
-                } else if (data.getLevel() < 15) {
+                } else if (data.getLevel() < batteryCriticalLevel) {
                     batteryState = 3; // Critical
-                } else if (data.getLevel() < 35) {
+                } else if (data.getLevel() < batteryLowLevel) {
                     batteryState = 2; // Low
                 } else {
                     batteryState = 0; // Normal
