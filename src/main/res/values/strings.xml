@@ -21,10 +21,10 @@
     <string name="graph_fill_color_summary">Battery graph fill color</string>
     <string name="graph_night_fill_color_title">Night Fill Color</string>
     <string name="graph_night_fill_color_summary">Battery graph fill color during night time</string>
-    <string name="night_start_title">Night Start Time</string>
-    <string name="night_start_summary">Start time for night mode (24-hour format, e.g., 20:00)</string>
-    <string name="night_end_title">Night End Time</string>
-    <string name="night_end_summary">End time for night mode (24-hour format, e.g., 08:00)</string>
+    <string name="night_time_title">Night Time Period</string>
+    <string name="night_time_summary">Set the start and end times for night mode</string>
+    <string name="night_start_title">Start</string>
+    <string name="night_end_title">End</string>
     <string name="charging_line_color_title">Charging Line Color</string>
     <string name="charging_line_color_summary">Battery charging line color</string>
     <string name="battery_low_color_title">Battery Low Color</string>
@@ -41,6 +41,7 @@
     <string name="battery_blend_value_summary">Blend amount for transitioning between status colors</string>
     <string name="battery_main_colors_title">Main Colors</string>
     <string name="battery_graph_colors_title">Graph Colors</string>
+    <string name="battery_night_colors_title">Night time</string>
     <string name="battery_state_colors_title">Battery State Colors</string>
     <string name="color_preview">Preview</string>
     <string name="color_red">Red</string>

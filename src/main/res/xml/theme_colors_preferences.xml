@@ -43,27 +43,6 @@
         android:layout="@layout/preference_color" />
 
     <com.danamir.batterymonitor.ColorPreference
-        android:key="graph_night_fill_color"
-        android:title="@string/graph_night_fill_color_title"
-        android:summary="@string/graph_night_fill_color_summary"
-        android:defaultValue="0x1AB6B6FF"
-        android:layout="@layout/preference_color" />
-
-    <EditTextPreference
-        android:key="night_start"
-        android:title="@string/night_start_title"
-        android:summary="@string/night_start_summary"
-        android:defaultValue="20:00"
-        android:inputType="time" />
-
-    <EditTextPreference
-        android:key="night_end"
-        android:title="@string/night_end_title"
-        android:summary="@string/night_end_summary"
-        android:defaultValue="08:00"
-        android:inputType="time" />
-
-    <com.danamir.batterymonitor.ColorPreference
         android:key="charging_line_color"
         android:title="@string/charging_line_color_title"
         android:summary="@string/charging_line_color_summary"
@@ -104,4 +83,20 @@
         app:thresholdKey="battery_critical_level"
         app:defaultColor="0xFFFF3C1C"
         app:defaultThreshold="15" />
+
+    <PreferenceCategory
+            android:title="@string/battery_night_colors_title" />
+
+    <com.danamir.batterymonitor.ColorPreference
+        android:key="graph_night_fill_color"
+        android:title="@string/graph_night_fill_color_title"
+        android:summary="@string/graph_night_fill_color_summary"
+        android:defaultValue="0x1AB6B6FF"
+        android:layout="@layout/preference_color" />
+
+    <com.danamir.batterymonitor.NightTimePreference
+        android:key="night_time"
+        android:title="@string/night_time_title"
+        android:summary="" />
+
 </PreferenceScreen>
