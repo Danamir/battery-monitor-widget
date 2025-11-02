@@ -83,6 +83,8 @@ public class SettingsActivity extends AppCompatActivity {
                     findPreference("horizontal_padding");
             androidx.preference.SeekBarPreference verticalPaddingPref =
                     findPreference("vertical_padding");
+            androidx.preference.SeekBarPreference subdivisionPref =
+                    findPreference("gridVerticalIntervalSubdivisionPref");
             androidx.preference.Preference backgroundColorPref =
                     findPreference("main_color");
 
@@ -139,6 +141,22 @@ public class SettingsActivity extends AppCompatActivity {
                     } catch (NumberFormatException e) {
                         return false;
                     }
+                });
+            }
+
+            if (subdivisionPref != null) {
+                // Ensure current value is at least 1
+                if (subdivisionPref.getValue() < 1) {
+                    subdivisionPref.setValue(1);
+                }
+
+                // Enforce minimum value of 1
+                subdivisionPref.setOnPreferenceChangeListener((preference, newValue) -> {
+                    int value = (int) newValue;
+                    if (value < 1) {
+                        return false; // Reject values less than 1
+                    }
+                    return true;
                 });
             }
 
