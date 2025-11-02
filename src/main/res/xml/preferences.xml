@@ -54,6 +54,16 @@
         android:maxLength="16" />
 
     <SeekBarPreference
+        android:key="gridVerticalIntervalSubdivisionPref"
+        android:title="@string/grid_vertical_interval_subdivision_title"
+        android:summary="@string/grid_vertical_interval_subdivision_summary"
+        android:defaultValue="1"
+        android:max="10"
+        android:min="1"
+        app:showSeekBarValue="true"
+        app:seekBarIncrement="1" />
+
+    <SeekBarPreference
         android:key="gridHorizontalIntervalPref"
         android:title="@string/grid_horizontal_interval_title"
         android:summary="@string/grid_horizontal_interval_summary"

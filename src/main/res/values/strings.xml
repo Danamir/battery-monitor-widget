@@ -54,6 +54,8 @@
     <string name="static_grid_summary">Static or time-aligned vertical grid lines</string>
     <string name="grid_vertical_interval_title">Grid Vertical Interval</string>
     <string name="grid_vertical_interval_summary">Time interval for vertical grid lines (e.g., "6 hours", "30m")</string>
+    <string name="grid_vertical_interval_subdivision_title">Grid Vertical Interval Subdivision</string>
+    <string name="grid_vertical_interval_subdivision_summary">Number divisions for each vertical interval</string>
     <string name="grid_horizontal_interval_title">Grid Horizontal Interval</string>
     <string name="grid_horizontal_interval_summary">Battery percentage interval for horizontal grid lines</string>
     <string name="theme_colors_title">Theme colors</string>
