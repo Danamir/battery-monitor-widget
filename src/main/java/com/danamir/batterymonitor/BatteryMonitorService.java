@@ -118,17 +118,20 @@ public class BatteryMonitorService extends Service {
         String contentText = "Battery Monitor";
 
         if (currentBatteryLevel >= 0) {
+            int minDuration = 10;
+            int targetPercent = BatteryUtils.getTargetPercent(20, 80, currentBatteryLevel, isCharging);
+
             BatteryDataManager dataManager = BatteryDataManager.getInstance(this);
             java.util.List<BatteryData> dataPoints = dataManager.getDataPoints(24);
-            Double usageRateValue = BatteryUtils.calculateBatteryUsageRateValue(dataPoints);
-            String usageRate = usageRateValue != null ? String.format("%.1f%%/h", usageRateValue) : null;
-            contentTitle = "Battery " + currentBatteryLevel + "%" + (isCharging ? " (Charging)" : "") +
-                          (usageRate != null ? " • " + usageRate : "");
+            Double usageRateValue = BatteryUtils.calculateBatteryUsageRateValue(dataPoints, minDuration);
+            String usageRate = usageRateValue != null ? String.format("%s%.1f%%/h", (isCharging ? "+" : "-"), usageRateValue) : null;
+            contentTitle = "Battery " + currentBatteryLevel + "%" + (isCharging ? " ⚡" : "")
+                        + (usageRate != null ? " • " + usageRate : "");
 
-            // Calculate time to 20% if discharging and rate is available
-            if (!isCharging && usageRateValue != null && usageRateValue > 0 && currentBatteryLevel > 20) {
-                double hoursTo20 = (currentBatteryLevel - 20) / usageRateValue;
-                String timeEstimate = BatteryUtils.formatTimeEstimate(hoursTo20);
+            // Calculate time to target level if rate is available
+            if (usageRateValue != null) {
+                double hoursToLevel = Math.abs(currentBatteryLevel - targetPercent) / usageRateValue;
+                String timeEstimate = BatteryUtils.formatTimeEstimate(hoursToLevel, targetPercent);
                 if (!timeEstimate.isEmpty()) {
                     contentText = timeEstimate + " • " + contentText;
                 }

@@ -766,17 +766,17 @@ public class BatteryGraphGenerator {
                 levelText += " ⚡";
             }
 
-            // Calculate usage rate and time estimate
-            Double usageRate = BatteryUtils.calculateBatteryUsageRateValue(dataPoints);
-            if (usageRate != null && !currentData.isCharging()) {
-                levelText += String.format(" • %.1f%%/h", usageRate);
+            // Calculate charge/discharge rate and time estimate
+            int minDuration = 10;
+            int targetPercent = BatteryUtils.getTargetPercent(20, 80, currentData.getLevel(), currentData.isCharging());
+            Double usageRate = BatteryUtils.calculateBatteryUsageRateValue(dataPoints, minDuration);
+            if (usageRate != null) {
+                levelText += String.format(" • %s%.1f%%/h", (currentData.isCharging() ? "+" : "-"), usageRate);
 
-                if (currentData.getLevel() > 20 && usageRate > 0) {
-                    double hoursTo20 = (currentData.getLevel() - 20) / usageRate;
-                    String timeEstimate = BatteryUtils.formatTimeEstimate(hoursTo20);
-                    if (!timeEstimate.isEmpty()) {
-                        levelText += " • " + timeEstimate;
-                    }
+                double hoursToLevel = Math.abs(currentData.getLevel() - targetPercent) / usageRate;
+                String timeEstimate = BatteryUtils.formatTimeEstimate(hoursToLevel, targetPercent);
+                if (!timeEstimate.isEmpty()) {
+                    levelText += " • " + timeEstimate;
                 }
             }
 
