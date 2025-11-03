@@ -338,6 +338,10 @@ public class BatteryGraphGenerator {
         int highUsageColor = prefs.getInt("high_usage_color", 0xBFFF00FF);
         int highUsageRangeMinutes = prefs.getInt("high_usage_range", 60);
 
+        // Get target percentages
+        int lowTargetPercent = prefs.getInt("low_target_percent", 20);
+        int highTargetPercent = prefs.getInt("high_target_percent", 80);
+
         // Get base colors for blending
         int normalColor = prefs.getInt("graph_line_color", 0xFF4CAF50);
         int lowColor = prefs.getInt("battery_low_color", 0xFFFFFF23);
@@ -768,7 +772,7 @@ public class BatteryGraphGenerator {
 
             // Calculate charge/discharge rate and time estimate
             int minDuration = 10;
-            int targetPercent = BatteryUtils.getTargetPercent(20, 80, currentData.getLevel(), currentData.isCharging());
+            int targetPercent = BatteryUtils.getTargetPercent(lowTargetPercent, highTargetPercent, currentData.getLevel(), currentData.isCharging());
             Double usageRate = BatteryUtils.calculateBatteryUsageRateValue(dataPoints, minDuration);
             if (usageRate != null) {
                 levelText += String.format(" • %s%.1f%%/h", (currentData.isCharging() ? "+" : "-"), usageRate);

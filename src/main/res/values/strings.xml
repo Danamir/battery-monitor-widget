@@ -73,4 +73,8 @@
     <string name="high_usage_blend_summary">Use current battery usage to blend between and normal and high battery usage colors</string>
     <string name="high_usage_range_title">High Usage Range (min)</string>
     <string name="high_usage_range_summary">Minimum time range for calculating high battery usage</string>
+    <string name="low_target_percent_title">Low Battery Target (%)</string>
+    <string name="low_target_percent_summary">Low battery target for discharge time estimation</string>
+    <string name="high_target_percent_title">Full Battery Target (%)</string>
+    <string name="high_target_percent_summary">High battery target for charge time estimation</string>
 </resources>

@@ -14,6 +14,27 @@
         android:fragment="com.danamir.batterymonitor.ThemeSettings" />
 
     <SeekBarPreference
+        android:key="low_target_percent"
+        android:title="@string/low_target_percent_title"
+        android:summary="@string/low_target_percent_summary"
+        android:defaultValue="20"
+        android:max="100"
+        android:min="0"
+        app:showSeekBarValue="true"
+        app:seekBarIncrement="1" />
+
+    <SeekBarPreference
+        android:key="high_target_percent"
+        android:title="@string/high_target_percent_title"
+        android:summary="@string/high_target_percent_summary"
+        android:defaultValue="80"
+        android:max="100"
+        android:min="0"
+        app:showSeekBarValue="true"
+        app:seekBarIncrement="1" />
+
+
+    <SeekBarPreference
         android:key="horizontal_padding"
         android:title="@string/horizontal_padding_title"
         android:summary="@string/horizontal_padding_summary"

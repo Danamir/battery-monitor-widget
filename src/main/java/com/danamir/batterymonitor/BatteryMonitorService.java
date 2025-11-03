@@ -114,12 +114,17 @@ public class BatteryMonitorService extends Service {
             builder = new Notification.Builder(this);
         }
 
+        // Get target percentages
+        android.content.SharedPreferences prefs = android.preference.PreferenceManager.getDefaultSharedPreferences(this);
+        int lowTargetPercent = prefs.getInt("low_target_percent", 20);
+        int highTargetPercent = prefs.getInt("high_target_percent", 80);
+
         String contentTitle;
         String contentText = "Battery Monitor";
 
         if (currentBatteryLevel >= 0) {
             int minDuration = 10;
-            int targetPercent = BatteryUtils.getTargetPercent(20, 80, currentBatteryLevel, isCharging);
+            int targetPercent = BatteryUtils.getTargetPercent(lowTargetPercent, highTargetPercent, currentBatteryLevel, isCharging);
 
             BatteryDataManager dataManager = BatteryDataManager.getInstance(this);
             java.util.List<BatteryData> dataPoints = dataManager.getDataPoints(24);
