@@ -44,4 +44,12 @@
         <attr name="maxValue" format="float" />
         <attr name="stepSize" format="float" />
     </declare-styleable>
+
+    <!-- FloatSeekBarPreference attributes -->
+    <declare-styleable name="FloatSeekBarPreference">
+        <attr name="defaultFloatValue" format="float" />
+        <attr name="minFloatValue" format="float" />
+        <attr name="maxFloatValue" format="float" />
+        <attr name="floatStepSize" format="float" />
+    </declare-styleable>
 </resources>

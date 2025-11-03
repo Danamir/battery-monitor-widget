@@ -37,7 +37,7 @@
     <string name="battery_critical_level_summary">Battery percentage threshold for critical warning</string>
     <string name="user_present_color_title">Display-on Color</string>
     <string name="user_present_color_summary">Display on / User present status bar color</string>
-    <string name="battery_blend_value_title">Blend colors</string>
+    <string name="battery_blend_value_title">Blend colors (%)</string>
     <string name="battery_blend_value_summary">Blend amount for transitioning between status colors</string>
     <string name="battery_main_colors_title">Main Colors</string>
     <string name="battery_graph_colors_title">Graph Colors</string>
@@ -69,4 +69,6 @@
     <string name="clear_preferences_summary">Reset all settings to default (keeps battery data)</string>
     <string name="high_usage_threshold_title">High Usage detection (%/h)</string>
     <string name="high_usage_threshold_summary">Battery discharge rate threshold (%/h)</string>
+    <string name="high_usage_blend_title">Blend usage (%/h)</string>
+    <string name="high_usage_blend_summary">Blend amount for transitioning between normal and high battery usage</string>
 </resources>

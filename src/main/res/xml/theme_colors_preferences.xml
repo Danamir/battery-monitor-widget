@@ -95,6 +95,15 @@
         app:maxValue="10.0"
         app:stepSize="0.1" />
 
+    <com.danamir.batterymonitor.FloatSeekBarPreference
+        android:key="high_usage_blend"
+        android:title="@string/high_usage_blend_title"
+        android:summary="@string/high_usage_blend_summary"
+        app:defaultFloatValue="2.0"
+        app:minFloatValue="0.0"
+        app:maxFloatValue="10.0"
+        app:floatStepSize="0.1" />
+
     <PreferenceCategory
             android:title="@string/battery_night_colors_title" />
 
