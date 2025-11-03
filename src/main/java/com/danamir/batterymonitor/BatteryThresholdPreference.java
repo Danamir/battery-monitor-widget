@@ -105,7 +105,15 @@ public class BatteryThresholdPreference extends Preference {
         if (colorSwatchContainer != null) {
             colorSwatchContainer.setOnClickListener(v -> {
                 String title = getTitle() != null ? getTitle().toString() : "Color";
-                colorSettingsManager.showColorPickerDialog(mColorKey, title);
+                colorSettingsManager.showColorPickerDialog(mColorKey, title, color -> {
+                    // Update the color preview when color is changed
+                    mCurrentColor = color;
+                    if (colorPreviewIcon != null) {
+                        colorPreviewIcon.setBackgroundColor(color);
+                    }
+                    // Notify widget to update
+                    BatteryWidgetProvider.updateAllWidgets(getContext());
+                }, mCurrentColor);
             });
         }
 

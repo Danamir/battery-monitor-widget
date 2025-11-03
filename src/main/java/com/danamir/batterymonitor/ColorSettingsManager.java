@@ -205,7 +205,32 @@ public class ColorSettingsManager {
      * @param title The dialog title
      */
     public void showColorPickerDialog(String colorKey, String title) {
-        int currentColor = prefs.getInt(colorKey, 0x80000000);
+        showColorPickerDialog(colorKey, title, null);
+    }
+
+    /**
+     * Shows a color picker dialog for the specified color preference with a callback.
+     *
+     * @param colorKey The preference key for the color
+     * @param title The dialog title
+     * @param onColorChangedListener Callback invoked when color is changed
+     */
+    public void showColorPickerDialog(String colorKey, String title, OnColorChangedListener onColorChangedListener) {
+        showColorPickerDialog(colorKey, title, onColorChangedListener, null);
+    }
+
+    /**
+     * Shows a color picker dialog for the specified color preference with a callback and explicit current color.
+     *
+     * @param colorKey The preference key for the color
+     * @param title The dialog title
+     * @param onColorChangedListener Callback invoked when color is changed
+     * @param currentColor The current color to display, or null to read from preferences
+     */
+    public void showColorPickerDialog(String colorKey, String title, OnColorChangedListener onColorChangedListener, Integer currentColor) {
+        if (currentColor == null) {
+            currentColor = prefs.getInt(colorKey, 0x80000000);
+        }
 
         View dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_color_picker, null);
         ColorPickerView colorPicker = dialogView.findViewById(R.id.color_picker);
@@ -219,8 +244,18 @@ public class ColorSettingsManager {
                 .setPositiveButton("OK", (dialog, which) -> {
                     int color = colorPicker.getColor();
                     setColor(colorKey, color);
+                    if (onColorChangedListener != null) {
+                        onColorChangedListener.onColorChanged(color);
+                    }
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+
+    /**
+     * Listener interface for color changes.
+     */
+    public interface OnColorChangedListener {
+        void onColorChanged(int color);
     }
 }
