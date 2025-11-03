@@ -152,7 +152,7 @@ public class BatteryMonitorService extends Service {
         int m = totalMinutes % 60;
 
         if (h > 0) {
-            return String.format("~%dh %dm to 20%%", h, m);
+            return String.format("~%dh%02dm to 20%%", h, m);
         } else {
             return String.format("~%dm to 20%%", m);
         }
