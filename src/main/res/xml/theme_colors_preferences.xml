@@ -65,7 +65,7 @@
         app:colorKey="battery_low_color"
         app:thresholdKey="battery_low_level"
         app:defaultColor="0xFFFFFF23"
-        app:defaultThreshold="30" />
+        app:defaultThreshold="35" />
 
     <com.danamir.batterymonitor.BatteryThresholdPreference
         android:key="battery_critical_threshold"
@@ -73,13 +73,13 @@
         app:colorKey="battery_critical_color"
         app:thresholdKey="battery_critical_level"
         app:defaultColor="0xFFFF3B1B"
-        app:defaultThreshold="25" />
+        app:defaultThreshold="20" />
 
     <SeekBarPreference
         android:key="battery_blend_value"
         android:title="@string/battery_blend_value_title"
         android:summary="@string/battery_blend_value_summary"
-        android:defaultValue="10"
+        android:defaultValue="20"
         android:min="0"
         android:max="50"
         app:showSeekBarValue="true" />
@@ -89,7 +89,7 @@
         android:title="@string/high_usage_threshold_title"
         app:colorKey="high_usage_color"
         app:thresholdKey="high_usage_level"
-        app:defaultColor="0xFFFF00FF"
+        app:defaultColor="0xBFFF00FF"
         app:defaultFloatThreshold="10.0"
         app:minValue="0.0"
         app:maxValue="20.0"

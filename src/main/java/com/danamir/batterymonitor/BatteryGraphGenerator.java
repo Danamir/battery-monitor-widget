@@ -54,6 +54,21 @@ public class BatteryGraphGenerator {
      * @return The blended color
      */
     private static int blendColors(int color1, int color2, float ratio) {
+        return BatteryGraphGenerator.blendColors(color1, color2, ratio, false);
+    }
+
+    /**
+     * Linearly blend between two colors based on a ratio.
+     * @param color1 The first color
+     * @param color2 The second color
+     * @param ratio The blend ratio (0.0 = color1, 1.0 = color2)
+     * @param useAlpha Use the second color alpha to modulate the ratio.
+     * @return The blended color
+     */
+    private static int blendColors(int color1, int color2, float ratio, boolean useAlpha) {
+        if (useAlpha) {
+            ratio = ratio * Color.alpha(color2) / 255.0f;
+        }
         float inverseRatio = 1.0f - ratio;
 
         int r = (int) (Color.red(color1) * inverseRatio + Color.red(color2) * ratio);
@@ -310,9 +325,9 @@ public class BatteryGraphGenerator {
         batteryCriticalPaint.setAntiAlias(true);
 
         // Get battery level thresholds and blend value
-        int batteryLowLevel = prefs.getInt("battery_low_level", 30);
-        int batteryCriticalLevel = prefs.getInt("battery_critical_level", 15);
-        int blendValue = prefs.getInt("battery_blend_value", 10);
+        int batteryLowLevel = prefs.getInt("battery_low_level", 35);
+        int batteryCriticalLevel = prefs.getInt("battery_critical_level", 20);
+        int blendValue = prefs.getInt("battery_blend_value", 20);
 
         // Get high usage settings
         float highUsageThreshold = prefs.getFloat("high_usage_level", 10.0f);
@@ -320,7 +335,7 @@ public class BatteryGraphGenerator {
         if (prefs.getBoolean("high_usage_blend", true)) {
             highUsageBlend = highUsageThreshold;
         }
-        int highUsageColor = prefs.getInt("high_usage_color", 0xFFFF00FF);
+        int highUsageColor = prefs.getInt("high_usage_color", 0xBFFF00FF);
         int highUsageRangeMinutes = prefs.getInt("high_usage_range", 60);
 
         // Get base colors for blending
@@ -681,11 +696,11 @@ public class BatteryGraphGenerator {
 
                         if (batteryUsage >= highUsageThreshold) {
                             // Full high usage color when above threshold
-                            blendedColor = blendColors(blendedColor, highUsageColor, 1.0f);
+                            blendedColor = blendColors(blendedColor, highUsageColor, 1.0f, true);
                         } else if (batteryUsage > lowThreshold) {
                             // Blend between lowThreshold and highUsageThreshold
                             float usageRatio = (batteryUsage - lowThreshold) / highUsageBlend;
-                            blendedColor = blendColors(blendedColor, highUsageColor, usageRatio);
+                            blendedColor = blendColors(blendedColor, highUsageColor, usageRatio, true);
                         }
                         // Below lowThreshold: ratio is 0.0 (no blending, keep original color)
                     }
