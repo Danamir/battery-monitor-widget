@@ -17,21 +17,21 @@
         android:key="horizontal_padding"
         android:title="@string/horizontal_padding_title"
         android:summary="@string/horizontal_padding_summary"
-        android:defaultValue="20"
+        android:defaultValue="0"
         android:max="200"
         android:min="0"
         app:showSeekBarValue="true"
-        app:seekBarIncrement="2" />
+        app:seekBarIncrement="1" />
 
     <SeekBarPreference
         android:key="vertical_padding"
         android:title="@string/vertical_padding_title"
         android:summary="@string/vertical_padding_summary"
-        android:defaultValue="10"
+        android:defaultValue="0"
         android:max="200"
         android:min="0"
         app:showSeekBarValue="true"
-        app:seekBarIncrement="2" />
+        app:seekBarIncrement="1" />
 
     <SwitchPreferenceCompat
         android:key="show_y_axis_labels"
@@ -43,13 +43,13 @@
         android:key="staticGridPref"
         android:title="@string/static_grid_title"
         android:summary="@string/static_grid_summary"
-        android:defaultValue="true" />
+        android:defaultValue="false" />
 
     <EditTextPreference
         android:key="gridVerticalIntervalPref"
         android:title="@string/grid_vertical_interval_title"
         android:summary="@string/grid_vertical_interval_summary"
-        android:defaultValue="6 hours"
+        android:defaultValue="12 hours"
         android:inputType="text"
         android:maxLength="16" />
 
@@ -57,8 +57,8 @@
         android:key="gridVerticalIntervalSubdivisionPref"
         android:title="@string/grid_vertical_interval_subdivision_title"
         android:summary="@string/grid_vertical_interval_subdivision_summary"
-        android:defaultValue="1"
-        android:max="10"
+        android:defaultValue="2"
+        android:max="24"
         android:min="1"
         app:showSeekBarValue="true"
         app:seekBarIncrement="1" />
@@ -77,4 +77,9 @@
         android:key="view_event_log"
         android:title="@string/view_event_log_title"
         android:summary="@string/view_event_log_summary" />
+
+    <Preference
+        android:key="clear_preferences"
+        android:title="@string/clear_preferences_title"
+        android:summary="@string/clear_preferences_summary" />
 </PreferenceScreen>

@@ -8,14 +8,14 @@
         android:key="main_color"
         android:title="@string/main_color_title"
         android:summary="@string/main_color_summary"
-        android:defaultValue="0xFFFFFFFF"
+        android:defaultValue="0x1A000000"
         android:layout="@layout/preference_color" />
 
     <com.danamir.batterymonitor.ColorPreference
         android:key="text_color"
         android:title="@string/text_color_title"
         android:summary="@string/text_color_summary"
-        android:defaultValue="0xFF424242"
+        android:defaultValue="0xFFB4B4B4"
         android:layout="@layout/preference_color" />
 
     <com.danamir.batterymonitor.ColorPreference
@@ -39,7 +39,7 @@
         android:key="graph_fill_color"
         android:title="@string/graph_fill_color_title"
         android:summary="@string/graph_fill_color_summary"
-        android:defaultValue="0x33ADD8E6"
+        android:defaultValue="0x66000000"
         android:layout="@layout/preference_color" />
 
     <com.danamir.batterymonitor.ColorPreference
@@ -53,7 +53,7 @@
         android:key="user_present_color"
         android:title="@string/user_present_color_title"
         android:summary="@string/user_present_color_summary"
-        android:defaultValue="0xFFFFEB3B"
+        android:defaultValue="0xFF08A6D9"
         android:layout="@layout/preference_color" />
 
     <PreferenceCategory
@@ -73,7 +73,7 @@
         android:title="@string/battery_low_level_title"
         app:colorKey="battery_low_color"
         app:thresholdKey="battery_low_level"
-        app:defaultColor="0xFFFFFF3A"
+        app:defaultColor="0xFFFFFF23"
         app:defaultThreshold="30" />
 
     <com.danamir.batterymonitor.BatteryThresholdPreference
@@ -81,8 +81,8 @@
         android:title="@string/battery_critical_level_title"
         app:colorKey="battery_critical_color"
         app:thresholdKey="battery_critical_level"
-        app:defaultColor="0xFFFF3C1C"
-        app:defaultThreshold="15" />
+        app:defaultColor="0xFFFF3B1B"
+        app:defaultThreshold="25" />
 
     <PreferenceCategory
             android:title="@string/battery_night_colors_title" />

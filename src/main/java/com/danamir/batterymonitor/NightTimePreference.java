@@ -40,8 +40,8 @@ public class NightTimePreference extends Preference {
 
         SharedPreferences prefs = getSharedPreferences();
         if (prefs != null) {
-            nightStartTime = prefs.getString("night_start", "20:00");
-            nightEndTime = prefs.getString("night_end", "08:00");
+            nightStartTime = prefs.getString("night_start", "0:00");
+            nightEndTime = prefs.getString("night_end", "06:00");
         }
 
         TextView nightStartValue = (TextView) holder.findViewById(R.id.night_start_value);

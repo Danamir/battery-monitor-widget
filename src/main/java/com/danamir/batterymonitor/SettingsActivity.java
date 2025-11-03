@@ -109,13 +109,15 @@ public class SettingsActivity extends AppCompatActivity {
                     try {
                         SeekBarPreference seekBarPreference = (SeekBarPreference) preference;
                         int increment = seekBarPreference.getSeekBarIncrement();
-                        float floatValue = (int) newValue;
-                        int rounded = Math.round(floatValue / increment);
-                        int finalValue = rounded * increment;
+                        if (increment > 1) {
+                            float floatValue = (int) newValue;
+                            int rounded = Math.round(floatValue / increment);
+                            int finalValue = rounded * increment;
 
-                        if (finalValue != floatValue) {
-                            seekBarPreference.setValue(finalValue);
-                            return false;
+                            if (finalValue != floatValue) {
+                                seekBarPreference.setValue(finalValue);
+                                return false;
+                            }
                         }
                         return true;
                     } catch (NumberFormatException e) {
@@ -129,13 +131,16 @@ public class SettingsActivity extends AppCompatActivity {
                     try {
                         SeekBarPreference seekBarPreference = (SeekBarPreference) preference;
                         int increment = seekBarPreference.getSeekBarIncrement();
-                        float floatValue = (int) newValue;
-                        int rounded = Math.round(floatValue / increment);
-                        int finalValue = rounded * increment;
+                        if(increment > 1) {
+                            float floatValue = (int) newValue;
+                            int rounded = Math.round(floatValue / increment);
+                            int finalValue = rounded * increment;
 
-                        if (finalValue != floatValue) {
-                            seekBarPreference.setValue(finalValue);
-                            return false;
+                            if (finalValue != floatValue) {
+                                seekBarPreference.setValue(finalValue);
+                                return false;
+
+                            }
                         }
                         return true;
                     } catch (NumberFormatException e) {
@@ -190,6 +195,14 @@ public class SettingsActivity extends AppCompatActivity {
             if (eventLogPref != null) {
                 eventLogPref.setOnPreferenceClickListener(preference -> {
                     showEventLogDialog();
+                    return true;
+                });
+            }
+
+            androidx.preference.Preference clearPrefsPref = findPreference("clear_preferences");
+            if (clearPrefsPref != null) {
+                clearPrefsPref.setOnPreferenceClickListener(preference -> {
+                    showClearPreferencesDialog();
                     return true;
                 });
             }
@@ -269,6 +282,27 @@ public class SettingsActivity extends AppCompatActivity {
                                 .setNegativeButton("Cancel", null)
                                 .show();
                     })
+                    .show();
+        }
+
+        private void showClearPreferencesDialog() {
+            new AlertDialog.Builder(getContext())
+                    .setTitle("Clear App Preferences")
+                    .setMessage("This will reset all settings to their default values. Battery data will be preserved.\n\nAre you sure?")
+                    .setPositiveButton("Clear", (dialog, which) -> {
+                        android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext());
+                        android.content.SharedPreferences.Editor editor = prefs.edit();
+                        editor.clear();
+                        editor.apply();
+
+                        // Refresh the preference screen
+                        getPreferenceScreen().removeAll();
+                        setPreferencesFromResource(R.xml.preferences, null);
+
+                        android.widget.Toast.makeText(getContext(), "Preferences cleared", android.widget.Toast.LENGTH_SHORT).show();
+                        BatteryWidgetProvider.updateAllWidgets(getContext());
+                    })
+                    .setNegativeButton("Cancel", null)
                     .show();
         }
 

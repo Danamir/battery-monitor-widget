@@ -239,9 +239,9 @@ public class BatteryGraphGenerator {
     private static void drawGraph(Context context, Canvas canvas, List<BatteryData> dataPoints, List<StatusData> statusData, int displayHours, int width, int height) {
         // Get padding and colors from preferences
         android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
-        int paddingHorizontalDp = prefs.getInt("horizontal_padding", 40);
-        int paddingVerticalDp = prefs.getInt("vertical_padding", 40);
-        int backgroundColor = prefs.getInt("main_color", 0x80000000); // Default: 50% transparent black
+        int paddingHorizontalDp = prefs.getInt("horizontal_padding", 0);
+        int paddingVerticalDp = prefs.getInt("vertical_padding", 0);
+        int backgroundColor = prefs.getInt("main_color", 0x1A000000); // Default: transparent black
 
         // Convert dp to pixels for padding and text sizing
         float density = context.getResources().getDisplayMetrics().density;
@@ -289,34 +289,34 @@ public class BatteryGraphGenerator {
         linePaint.setAntiAlias(true);
 
         // Get night time settings
-        String nightStartStr = prefs.getString("night_start", "20:00");
-        String nightEndStr = prefs.getString("night_end", "08:00");
+        String nightStartStr = prefs.getString("night_start", "00:00");
+        String nightEndStr = prefs.getString("night_end", "06:00");
         int nightStartMinutes = parseTimeToMinutes(nightStartStr);
         int nightEndMinutes = parseTimeToMinutes(nightEndStr);
-        if (nightStartMinutes == -1) nightStartMinutes = 20 * 60; // Default 20:00
-        if (nightEndMinutes == -1) nightEndMinutes = 8 * 60; // Default 08:00
+        if (nightStartMinutes == -1) nightStartMinutes = 0 * 60; // Default 00:00
+        if (nightEndMinutes == -1) nightEndMinutes = 6 * 60; // Default 06:00
 
-        int dayFillColor = prefs.getInt("graph_fill_color", 0x33ADD8E6); // 20% transparent light blue
-        int nightFillColor = prefs.getInt("graph_night_fill_color", 0x33000080); // 20% transparent dark blue
+        int dayFillColor = prefs.getInt("graph_fill_color", 0x66000000); // transparent black
+        int nightFillColor = prefs.getInt("graph_night_fill_color", 0x1AB6B6FF); // 20% transparent dark blue
 
         Paint fillPaint = new Paint();
         fillPaint.setStyle(Paint.Style.FILL);
         fillPaint.setAntiAlias(true);
 
         Paint chargingPaint = new Paint();
-        chargingPaint.setColor(prefs.getInt("charging_line_color", 0xFFADD8E6)); // Light blue
+        chargingPaint.setColor(prefs.getInt("charging_line_color", 0xFF09A6D9)); // Light blue
         chargingPaint.setStrokeWidth(2f * density);
         chargingPaint.setStyle(Paint.Style.STROKE);
         chargingPaint.setAntiAlias(true);
 
         Paint batteryLowPaint = new Paint();
-        batteryLowPaint.setColor(prefs.getInt("battery_low_color", 0xFFFFFF3A)); // Yellow
+        batteryLowPaint.setColor(prefs.getInt("battery_low_color", 0xFFFFFF23)); // Yellow
         batteryLowPaint.setStrokeWidth(2f * density);
         batteryLowPaint.setStyle(Paint.Style.STROKE);
         batteryLowPaint.setAntiAlias(true);
 
         Paint batteryCriticalPaint = new Paint();
-        batteryCriticalPaint.setColor(prefs.getInt("battery_critical_color", 0xFFFF3C1C)); // Red
+        batteryCriticalPaint.setColor(prefs.getInt("battery_critical_color", 0xFFFF3B1B)); // Red
         batteryCriticalPaint.setStrokeWidth(2f * density);
         batteryCriticalPaint.setStyle(Paint.Style.STROKE);
         batteryCriticalPaint.setAntiAlias(true);
@@ -328,9 +328,9 @@ public class BatteryGraphGenerator {
 
         // Get base colors for blending
         int normalColor = prefs.getInt("graph_line_color", 0xFF4CAF50);
-        int lowColor = prefs.getInt("battery_low_color", 0xFFFFFF3A);
-        int criticalColor = prefs.getInt("battery_critical_color", 0xFFFF3C1C);
-        int chargingColor = prefs.getInt("charging_line_color", 0xFFADD8E6);
+        int lowColor = prefs.getInt("battery_low_color", 0xFFFFFF23);
+        int criticalColor = prefs.getInt("battery_critical_color", 0xFFFF3B1B);
+        int chargingColor = prefs.getInt("charging_line_color", 0xFF09A6D9);
 
         // Draw background with night time sections
         long now = System.currentTimeMillis();
@@ -456,14 +456,14 @@ public class BatteryGraphGenerator {
         boolean staticGrid = prefs.getBoolean("staticGridPref", true);
 
         // Parse grid interval from human-readable format
-        String intervalStr = prefs.getString("gridVerticalIntervalPref", "6 hours");
+        String intervalStr = prefs.getString("gridVerticalIntervalPref", "12 hours");
         long intervalMillis = parseIntervalToMillis(intervalStr);
         if (intervalMillis <= 0) {
             intervalMillis = 6 * 60 * 60 * 1000L; // Default to 6 hours
         }
 
         // Get subdivision count
-        int intervalSubdivisionCount = Math.max(1, prefs.getInt("gridVerticalIntervalSubdivisionPref", 1));
+        int intervalSubdivisionCount = Math.max(1, prefs.getInt("gridVerticalIntervalSubdivisionPref", 2));
 
         // Create paint for subdivision grid lines (thinner and dashed)
         Paint subGridPaint = null;

@@ -65,4 +65,6 @@
     <string name="event_log_dialog_title">Battery Event Log</string>
     <string name="event_log_clear">Clear Log</string>
     <string name="event_log_empty">No events logged yet</string>
+    <string name="clear_preferences_title">Clear App Preferences</string>
+    <string name="clear_preferences_summary">Reset all settings to default (keeps battery data)</string>
 </resources>
