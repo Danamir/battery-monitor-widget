@@ -8,46 +8,69 @@
     android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
     android:paddingTop="16dp"
     android:paddingBottom="16dp"
-    android:orientation="vertical">
+    android:orientation="horizontal">
 
-    <TextView
-        android:id="@android:id/title"
+    <!-- Icon space to match standard preferences -->
+    <FrameLayout
+        android:id="@android:id/icon_frame"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceListItem"
-        android:singleLine="true"
-        android:ellipsize="marquee" />
-
-    <TextView
-        android:id="@android:id/summary"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceListItemSecondary"
-        android:maxLines="4"
-        android:layout_marginTop="4dp" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginTop="8dp">
-
-        <SeekBar
-            android:id="@+id/seekbar"
-            android:layout_width="0dp"
+        android:minWidth="56dp"
+        android:paddingEnd="16dp"
+        android:gravity="start|center_vertical">
+        <ImageView
+            android:id="@android:id/icon"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:max="100"
-            android:min="0" />
+            android:layout_gravity="start|center_vertical" />
+    </FrameLayout>
+
+    <!-- Content area -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
 
         <TextView
-            android:id="@+id/seekbar_value"
-            android:layout_width="40dp"
+            android:id="@android:id/title"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
             android:textAppearance="?android:attr/textAppearanceListItem"
-            android:gravity="end" />
+            android:singleLine="true"
+            android:ellipsize="marquee" />
+
+        <TextView
+            android:id="@android:id/summary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceListItemSecondary"
+            android:maxLines="4"
+            android:layout_marginTop="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="8dp">
+
+            <SeekBar
+                android:id="@+id/seekbar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="100"
+                android:min="0" />
+
+            <TextView
+                android:id="@+id/seekbar_value"
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:textAppearance="?android:attr/textAppearanceListItem"
+                android:gravity="end" />
+        </LinearLayout>
     </LinearLayout>
 
 </LinearLayout>

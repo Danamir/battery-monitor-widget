@@ -314,6 +314,11 @@ public class BatteryGraphGenerator {
         int batteryCriticalLevel = prefs.getInt("battery_critical_level", 15);
         int blendValue = prefs.getInt("battery_blend_value", 10);
 
+        // Get high usage settings
+        float highUsageThreshold = prefs.getFloat("high_usage_level", 3.0f);
+        float highUsageBlend = prefs.getFloat("high_usage_blend", 2.0f);
+        int highUsageColor = prefs.getInt("high_usage_color", 0xFFFF00FF);
+
         // Get base colors for blending
         int normalColor = prefs.getInt("graph_line_color", 0xFF4CAF50);
         int lowColor = prefs.getInt("battery_low_color", 0xFFFFFF23);
@@ -597,6 +602,7 @@ public class BatteryGraphGenerator {
             // Draw line segments with blended colors
             Float prevX = null;
             Float prevY = null;
+            BatteryData prevData = null;
 
             for (int i = 0; i < dataPoints.size(); i++) {
                 BatteryData data = dataPoints.get(i);
@@ -607,7 +613,16 @@ public class BatteryGraphGenerator {
                 float y = paddingVertical + (height - 2 * paddingVertical) * (100 - data.getLevel()) / 100f;
 
                 // Draw line segment from previous point to current point with blended color
-                if (prevX != null && prevY != null) {
+                if (prevX != null && prevY != null && prevData != null) {
+                    // Calculate battery usage per hour for this segment
+                    float batteryUsage = 0.0f;
+                    long timeDelta = data.getTimestamp() - prevData.getTimestamp();
+                    if (timeDelta > 0) {
+                        int levelDelta = prevData.getLevel() - data.getLevel();
+                        // Convert to %/hour
+                        batteryUsage = (levelDelta / (timeDelta / 3600000.0f));
+                    }
+
                     // Use the color for the current battery level
                     int blendedColor = getBlendedLineColor(
                         data.getLevel(),
@@ -620,12 +635,29 @@ public class BatteryGraphGenerator {
                         batteryCriticalLevel,
                         blendValue
                     );
+
+                    // Apply high usage blending if not charging
+                    if (!data.isCharging()) {
+                        float lowThreshold = highUsageThreshold - highUsageBlend;
+
+                        if (batteryUsage >= highUsageThreshold) {
+                            // Full high usage color when above threshold
+                            blendedColor = blendColors(blendedColor, highUsageColor, 1.0f);
+                        } else if (batteryUsage > lowThreshold) {
+                            // Blend between lowThreshold and highUsageThreshold
+                            float usageRatio = (batteryUsage - lowThreshold) / highUsageBlend;
+                            blendedColor = blendColors(blendedColor, highUsageColor, usageRatio);
+                        }
+                        // Below lowThreshold: ratio is 0.0 (no blending, keep original color)
+                    }
+
                     segmentPaint.setColor(blendedColor);
                     canvas.drawLine(prevX, prevY, x, y, segmentPaint);
                 }
 
                 prevX = x;
                 prevY = y;
+                prevData = data;
             }
         }
 
