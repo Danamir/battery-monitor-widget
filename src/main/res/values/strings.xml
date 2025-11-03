@@ -67,8 +67,10 @@
     <string name="event_log_empty">No events logged yet</string>
     <string name="clear_preferences_title">Clear App Preferences</string>
     <string name="clear_preferences_summary">Reset all settings to default (keeps battery data)</string>
-    <string name="high_usage_threshold_title">High Usage detection (%/h)</string>
+    <string name="high_usage_threshold_title">High Usage Detection (%/h)</string>
     <string name="high_usage_threshold_summary">Battery discharge rate threshold (%/h)</string>
     <string name="high_usage_blend_title">Blend usage (%/h)</string>
     <string name="high_usage_blend_summary">Blend amount for transitioning between normal and high battery usage</string>
+    <string name="high_usage_range_title">High Usage Range (min)</string>
+    <string name="high_usage_range_summary">Minimum time range for calculating high battery usage</string>
 </resources>

@@ -104,6 +104,16 @@
         app:maxValue="10.0"
         app:stepSize="0.1" />
 
+    <SeekBarPreference
+        android:key="high_usage_range"
+        android:title="@string/high_usage_range_title"
+        android:summary="@string/high_usage_range_summary"
+        android:defaultValue="10"
+        android:max="60"
+        android:min="0"
+        app:showSeekBarValue="true"
+        app:seekBarIncrement="1" />
+
     <PreferenceCategory
             android:title="@string/battery_night_colors_title" />
 
