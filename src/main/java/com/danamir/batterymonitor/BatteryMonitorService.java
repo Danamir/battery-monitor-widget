@@ -136,7 +136,7 @@ public class BatteryMonitorService extends Service {
         return builder
             .setContentTitle(contentTitle)
             .setContentText(contentText)
-            .setSmallIcon(android.R.drawable.ic_menu_info_details)
+            .setSmallIcon(R.drawable.ic_notification_battery)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .build();
