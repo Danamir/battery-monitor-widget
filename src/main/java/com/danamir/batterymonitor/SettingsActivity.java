@@ -73,6 +73,11 @@ public class SettingsActivity extends AppCompatActivity {
                 if ("main_color".equals(key) || "text_color".equals(key) || "grid_color".equals(key)) {
                     updateColorPreview();
                 }
+                // Update notification for relevant settings
+                if ("low_target_percent".equals(key) || "high_target_percent".equals(key) || "display_length_hours".equals(key)) {
+                    Intent serviceIntent = new Intent(getContext(), BatteryMonitorService.class);
+                    getContext().startService(serviceIntent);
+                }
             };
             prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener);
 
