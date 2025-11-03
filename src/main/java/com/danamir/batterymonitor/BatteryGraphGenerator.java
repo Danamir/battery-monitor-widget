@@ -251,20 +251,8 @@ public class BatteryGraphGenerator {
         float percentTextSize = 16 * density;
 
         // Get custom colors or use auto-calculated ones
-        int textColor;
-        int gridColor;
-
-        if (prefs.contains("text_color")) {
-            textColor = prefs.getInt("text_color", getContrastingTextColor(backgroundColor));
-        } else {
-            textColor = getContrastingTextColor(backgroundColor);
-        }
-
-        if (prefs.contains("grid_color")) {
-            gridColor = prefs.getInt("grid_color", textColor);
-        } else {
-            gridColor = textColor;
-        }
+        int textColor = prefs.getInt("text_color", 0xFFB4B4B4);
+        int gridColor = prefs.getInt("grid_color", 0x33CCCCCC);
 
         // Initialize paints
         Paint backgroundPaint = new Paint();
