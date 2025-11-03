@@ -1,8 +1,25 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application") version "8.12.3"
 }
 
 android {
+    signingConfigs {
+        create("release") {
+            val keystorePropertiesFile = rootProject.file("keystore.properties")
+            val keystoreProperties = Properties()
+            if (keystorePropertiesFile.exists()) {
+                keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+            }
+            
+            storeFile = file(keystoreProperties.getProperty("storeFile") ?: "release-keystore.jks")
+            storePassword = keystoreProperties.getProperty("storePassword") ?: ""
+            keyAlias = keystoreProperties.getProperty("keyAlias") ?: ""
+            keyPassword = keystoreProperties.getProperty("keyPassword") ?: ""
+        }
+    }
     namespace = "com.danamir.batterymonitor"
     compileSdk = 36
 
@@ -19,6 +36,7 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 
