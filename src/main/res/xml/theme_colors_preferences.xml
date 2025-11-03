@@ -84,6 +84,17 @@
         app:defaultColor="0xFFFF3B1B"
         app:defaultThreshold="25" />
 
+    <com.danamir.batterymonitor.FloatBatteryThresholdPreference
+        android:key="high_usage_threshold"
+        android:title="@string/high_usage_threshold_title"
+        app:colorKey="high_usage_color"
+        app:thresholdKey="high_usage_level"
+        app:defaultColor="0xFFFF00FF"
+        app:defaultFloatThreshold="3.0"
+        app:minValue="0.0"
+        app:maxValue="10.0"
+        app:stepSize="0.1" />
+
     <PreferenceCategory
             android:title="@string/battery_night_colors_title" />
 
