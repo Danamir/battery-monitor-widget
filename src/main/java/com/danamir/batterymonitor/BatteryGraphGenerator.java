@@ -465,12 +465,12 @@ public class BatteryGraphGenerator {
         // Get subdivision count
         int intervalSubdivisionCount = Math.max(1, prefs.getInt("gridVerticalIntervalSubdivisionPref", 1));
 
-        // Create paint for sub-interval grid lines (thinner and dashed)
+        // Create paint for subdivision grid lines (thinner and dashed)
         Paint subGridPaint = null;
         if (intervalSubdivisionCount > 1) {
             subGridPaint = new Paint();
             subGridPaint.setColor(gridColor);
-            subGridPaint.setStrokeWidth(1f * density);
+            subGridPaint.setStrokeWidth(0.8f * density);
             subGridPaint.setStyle(Paint.Style.STROKE);
             subGridPaint.setAntiAlias(true);
             subGridPaint.setPathEffect(new android.graphics.DashPathEffect(new float[]{3 * density, 3 * density}, 0));
