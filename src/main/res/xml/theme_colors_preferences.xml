@@ -95,15 +95,6 @@
         app:maxValue="20.0"
         app:stepSize="0.1" />
 
-    <com.danamir.batterymonitor.FloatSeekBarPreference
-        android:key="high_usage_blend"
-        android:title="@string/high_usage_blend_title"
-        android:summary="@string/high_usage_blend_summary"
-        app:defaultFloatValue="10.0"
-        app:minFloatValue="0.0"
-        app:maxFloatValue="20.0"
-        app:floatStepSize="0.1" />
-
     <SeekBarPreference
         android:key="high_usage_range"
         android:title="@string/high_usage_range_title"
@@ -113,6 +104,12 @@
         android:min="0"
         app:showSeekBarValue="true"
         app:seekBarIncrement="1" />
+
+    <SwitchPreferenceCompat
+        android:key="high_usage_blend"
+        android:title="@string/high_usage_blend_title"
+        android:summary="@string/high_usage_blend_summary"
+        android:defaultValue="true" />
 
     <PreferenceCategory
             android:title="@string/battery_night_colors_title" />

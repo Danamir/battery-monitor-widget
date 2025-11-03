@@ -316,7 +316,10 @@ public class BatteryGraphGenerator {
 
         // Get high usage settings
         float highUsageThreshold = prefs.getFloat("high_usage_level", 10.0f);
-        float highUsageBlend = prefs.getFloat("high_usage_blend", 10.0f);
+        float highUsageBlend = 1.0f;
+        if (prefs.getBoolean("high_usage_blend", true)) {
+            highUsageBlend = highUsageThreshold;
+        }
         int highUsageColor = prefs.getInt("high_usage_color", 0xFFFF00FF);
         int highUsageRangeMinutes = prefs.getInt("high_usage_range", 60);
 
@@ -704,7 +707,7 @@ public class BatteryGraphGenerator {
             startTime = now - timeRange;
 
             Paint userPresentPaint = new Paint();
-            userPresentPaint.setColor(prefs.getInt("user_present_color", 0xFFFFEB3B)); // Yellow
+            userPresentPaint.setColor(prefs.getInt("user_present_color", 0xFF08A6D9)); // Light blue
             userPresentPaint.setStyle(Paint.Style.FILL);
             userPresentPaint.setAntiAlias(true);
 
