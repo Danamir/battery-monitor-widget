@@ -115,7 +115,7 @@ public class BatteryMonitorService extends Service {
         }
 
         // Get target percentages
-        android.content.SharedPreferences prefs = android.preference.PreferenceManager.getDefaultSharedPreferences(this);
+        android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
         int lowTargetPercent = prefs.getInt("low_target_percent", 20);
         int highTargetPercent = prefs.getInt("high_target_percent", 80);
 
