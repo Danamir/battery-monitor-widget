@@ -315,9 +315,10 @@ public class BatteryGraphGenerator {
         int blendValue = prefs.getInt("battery_blend_value", 10);
 
         // Get high usage settings
-        float highUsageThreshold = prefs.getFloat("high_usage_level", 3.0f);
-        float highUsageBlend = prefs.getFloat("high_usage_blend", 2.0f);
+        float highUsageThreshold = prefs.getFloat("high_usage_level", 10.0f);
+        float highUsageBlend = prefs.getFloat("high_usage_blend", 10.0f);
         int highUsageColor = prefs.getInt("high_usage_color", 0xFFFF00FF);
+        int highUsageRangeMinutes = prefs.getInt("high_usage_range", 60);
 
         // Get base colors for blending
         int normalColor = prefs.getInt("graph_line_color", 0xFF4CAF50);
@@ -614,13 +615,48 @@ public class BatteryGraphGenerator {
 
                 // Draw line segment from previous point to current point with blended color
                 if (prevX != null && prevY != null && prevData != null) {
-                    // Calculate battery usage per hour for this segment
+                    // Calculate mean battery usage per hour over the specified time range
                     float batteryUsage = 0.0f;
-                    long timeDelta = data.getTimestamp() - prevData.getTimestamp();
-                    if (timeDelta > 0) {
-                        int levelDelta = prevData.getLevel() - data.getLevel();
-                        // Convert to %/hour
-                        batteryUsage = (levelDelta / (timeDelta / 3600000.0f));
+                    long rangeMillis = highUsageRangeMinutes * 60 * 1000L;
+                    long rangeStartTime = data.getTimestamp() - rangeMillis;
+
+                    // Collect all usage rates within the time range
+                    List<Float> usageRates = new ArrayList<>();
+                    for (int j = i - 1; j >= 0; j--) {
+                        BatteryData currentPoint = dataPoints.get(j);
+                        if (currentPoint.getTimestamp() < rangeStartTime) {
+                            break; // Past the range
+                        }
+
+                        if (j > 0) {
+                            BatteryData previousPoint = dataPoints.get(j - 1);
+                            long timeDelta = currentPoint.getTimestamp() - previousPoint.getTimestamp();
+                            if (timeDelta > 0) {
+                                int levelDelta = previousPoint.getLevel() - currentPoint.getLevel();
+                                float rate = levelDelta / (timeDelta / 3600000.0f);
+                                usageRates.add(rate);
+                            }
+                        }
+                    }
+
+                    // Calculate mean of usage rates
+                    if (!usageRates.isEmpty()) {
+                        float sum = 0.0f;
+                        for (float rate : usageRates) {
+                            sum += rate;
+                        }
+                        float meanUsage = sum / usageRates.size();
+
+                        // Calculate current usage rate (between previous and current point)
+                        float currentUsageRate = 0.0f;
+                        long timeDelta = data.getTimestamp() - prevData.getTimestamp();
+                        if (timeDelta > 0) {
+                            int levelDelta = prevData.getLevel() - data.getLevel();
+                            currentUsageRate = levelDelta / (timeDelta / 3600000.0f);
+                        }
+
+                        // Use the higher of current rate or mean rate
+                        batteryUsage = Math.max(currentUsageRate, meanUsage);
                     }
 
                     // Use the color for the current battery level

@@ -59,15 +59,6 @@
     <PreferenceCategory
         android:title="@string/battery_state_colors_title" />
 
-    <SeekBarPreference
-        android:key="battery_blend_value"
-        android:title="@string/battery_blend_value_title"
-        android:summary="@string/battery_blend_value_summary"
-        android:defaultValue="10"
-        android:min="0"
-        android:max="50"
-        app:showSeekBarValue="true" />
-
     <com.danamir.batterymonitor.BatteryThresholdPreference
         android:key="battery_low_threshold"
         android:title="@string/battery_low_level_title"
@@ -84,14 +75,14 @@
         app:defaultColor="0xFFFF3B1B"
         app:defaultThreshold="25" />
 
-    <com.danamir.batterymonitor.FloatSeekBarPreference
-        android:key="high_usage_blend"
-        android:title="@string/high_usage_blend_title"
-        android:summary="@string/high_usage_blend_summary"
-        app:defaultFloatValue="2.0"
-        app:minFloatValue="0.0"
-        app:maxFloatValue="10.0"
-        app:floatStepSize="0.1" />
+    <SeekBarPreference
+        android:key="battery_blend_value"
+        android:title="@string/battery_blend_value_title"
+        android:summary="@string/battery_blend_value_summary"
+        android:defaultValue="10"
+        android:min="0"
+        android:max="50"
+        app:showSeekBarValue="true" />
 
     <com.danamir.batterymonitor.FloatBatteryThresholdPreference
         android:key="high_usage_threshold"
@@ -99,17 +90,26 @@
         app:colorKey="high_usage_color"
         app:thresholdKey="high_usage_level"
         app:defaultColor="0xFFFF00FF"
-        app:defaultFloatThreshold="3.0"
+        app:defaultFloatThreshold="10.0"
         app:minValue="0.0"
-        app:maxValue="10.0"
+        app:maxValue="20.0"
         app:stepSize="0.1" />
+
+    <com.danamir.batterymonitor.FloatSeekBarPreference
+        android:key="high_usage_blend"
+        android:title="@string/high_usage_blend_title"
+        android:summary="@string/high_usage_blend_summary"
+        app:defaultFloatValue="10.0"
+        app:minFloatValue="0.0"
+        app:maxFloatValue="20.0"
+        app:floatStepSize="0.1" />
 
     <SeekBarPreference
         android:key="high_usage_range"
         android:title="@string/high_usage_range_title"
         android:summary="@string/high_usage_range_summary"
-        android:defaultValue="10"
-        android:max="60"
+        android:defaultValue="60"
+        android:max="240"
         android:min="0"
         app:showSeekBarValue="true"
         app:seekBarIncrement="1" />
