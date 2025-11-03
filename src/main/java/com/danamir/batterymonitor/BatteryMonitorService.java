@@ -118,16 +118,20 @@ public class BatteryMonitorService extends Service {
         String contentText = "Battery Monitor";
 
         if (currentBatteryLevel >= 0) {
-            Double usageRateValue = calculateBatteryUsageRateValue();
+            BatteryDataManager dataManager = BatteryDataManager.getInstance(this);
+            java.util.List<BatteryData> dataPoints = dataManager.getDataPoints(24);
+            Double usageRateValue = BatteryUtils.calculateBatteryUsageRateValue(dataPoints);
             String usageRate = usageRateValue != null ? String.format("%.1f%%/h", usageRateValue) : null;
-            contentTitle = "Battery " + currentBatteryLevel + "%" +
-                          (usageRate != null ? " • " + usageRate : "") + (isCharging ? " (Charging)" : "");
+            contentTitle = "Battery " + currentBatteryLevel + "%" + (isCharging ? " (Charging)" : "") +
+                          (usageRate != null ? " • " + usageRate : "");
 
             // Calculate time to 20% if discharging and rate is available
             if (!isCharging && usageRateValue != null && usageRateValue > 0 && currentBatteryLevel > 20) {
                 double hoursTo20 = (currentBatteryLevel - 20) / usageRateValue;
-                contentText = formatTimeEstimate(hoursTo20);
-                contentText += " • Battery Monitor";
+                String timeEstimate = BatteryUtils.formatTimeEstimate(hoursTo20);
+                if (!timeEstimate.isEmpty()) {
+                    contentText = timeEstimate + " • " + contentText;
+                }
             }
         } else {
             contentTitle = "Battery Monitor";
@@ -140,65 +144,6 @@ public class BatteryMonitorService extends Service {
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .build();
-    }
-
-    private String formatTimeEstimate(double hours) {
-        if (hours < 0) {
-            return "Battery Monitor";
-        }
-
-        int totalMinutes = (int) Math.round(hours * 60);
-        int h = totalMinutes / 60;
-        int m = totalMinutes % 60;
-
-        if (h > 0) {
-            return String.format("~%dh%02dm to 20%%", h, m);
-        } else {
-            return String.format("~%dm to 20%%", m);
-        }
-    }
-
-    private Double calculateBatteryUsageRateValue() {
-        BatteryDataManager dataManager = BatteryDataManager.getInstance(this);
-        java.util.List<BatteryData> dataPoints = dataManager.getDataPoints(24);
-
-        if (dataPoints.size() < 2) {
-            return null;
-        }
-
-        // Find the most recent continuous discharge period
-        BatteryData endPoint = null;
-        BatteryData startPoint = null;
-
-        for (int i = dataPoints.size() - 1; i >= 0; i--) {
-            BatteryData point = dataPoints.get(i);
-
-            if (endPoint == null && !point.isCharging()) {
-                endPoint = point;
-            } else if (endPoint != null && !point.isCharging()) {
-                startPoint = point;
-            } else if (endPoint != null && point.isCharging()) {
-                break;
-            }
-        }
-
-        if (startPoint == null || endPoint == null) {
-            return null;
-        }
-
-        long timeDiffMs = endPoint.getTimestamp() - startPoint.getTimestamp();
-        int levelDiff = startPoint.getLevel() - endPoint.getLevel();
-
-        // Need at least 10 minutes of data for reasonable calculation
-        if (timeDiffMs < 600000 || levelDiff <= 0) {
-            return null;
-        }
-
-        // Calculate rate per hour
-        double hours = timeDiffMs / 3600000.0;
-        double ratePerHour = levelDiff / hours;
-
-        return ratePerHour;
     }
 
     public void updateNotification(int batteryLevel, boolean charging) {
