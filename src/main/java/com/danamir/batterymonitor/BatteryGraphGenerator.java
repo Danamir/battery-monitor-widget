@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Picture;
+import android.widget.TextView;
 
 import androidx.core.content.ContextCompat;
 
@@ -266,7 +267,7 @@ public class BatteryGraphGenerator {
         float percentTextSize = 16 * density;
 
         // Get custom colors or use auto-calculated ones
-        int textColor = prefs.getInt("text_color", 0xFFB4B4B4);
+        int textColor = prefs.getInt("text_color", 0xFFFFFFFF);
         int gridColor = prefs.getInt("grid_color", 0x33CCCCCC);
 
         // Initialize paints
@@ -335,7 +336,7 @@ public class BatteryGraphGenerator {
         if (prefs.getBoolean("high_usage_blend", true)) {
             highUsageBlend = highUsageThreshold;
         }
-        int highUsageColor = prefs.getInt("high_usage_color", 0xBFFF00FF);
+        int highUsageColor = prefs.getInt("high_usage_color", 0xBF00FFFF);
         int highUsageRangeMinutes = prefs.getInt("high_usage_range", 60);
 
         // Get target percentages
@@ -784,8 +785,34 @@ public class BatteryGraphGenerator {
                 }
             }
 
-            textPaint.setTextSize(percentTextSize);
-            canvas.drawText(levelText, paddingHorizontal + percentTextSize + (showYAxisLabels ? labelTextSize * 3 : 0), height - paddingVertical - percentTextSize * 0.5f, textPaint);
+            // Create and configure TextView
+            TextView textView = new TextView(context);
+            textView.setText(levelText);
+            textView.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, percentTextSize);
+            textView.setTextColor(textColor);
+
+            // Make text wider
+            textView.setTextScaleX(1.5f);
+
+            // Add shadow: radius, dx, dy, color
+            textView.setShadowLayer(3 * density, 2 * density, 2 * density, Color.BLACK);
+
+            // Measure and layout the TextView
+            int spec = android.view.View.MeasureSpec.makeMeasureSpec(0, android.view.View.MeasureSpec.UNSPECIFIED);
+            textView.measure(spec, spec);
+            textView.layout(0, 0, textView.getMeasuredWidth(), textView.getMeasuredHeight());
+
+            // Save canvas state and translate to drawing position
+            canvas.save();
+            float xPos = paddingHorizontal + percentTextSize + (showYAxisLabels ? labelTextSize * 3 : 0);
+            float yPos = height - paddingVertical - percentTextSize * 1.5f;
+            canvas.translate(xPos, yPos);
+
+            // Draw the TextView
+            textView.draw(canvas);
+
+            // Restore canvas state
+            canvas.restore();
         }
     }
 }

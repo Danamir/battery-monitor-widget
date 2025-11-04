@@ -15,7 +15,7 @@
         android:key="text_color"
         android:title="@string/text_color_title"
         android:summary="@string/text_color_summary"
-        android:defaultValue="0xFFB4B4B4"
+        android:defaultValue="0xFFFFFFFF"
         android:layout="@layout/preference_color" />
 
     <com.danamir.batterymonitor.ColorPreference
@@ -89,7 +89,7 @@
         android:title="@string/high_usage_threshold_title"
         app:colorKey="high_usage_color"
         app:thresholdKey="high_usage_level"
-        app:defaultColor="0xBFFF00FF"
+        app:defaultColor="0xBF00FFFF"
         app:defaultFloatThreshold="10.0"
         app:minValue="0.0"
         app:maxValue="20.0"
