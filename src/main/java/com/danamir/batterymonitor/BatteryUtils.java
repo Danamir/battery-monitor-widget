@@ -3,6 +3,8 @@ package com.danamir.batterymonitor;
 import java.util.List;
 
 public class BatteryUtils {
+    public static final String TEXT_SEPARATOR = "  •  ";
+    // public static final String TEXT_SEPARATOR = "  |  ";
 
     /**
      * Calculate the battery discharge rate in percent per hour.
@@ -119,13 +121,13 @@ public class BatteryUtils {
             int d = h / 24;
             h = h % 24;
             if(h == 0) {
-                return String.format("~%dd%s", d, targetPercentStr);
+                return String.format("%dd%s", d, targetPercentStr);
             }
-            return String.format("~%dd %dh%s", d, h, targetPercentStr);
+            return String.format("%dd %dh%s", d, h, targetPercentStr);
         } else if (h > 0) {
-            return String.format("~%dh%02dm%s", h, m, targetPercentStr);
+            return String.format("%dh%02dm%s", h, m, targetPercentStr);
         } else {
-            return String.format("~%dm%s", m, targetPercentStr);
+            return String.format("%dm%s", m, targetPercentStr);
         }
     }
 }

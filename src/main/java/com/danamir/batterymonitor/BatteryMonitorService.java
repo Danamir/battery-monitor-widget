@@ -129,16 +129,16 @@ public class BatteryMonitorService extends Service {
             BatteryDataManager dataManager = BatteryDataManager.getInstance(this);
             java.util.List<BatteryData> dataPoints = dataManager.getDataPoints(24);
             Double usageRateValue = BatteryUtils.calculateBatteryUsageRateValue(dataPoints, minDuration);
-            String usageRate = usageRateValue != null ? String.format("%s%.1f%%/h", (isCharging ? "+" : "-"), usageRateValue) : null;
+            String usageRate = usageRateValue != null ? String.format("%.1f%%/h", usageRateValue) : null;
             contentTitle = "Battery " + currentBatteryLevel + "%" + (isCharging ? " ⚡" : "")
-                        + (usageRate != null ? " • " + usageRate : "");
+                        + (usageRate != null ? BatteryUtils.TEXT_SEPARATOR + usageRate : "");
 
             // Calculate time to target level if rate is available
             if (usageRateValue != null) {
                 double hoursToLevel = Math.abs(currentBatteryLevel - targetPercent) / usageRateValue;
                 String timeEstimate = BatteryUtils.formatTimeEstimate(hoursToLevel, targetPercent);
                 if (!timeEstimate.isEmpty()) {
-                    contentText = timeEstimate + " • " + contentText;
+                    contentText = timeEstimate + BatteryUtils.TEXT_SEPARATOR + contentText;
                 }
             }
         } else {

@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Picture;
+import android.graphics.Typeface;
 import android.widget.TextView;
 
 import androidx.core.content.ContextCompat;
@@ -776,12 +777,12 @@ public class BatteryGraphGenerator {
             int targetPercent = BatteryUtils.getTargetPercent(lowTargetPercent, highTargetPercent, currentData.getLevel(), currentData.isCharging());
             Double usageRate = BatteryUtils.calculateBatteryUsageRateValue(dataPoints, minDuration);
             if (usageRate != null) {
-                levelText += String.format(" • %s%.1f%%/h", (currentData.isCharging() ? "+" : "-"), usageRate);
+                levelText += String.format(BatteryUtils.TEXT_SEPARATOR+"%.1f%%/h", usageRate);
 
                 double hoursToLevel = Math.abs(currentData.getLevel() - targetPercent) / usageRate;
                 String timeEstimate = BatteryUtils.formatTimeEstimate(hoursToLevel, targetPercent);
                 if (!timeEstimate.isEmpty()) {
-                    levelText += " • " + timeEstimate;
+                    levelText += BatteryUtils.TEXT_SEPARATOR + timeEstimate;
                 }
             }
 
@@ -791,11 +792,14 @@ public class BatteryGraphGenerator {
             textView.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, percentTextSize);
             textView.setTextColor(textColor);
 
+            // Use system default UI font
+            textView.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
+
             // Make text wider
             textView.setTextScaleX(1.5f);
 
             // Add shadow: radius, dx, dy, color
-            textView.setShadowLayer(3 * density, 2 * density, 2 * density, Color.BLACK);
+            textView.setShadowLayer(2 * density, 1 * density, 1 * density, Color.BLACK);
 
             // Measure and layout the TextView
             int spec = android.view.View.MeasureSpec.makeMeasureSpec(0, android.view.View.MeasureSpec.UNSPECIFIED);
