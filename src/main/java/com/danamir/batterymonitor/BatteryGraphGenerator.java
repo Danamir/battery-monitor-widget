@@ -1,6 +1,7 @@
 package com.danamir.batterymonitor;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -786,17 +787,30 @@ public class BatteryGraphGenerator {
                 }
             }
 
+            // Check display orientation
+            android.util.DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+            int orientation = context.getResources().getConfiguration().orientation;
+
+            float adjustedTextSize = percentTextSize;
+            if (orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
+                adjustedTextSize = percentTextSize * (float) displayMetrics.widthPixels / displayMetrics.heightPixels;
+            }
+
             // Create and configure TextView
             TextView textView = new TextView(context);
             textView.setText(levelText);
-            textView.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, percentTextSize);
+            textView.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, adjustedTextSize);
             textView.setTextColor(textColor);
 
             // Use system default UI font
             textView.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
 
             // Make text wider
-            textView.setTextScaleX(1.5f);
+            if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+                textView.setTextScaleX(1.5f);
+            } else {
+                textView.setTextScaleX(1.0f/1.5f);
+            }
 
             // Add shadow: radius, dx, dy, color
             textView.setShadowLayer(2 * density, 1 * density, 1 * density, Color.BLACK);
@@ -808,8 +822,8 @@ public class BatteryGraphGenerator {
 
             // Save canvas state and translate to drawing position
             canvas.save();
-            float xPos = paddingHorizontal + percentTextSize + (showYAxisLabels ? labelTextSize * 3 : 0);
-            float yPos = height - paddingVertical - percentTextSize * 1.5f;
+            float xPos = paddingHorizontal + adjustedTextSize + (showYAxisLabels ? labelTextSize * 3 : 0);
+            float yPos = height - paddingVertical - adjustedTextSize * 1.5f;
             canvas.translate(xPos, yPos);
 
             // Draw the TextView
