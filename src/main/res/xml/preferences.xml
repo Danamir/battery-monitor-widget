@@ -1,125 +1,160 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
-    <EditTextPreference
-        android:key="display_length_hours"
-        android:title="@string/display_length_title"
-        android:summary="@string/display_length_summary"
-        android:defaultValue="48"
-        android:inputType="number" />
+    <PreferenceCategory
+        android:title="@string/category_display_title"
+        android:key="category_display">
 
-    <PreferenceScreen
-        android:key="theme_colors"
-        android:title="@string/theme_colors_title"
-        android:summary="@string/theme_colors_summary"
-        android:fragment="com.danamir.batterymonitor.ThemeSettings" />
+        <PreferenceScreen
+            android:key="display_settings"
+            android:title="@string/display_settings_title"
+            android:summary="@string/display_settings_summary"
+            android:fragment="com.danamir.batterymonitor.DisplaySettings" />
 
-    <SeekBarPreference
-        android:key="low_target_percent"
-        android:title="@string/low_target_percent_title"
-        android:summary="@string/low_target_percent_summary"
-        android:defaultValue="20"
-        android:max="100"
-        android:min="0"
-        app:showSeekBarValue="true"
-        app:seekBarIncrement="1" />
+    </PreferenceCategory>
 
-    <SeekBarPreference
-        android:key="high_target_percent"
-        android:title="@string/high_target_percent_title"
-        android:summary="@string/high_target_percent_summary"
-        android:defaultValue="80"
-        android:max="100"
-        android:min="0"
-        app:showSeekBarValue="true"
-        app:seekBarIncrement="1" />
+    <PreferenceCategory
+        android:title="@string/category_general_title"
+        android:key="category_general">
 
+        <EditTextPreference
+            android:key="display_length_hours"
+            android:title="@string/display_length_title"
+            android:summary="@string/display_length_summary"
+            android:defaultValue="48"
+            android:inputType="number" />
 
-    <SeekBarPreference
-        android:key="horizontal_padding"
-        android:title="@string/horizontal_padding_title"
-        android:summary="@string/horizontal_padding_summary"
-        android:defaultValue="0"
-        android:max="200"
-        android:min="0"
-        app:showSeekBarValue="true"
-        app:seekBarIncrement="1" />
+        <SeekBarPreference
+            android:key="low_target_percent"
+            android:title="@string/low_target_percent_title"
+            android:summary="@string/low_target_percent_summary"
+            android:defaultValue="20"
+            android:max="100"
+            android:min="0"
+            app:showSeekBarValue="true"
+            app:seekBarIncrement="1" />
 
-    <SeekBarPreference
-        android:key="vertical_padding"
-        android:title="@string/vertical_padding_title"
-        android:summary="@string/vertical_padding_summary"
-        android:defaultValue="0"
-        android:max="200"
-        android:min="0"
-        app:showSeekBarValue="true"
-        app:seekBarIncrement="1" />
+        <SeekBarPreference
+            android:key="high_target_percent"
+            android:title="@string/high_target_percent_title"
+            android:summary="@string/high_target_percent_summary"
+            android:defaultValue="80"
+            android:max="100"
+            android:min="0"
+            app:showSeekBarValue="true"
+            app:seekBarIncrement="1" />
 
-    <SwitchPreferenceCompat
-        android:key="show_y_axis_labels"
-        android:title="@string/show_y_axis_labels_title"
-        android:summary="@string/show_y_axis_labels_summary"
-        android:defaultValue="false" />
+    </PreferenceCategory>
 
-    <SwitchPreferenceCompat
-        android:key="staticGridPref"
-        android:title="@string/static_grid_title"
-        android:summary="@string/static_grid_summary"
-        android:defaultValue="false" />
+    <PreferenceCategory
+        android:title="@string/category_battery_text_title"
+        android:key="category_battery_text">
 
-    <EditTextPreference
-        android:key="gridVerticalIntervalPref"
-        android:title="@string/grid_vertical_interval_title"
-        android:summary="@string/grid_vertical_interval_summary"
-        android:defaultValue="12 hours"
-        android:inputType="text"
-        android:maxLength="16" />
+        <SeekBarPreference
+            android:key="batteryTextSize"
+            android:title="@string/battery_text_size_title"
+            android:summary="@string/battery_text_size_summary"
+            android:defaultValue="16"
+            android:max="48"
+            android:min="8"
+            app:showSeekBarValue="true"
+            app:seekBarIncrement="1" />
 
-    <SeekBarPreference
-        android:key="gridVerticalIntervalSubdivisionPref"
-        android:title="@string/grid_vertical_interval_subdivision_title"
-        android:summary="@string/grid_vertical_interval_subdivision_summary"
-        android:defaultValue="2"
-        android:max="24"
-        android:min="1"
-        app:showSeekBarValue="true"
-        app:seekBarIncrement="1" />
+        <com.danamir.batterymonitor.FloatSeekBarPreference
+            android:key="batteryWidthScale"
+            android:title="@string/battery_width_scale_title"
+            android:summary="@string/battery_width_scale_summary"
+            app:defaultFloatValue="1.5"
+            app:minFloatValue="0.5"
+            app:maxFloatValue="3.0"
+            app:floatStepSize="0.1" />
 
-    <SeekBarPreference
-        android:key="gridHorizontalIntervalPref"
-        android:title="@string/grid_horizontal_interval_title"
-        android:summary="@string/grid_horizontal_interval_summary"
-        android:defaultValue="25"
-        android:max="100"
-        android:min="0"
-        app:showSeekBarValue="true"
-        app:seekBarIncrement="1" />
+    </PreferenceCategory>
 
-    <SeekBarPreference
-        android:key="batteryTextSize"
-        android:title="@string/battery_text_size_title"
-        android:summary="@string/battery_text_size_summary"
-        android:defaultValue="16"
-        android:max="48"
-        android:min="8"
-        app:showSeekBarValue="true"
-        app:seekBarIncrement="1" />
+    <PreferenceCategory
+        android:title="@string/category_grid_title"
+        android:key="category_grid">
 
-    <com.danamir.batterymonitor.FloatSeekBarPreference
-        android:key="batteryWidthScale"
-        android:title="@string/battery_width_scale_title"
-        android:summary="@string/battery_width_scale_summary"
-        app:defaultFloatValue="1.5"
-        app:minFloatValue="0.5"
-        app:maxFloatValue="3.0"
-        app:floatStepSize="0.1" />
+        <SwitchPreferenceCompat
+            android:key="staticGridPref"
+            android:title="@string/static_grid_title"
+            android:summary="@string/static_grid_summary"
+            android:defaultValue="false" />
 
-    <Preference
-        android:key="view_event_log"
-        android:title="@string/view_event_log_title"
-        android:summary="@string/view_event_log_summary" />
+        <EditTextPreference
+            android:key="gridVerticalIntervalPref"
+            android:title="@string/grid_vertical_interval_title"
+            android:summary="@string/grid_vertical_interval_summary"
+            android:defaultValue="12 hours"
+            android:inputType="text"
+            android:maxLength="16" />
 
-    <Preference
-        android:key="clear_preferences"
-        android:title="@string/clear_preferences_title"
-        android:summary="@string/clear_preferences_summary" />
+        <SeekBarPreference
+            android:key="gridVerticalIntervalSubdivisionPref"
+            android:title="@string/grid_vertical_interval_subdivision_title"
+            android:summary="@string/grid_vertical_interval_subdivision_summary"
+            android:defaultValue="2"
+            android:max="24"
+            android:min="1"
+            app:showSeekBarValue="true"
+            app:seekBarIncrement="1" />
+
+        <SeekBarPreference
+            android:key="gridHorizontalIntervalPref"
+            android:title="@string/grid_horizontal_interval_title"
+            android:summary="@string/grid_horizontal_interval_summary"
+            android:defaultValue="25"
+            android:max="100"
+            android:min="0"
+            app:showSeekBarValue="true"
+            app:seekBarIncrement="1" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/category_layout_title"
+        android:key="category_layout">
+
+        <SeekBarPreference
+            android:key="horizontal_padding"
+            android:title="@string/horizontal_padding_title"
+            android:summary="@string/horizontal_padding_summary"
+            android:defaultValue="0"
+            android:max="200"
+            android:min="0"
+            app:showSeekBarValue="true"
+            app:seekBarIncrement="1" />
+
+        <SeekBarPreference
+            android:key="vertical_padding"
+            android:title="@string/vertical_padding_title"
+            android:summary="@string/vertical_padding_summary"
+            android:defaultValue="0"
+            android:max="200"
+            android:min="0"
+            app:showSeekBarValue="true"
+            app:seekBarIncrement="1" />
+
+        <SwitchPreferenceCompat
+            android:key="show_y_axis_labels"
+            android:title="@string/show_y_axis_labels_title"
+            android:summary="@string/show_y_axis_labels_summary"
+            android:defaultValue="false" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/category_data_title"
+        android:key="category_data">
+
+        <Preference
+            android:key="view_event_log"
+            android:title="@string/view_event_log_title"
+            android:summary="@string/view_event_log_summary" />
+
+        <Preference
+            android:key="clear_preferences"
+            android:title="@string/clear_preferences_title"
+            android:summary="@string/clear_preferences_summary" />
+
+    </PreferenceCategory>
 </PreferenceScreen>

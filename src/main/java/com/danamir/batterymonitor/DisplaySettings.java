@@ -4,16 +4,16 @@ import android.os.Bundle;
 import android.util.Log;
 import androidx.preference.PreferenceFragmentCompat;
 
-public class ThemeSettings extends PreferenceFragmentCompat {
+public class DisplaySettings extends PreferenceFragmentCompat {
     private android.content.SharedPreferences.OnSharedPreferenceChangeListener preferenceChangeListener;
     private ColorSettingsManager colorSettingsManager;
 
     @Override
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         try {
-            setPreferencesFromResource(R.xml.theme_colors_preferences, rootKey);
+            setPreferencesFromResource(R.xml.display_preferences, rootKey);
         } catch (ClassCastException e) {
-            Log.e("ThemeSettings", "Could not load preferences", e);
+            Log.e("DisplaySettings", "Could not load preferences", e);
         }
 
         android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext());
