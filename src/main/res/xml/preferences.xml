@@ -71,8 +71,17 @@
     </PreferenceCategory>
 
     <PreferenceCategory
-        android:title="@string/category_grid_title"
+        android:title="@string/category_graph_title"
         android:key="category_grid">
+
+        <com.danamir.batterymonitor.FloatSeekBarPreference
+            android:key="graphLineWidth"
+            android:title="@string/graph_line_width_title"
+            android:summary="@string/graph_line_width_summary"
+            app:defaultFloatValue="2.5"
+            app:minFloatValue="0.5"
+            app:maxFloatValue="10.0"
+            app:floatStepSize="0.5" />
 
         <SwitchPreferenceCompat
             android:key="staticGridPref"

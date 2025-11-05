@@ -289,9 +289,11 @@ public class BatteryGraphGenerator {
         textPaint.setTextSize(labelTextSize);
         textPaint.setAntiAlias(true);
 
+        float graphLineWidth = prefs.getFloat("graphLineWidth", 2.0f);
+
         Paint linePaint = new Paint();
         linePaint.setColor(prefs.getInt("graph_line_color", 0xFF4CAF50)); // Green
-        linePaint.setStrokeWidth(2f * density);
+        linePaint.setStrokeWidth(graphLineWidth * density);
         linePaint.setStyle(Paint.Style.STROKE);
         linePaint.setAntiAlias(true);
 
@@ -309,24 +311,6 @@ public class BatteryGraphGenerator {
         Paint fillPaint = new Paint();
         fillPaint.setStyle(Paint.Style.FILL);
         fillPaint.setAntiAlias(true);
-
-        Paint chargingPaint = new Paint();
-        chargingPaint.setColor(prefs.getInt("charging_line_color", 0xFF09A6D9)); // Light blue
-        chargingPaint.setStrokeWidth(2f * density);
-        chargingPaint.setStyle(Paint.Style.STROKE);
-        chargingPaint.setAntiAlias(true);
-
-        Paint batteryLowPaint = new Paint();
-        batteryLowPaint.setColor(prefs.getInt("battery_low_color", 0xFFFFFF23)); // Yellow
-        batteryLowPaint.setStrokeWidth(2f * density);
-        batteryLowPaint.setStyle(Paint.Style.STROKE);
-        batteryLowPaint.setAntiAlias(true);
-
-        Paint batteryCriticalPaint = new Paint();
-        batteryCriticalPaint.setColor(prefs.getInt("battery_critical_color", 0xFFFF3B1B)); // Red
-        batteryCriticalPaint.setStrokeWidth(2f * density);
-        batteryCriticalPaint.setStyle(Paint.Style.STROKE);
-        batteryCriticalPaint.setAntiAlias(true);
 
         // Get battery level thresholds and blend value
         int batteryLowLevel = prefs.getInt("battery_low_level", 35);
@@ -622,7 +606,7 @@ public class BatteryGraphGenerator {
 
             // Create a paint for drawing line segments with blended colors
             Paint segmentPaint = new Paint();
-            segmentPaint.setStrokeWidth(2f * density);
+            segmentPaint.setStrokeWidth(graphLineWidth * density);
             segmentPaint.setStyle(Paint.Style.STROKE);
             segmentPaint.setAntiAlias(true);
 
