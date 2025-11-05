@@ -15,6 +15,7 @@ import android.os.Looper;
 public class BatteryMonitorService extends Service {
     private BatteryReceiver batteryReceiver;
     private BatteryReceiver screenReceiver;
+    private BatteryReceiver configReceiver;
     private Handler handler;
     private Runnable updateRunnable;
     private static final long UPDATE_INTERVAL = 60000; // 1 minute
@@ -46,6 +47,12 @@ public class BatteryMonitorService extends Service {
         screenFilter.addAction(Intent.ACTION_USER_PRESENT);
         screenFilter.addAction(Intent.ACTION_SCREEN_OFF);
         registerReceiver(screenReceiver, screenFilter);
+
+        // Register configuration change receiver (must be registered dynamically)
+        configReceiver = new BatteryReceiver();
+        IntentFilter configFilter = new IntentFilter();
+        configFilter.addAction(Intent.ACTION_CONFIGURATION_CHANGED);
+        registerReceiver(configReceiver, configFilter);
 
         // Set up periodic updates (fallback to ensure updates even if battery doesn't change)
         handler = new Handler(Looper.getMainLooper());
@@ -174,6 +181,10 @@ public class BatteryMonitorService extends Service {
 
         if (screenReceiver != null) {
             unregisterReceiver(screenReceiver);
+        }
+
+        if (configReceiver != null) {
+            unregisterReceiver(configReceiver);
         }
 
         if (handler != null && updateRunnable != null) {

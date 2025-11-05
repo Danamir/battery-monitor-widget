@@ -14,6 +14,12 @@ public class BatteryReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
 
+        if (Intent.ACTION_CONFIGURATION_CHANGED.equals(action)) {
+            // Configuration changed (e.g., orientation change) - update widgets
+            BatteryWidgetProvider.updateAllWidgets(context);
+            return;
+        }
+
         if (Intent.ACTION_USER_PRESENT.equals(action)) {
             // User unlocked device - start user_present status
             StatusManager statusManager = StatusManager.getInstance(context);
