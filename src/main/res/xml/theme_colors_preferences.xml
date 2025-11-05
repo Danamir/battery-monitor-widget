@@ -89,7 +89,7 @@
         android:title="@string/high_usage_threshold_title"
         app:colorKey="high_usage_color"
         app:thresholdKey="high_usage_level"
-        app:defaultColor="0xBF00FFFF"
+        app:defaultColor="0xBFFF00FF"
         app:defaultFloatThreshold="10.0"
         app:minValue="0.0"
         app:maxValue="20.0"
