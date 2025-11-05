@@ -571,9 +571,44 @@ public class BatteryGraphGenerator {
             timeRange = displayHours * 60 * 60 * 1000L;
             startTime = now - timeRange;
 
+            // Check if the first point is before startTime (for interpolation)
+            // If getDataPoints was called with getPreviousPoint=true, the first point might be before startTime
+            BatteryData beforeStartData = null;
+            int firstVisibleIndex = -1;
+
+            // Check if first point is before the time range
+            if (!dataPoints.isEmpty() && dataPoints.get(0).getTimestamp() < startTime) {
+                beforeStartData = dataPoints.get(0);
+                // Find the first point that's actually in the range
+                for (int i = 1; i < dataPoints.size(); i++) {
+                    if (dataPoints.get(i).getTimestamp() >= startTime) {
+                        firstVisibleIndex = i;
+                        break;
+                    }
+                }
+            }
+
             // Build fill path (single color)
             Path fillPath = new Path();
             boolean firstPoint = true;
+            Float interpolatedStartY = null;
+
+            // Calculate interpolated starting point if we have a point before the range
+            if (beforeStartData != null && firstVisibleIndex >= 0) {
+                BatteryData firstVisibleData = dataPoints.get(firstVisibleIndex);
+                long timeDelta = firstVisibleData.getTimestamp() - beforeStartData.getTimestamp();
+                if (timeDelta > 0) {
+                    float timeRatio = (float)(startTime - beforeStartData.getTimestamp()) / timeDelta;
+                    int interpolatedLevel = (int)(beforeStartData.getLevel() +
+                        (firstVisibleData.getLevel() - beforeStartData.getLevel()) * timeRatio);
+                    interpolatedStartY = paddingVertical + (height - 2 * paddingVertical) * (100 - interpolatedLevel) / 100f;
+
+                    // Start fill path at left edge
+                    fillPath.moveTo(paddingHorizontal, height - paddingVertical);
+                    fillPath.lineTo(paddingHorizontal, interpolatedStartY);
+                    firstPoint = false;
+                }
+            }
 
             for (int i = 0; i < dataPoints.size(); i++) {
                 BatteryData data = dataPoints.get(i);
@@ -615,10 +650,32 @@ public class BatteryGraphGenerator {
             Float prevY = null;
             BatteryData prevData = null;
 
+            // Use the interpolated starting point if available
+            if (beforeStartData != null && firstVisibleIndex >= 0 && interpolatedStartY != null) {
+                BatteryData firstVisibleData = dataPoints.get(firstVisibleIndex);
+                long timeDelta = firstVisibleData.getTimestamp() - beforeStartData.getTimestamp();
+                if (timeDelta > 0) {
+                    float timeRatio = (float)(startTime - beforeStartData.getTimestamp()) / timeDelta;
+                    int interpolatedLevel = (int)(beforeStartData.getLevel() +
+                        (firstVisibleData.getLevel() - beforeStartData.getLevel()) * timeRatio);
+
+                    // Set up the interpolated first point at the left edge of the graph
+                    prevX = (float) paddingHorizontal;
+                    prevY = interpolatedStartY;
+
+                    // Create a virtual data point for the interpolated position
+                    // Use the charging state of the first visible point
+                    prevData = new BatteryData(startTime, interpolatedLevel, firstVisibleData.isCharging());
+                }
+            }
+
             for (int i = 0; i < dataPoints.size(); i++) {
                 BatteryData data = dataPoints.get(i);
 
-                if (data.getTimestamp() < startTime) continue;
+                // Skip points before startTime
+                if (data.getTimestamp() < startTime) {
+                    continue;
+                }
 
                 float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (data.getTimestamp() - startTime) / (float) timeRange;
                 float y = paddingVertical + (height - 2 * paddingVertical) * (100 - data.getLevel()) / 100f;

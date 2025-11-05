@@ -95,7 +95,7 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
         // Generate as Picture for resolution-independent rendering
         Picture picture = BatteryGraphGenerator.generateGraphAsPicture(
             context,
-            dataManager.getDataPoints(displayHours),
+            dataManager.getDataPoints(displayHours, true),
             statusData,
             displayHours,
             width,

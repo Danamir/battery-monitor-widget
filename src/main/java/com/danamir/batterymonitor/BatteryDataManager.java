@@ -82,19 +82,40 @@ public class BatteryDataManager {
     }
 
     public synchronized List<BatteryData> getDataPoints(int hours) {
+        return getDataPoints(hours, false);
+    }
+
+    public synchronized List<BatteryData> getDataPoints(int hours, boolean getPreviousPoint) {
         long cutoffTime = System.currentTimeMillis() - (hours * 60 * 60 * 1000L);
         List<BatteryData> filteredData = new ArrayList<>();
 
         BatteryData lastPoint = null;
+        BatteryData previousPoint = null; // The last point before cutoffTime
+        boolean addedPreviousPoint = false;
+
         for (BatteryData data : dataPoints) {
             if (data.getTimestamp() < cutoffTime) {
+                // Track the last point before cutoffTime
+                previousPoint = data;
                 continue;
             }
 
+            // Add the previous point once when we find the first point in range
+            if (getPreviousPoint && previousPoint != null && filteredData.isEmpty()) {
+                filteredData.add(previousPoint);
+                lastPoint = previousPoint;
+                previousPoint = null; // Only add it once
+                addedPreviousPoint = true;
+            }
+
+            // Don't apply duplicate filtering to the previous point we just added
             if (lastPoint != null && lastPoint.getLevel() == data.getLevel()
-                    && lastPoint.isCharging() == data.isCharging() && !filteredData.isEmpty()) {
+                    && lastPoint.isCharging() == data.isCharging() && !filteredData.isEmpty()
+                    && !addedPreviousPoint) {
                 filteredData.remove(filteredData.size() - 1);
             }
+
+            addedPreviousPoint = false;
 
             filteredData.add(data);
             lastPoint = data;
