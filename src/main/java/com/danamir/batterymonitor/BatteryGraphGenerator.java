@@ -266,7 +266,8 @@ public class BatteryGraphGenerator {
         int paddingHorizontal = (int) (paddingHorizontalDp * density);
         int paddingVertical = (int) (paddingVerticalDp * density);
         float labelTextSize = 12 * density;
-        float percentTextSize = 16 * density;
+        int batteryTextSizeDp = prefs.getInt("batteryTextSize", 16);
+        float batteryTextSize = batteryTextSizeDp * density;
 
         // Get custom colors or use auto-calculated ones
         int textColor = prefs.getInt("text_color", 0xFFFFFFFF);
@@ -791,9 +792,9 @@ public class BatteryGraphGenerator {
             android.util.DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
             int orientation = context.getResources().getConfiguration().orientation;
 
-            float adjustedTextSize = percentTextSize;
+            float adjustedTextSize = batteryTextSize;
             if (orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
-                adjustedTextSize = percentTextSize * (float) displayMetrics.widthPixels / displayMetrics.heightPixels;
+                adjustedTextSize = batteryTextSize * (float) displayMetrics.widthPixels / displayMetrics.heightPixels;
             }
 
             // Create and configure TextView
@@ -806,10 +807,11 @@ public class BatteryGraphGenerator {
             textView.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
 
             // Make text wider
+            float batteryWidthScale = prefs.getFloat("batteryWidthScale", 1.5f);
             if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                textView.setTextScaleX(1.5f);
+                textView.setTextScaleX(batteryWidthScale);
             } else {
-                textView.setTextScaleX(1.0f/1.5f);
+                textView.setTextScaleX(1.0f/batteryWidthScale);
             }
 
             // Add shadow: radius, dx, dy, color

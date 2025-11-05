@@ -94,6 +94,25 @@
         app:showSeekBarValue="true"
         app:seekBarIncrement="1" />
 
+    <SeekBarPreference
+        android:key="batteryTextSize"
+        android:title="@string/battery_text_size_title"
+        android:summary="@string/battery_text_size_summary"
+        android:defaultValue="16"
+        android:max="48"
+        android:min="8"
+        app:showSeekBarValue="true"
+        app:seekBarIncrement="1" />
+
+    <com.danamir.batterymonitor.FloatSeekBarPreference
+        android:key="batteryWidthScale"
+        android:title="@string/battery_width_scale_title"
+        android:summary="@string/battery_width_scale_summary"
+        app:defaultFloatValue="1.5"
+        app:minFloatValue="0.5"
+        app:maxFloatValue="3.0"
+        app:floatStepSize="0.1" />
+
     <Preference
         android:key="view_event_log"
         android:title="@string/view_event_log_title"
