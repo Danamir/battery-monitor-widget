@@ -292,7 +292,7 @@ public class BatteryGraphGenerator {
         float graphLineWidth = prefs.getFloat("graphLineWidth", 2.0f);
 
         Paint linePaint = new Paint();
-        linePaint.setColor(prefs.getInt("graph_line_color", 0xFF4CAF50)); // Green
+        linePaint.setColor(prefs.getInt("graph_line_color", 0xFF4ACE50)); // Green
         linePaint.setStrokeWidth(graphLineWidth * density);
         linePaint.setStyle(Paint.Style.STROKE);
         linePaint.setAntiAlias(true);
@@ -331,7 +331,7 @@ public class BatteryGraphGenerator {
         int highTargetPercent = prefs.getInt("high_target_percent", 80);
 
         // Get base colors for blending
-        int normalColor = prefs.getInt("graph_line_color", 0xFF4CAF50);
+        int normalColor = prefs.getInt("graph_line_color", 0xFF4ACE50);
         int lowColor = prefs.getInt("battery_low_color", 0xFFFFFF23);
         int criticalColor = prefs.getInt("battery_critical_color", 0xFFFF3B1B);
         int chargingColor = prefs.getInt("charging_line_color", 0xFF09A6D9);
