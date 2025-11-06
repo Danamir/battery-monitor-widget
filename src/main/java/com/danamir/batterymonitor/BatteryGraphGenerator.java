@@ -289,7 +289,7 @@ public class BatteryGraphGenerator {
         textPaint.setTextSize(labelTextSize);
         textPaint.setAntiAlias(true);
 
-        float graphLineWidth = prefs.getFloat("graphLineWidth", 2.0f);
+        float graphLineWidth = prefs.getFloat("graphLineWidth", 2.5f);
 
         Paint linePaint = new Paint();
         linePaint.setColor(prefs.getInt("graph_line_color", 0xFF00D505)); // Green
