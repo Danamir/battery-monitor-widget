@@ -42,6 +42,11 @@ public class BatteryUtils {
                 endPoint = point;
             } else if (endPoint != null && point.isCharging() == isChargingPeriod) {
                 startPoint = point;
+                // Check if we've reached minDuration
+                long currentTimeDiff = endPoint.getTimestamp() - startPoint.getTimestamp();
+                if (currentTimeDiff >= minDuration * 60 * 1000) {
+                    break;
+                }
             } else if (endPoint != null && point.isCharging() != isChargingPeriod) {
                 differentPeriodAllowed--;
                 if (differentPeriodAllowed < 0) {
@@ -63,6 +68,22 @@ public class BatteryUtils {
         } else {
             // For discharging, level decreases over time
             levelDiff = startPoint.getLevel() - endPoint.getLevel();
+        }
+
+        // put debug here
+        boolean debug = false;
+        if (debug) {
+            android.util.Log.d("BatteryUtils", "=== Battery Calculation Debug ===");
+            android.util.Log.d("BatteryUtils", "isChargingPeriod: " + isChargingPeriod);
+            android.util.Log.d("BatteryUtils", "startPoint.timestamp: " + new java.util.Date(startPoint.getTimestamp()));
+            android.util.Log.d("BatteryUtils", "startPoint.level: " + startPoint.getLevel() + "%");
+            android.util.Log.d("BatteryUtils", "startPoint.isCharging: " + startPoint.isCharging());
+            android.util.Log.d("BatteryUtils", "endPoint.timestamp: " + new java.util.Date(endPoint.getTimestamp()));
+            android.util.Log.d("BatteryUtils", "endPoint.level: " + endPoint.getLevel() + "%");
+            android.util.Log.d("BatteryUtils", "endPoint.isCharging: " + endPoint.isCharging());
+            android.util.Log.d("BatteryUtils", "timeDiffMs: " + (timeDiffMs / 60000.0) + " minutes, " + (timeDiffMs / 3600000.0) + " hours");
+            android.util.Log.d("BatteryUtils", "levelDiff: " + levelDiff + "%");
+            android.util.Log.d("BatteryUtils", "minDuration: " + minDuration + " minutes");
         }
 
         // Need at least that many minutes of data for reasonable calculation
