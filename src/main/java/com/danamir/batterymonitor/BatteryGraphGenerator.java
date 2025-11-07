@@ -255,8 +255,10 @@ public class BatteryGraphGenerator {
     }
 
     private static void drawGraph(Context context, Canvas canvas, List<BatteryData> dataPoints, List<StatusData> statusData, int displayHours, int width, int height) {
-        boolean usageRateFill = true;
-        boolean usageRateLine = false;
+        boolean usageRateFill = false;
+        boolean usageRateLine = true;
+        boolean usageRateLineOnly = true;
+        boolean fillWithLineColor = true;
 
         // Get padding and colors from preferences
         android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
@@ -751,7 +753,50 @@ public class BatteryGraphGenerator {
                         blendValue
                     );
 
-                    if (usageRateFill) {
+                    if (fillWithLineColor) {
+                        // Mode: Use blended line color as fill color (with alpha from fillColor)
+
+                        int fillLineColor = blendedColor;
+
+                        // Apply high usage blending if usageRateLine is true and not charging
+                        if (data.isCharging()) {
+                            // Use charging line color when charging
+                            fillLineColor = chargingColor;
+                        } else if ((usageRateLine && !usageRateLineOnly) || usageRateFill) {
+                            float lowThreshold = highUsageThreshold - highUsageBlend;
+
+                            if (batteryUsage >= highUsageThreshold) {
+                                // Full high usage color when above threshold
+                                fillLineColor = blendColors(fillLineColor, highUsageColor, 1.0f, false);
+                            } else if (batteryUsage > lowThreshold) {
+                                // Blend between lowThreshold and highUsageThreshold
+                                float usageRatio = (batteryUsage - lowThreshold) / highUsageBlend;
+                                fillLineColor = blendColors(fillLineColor, highUsageColor, usageRatio, false);
+                            }
+                        }
+
+                        // Extract alpha from fillColor
+                        int fillAlpha = Color.alpha(fillColor);
+
+                        // Create fill color from blended line color with fillColor's alpha
+                        int lineColorWithFillAlpha = Color.argb(
+                            fillAlpha,
+                            Color.red(fillLineColor),
+                            Color.green(fillLineColor),
+                            Color.blue(fillLineColor)
+                        );
+
+                        // Draw fill segment with line color (using fillColor alpha)
+                        Path segmentFillPath = new Path();
+                        segmentFillPath.moveTo(prevX, height - paddingVertical);
+                        segmentFillPath.lineTo(prevX, prevY);
+                        segmentFillPath.lineTo(x, y);
+                        segmentFillPath.lineTo(x, height - paddingVertical);
+                        segmentFillPath.close();
+
+                        usageRateFillPaint.setColor(lineColorWithFillAlpha);
+                        canvas.drawPath(segmentFillPath, usageRateFillPaint);
+                    } else if (usageRateFill) {
                         // Mode: Usage rate as fill color
 
                         // Calculate usage rate color for fill
@@ -761,11 +806,11 @@ public class BatteryGraphGenerator {
 
                             if (batteryUsage >= highUsageThreshold) {
                                 // Full high usage color when above threshold
-                                usageRateFillColor = blendColors(fillColor, highUsageColor, 1.0f, true);
+                                usageRateFillColor = blendColors(fillColor, highUsageColor, 1.0f, false);
                             } else if (batteryUsage > lowThreshold) {
                                 // Blend between lowThreshold and highUsageThreshold
                                 float usageRatio = (batteryUsage - lowThreshold) / highUsageBlend;
-                                usageRateFillColor = blendColors(fillColor, highUsageColor, usageRatio, true);
+                                usageRateFillColor = blendColors(fillColor, highUsageColor, usageRatio, false);
                             }
 
                             // Draw fill segment with usage rate color
