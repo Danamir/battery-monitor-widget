@@ -10,6 +10,12 @@
             android:summary="@string/display_settings_summary"
             android:fragment="com.danamir.batterymonitor.DisplaySettings" />
 
+        <PreferenceScreen
+            android:key="battery_text_settings"
+            android:title="@string/battery_text_settings_title"
+            android:summary="@string/battery_text_settings_summary"
+            android:fragment="com.danamir.batterymonitor.BatteryTextPreference" />
+
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -52,31 +58,6 @@
             android:min="1"
             app:showSeekBarValue="true"
             app:seekBarIncrement="1" />
-
-    </PreferenceCategory>
-
-    <PreferenceCategory
-        android:title="@string/category_battery_text_title"
-        android:key="category_battery_text">
-
-        <SeekBarPreference
-            android:key="batteryTextSize"
-            android:title="@string/battery_text_size_title"
-            android:summary="@string/battery_text_size_summary"
-            android:defaultValue="16"
-            android:max="48"
-            android:min="8"
-            app:showSeekBarValue="true"
-            app:seekBarIncrement="1" />
-
-        <com.danamir.batterymonitor.FloatSeekBarPreference
-            android:key="batteryWidthScale"
-            android:title="@string/battery_width_scale_title"
-            android:summary="@string/battery_width_scale_summary"
-            app:defaultFloatValue="1.5"
-            app:minFloatValue="0.5"
-            app:maxFloatValue="3.0"
-            app:floatStepSize="0.1" />
 
     </PreferenceCategory>
 

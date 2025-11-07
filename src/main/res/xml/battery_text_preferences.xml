@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory
+        android:title="@string/category_battery_text_display_title"
+        android:key="category_battery_text_display">
+
+        <SeekBarPreference
+            android:key="batteryTextSize"
+            android:title="@string/battery_text_size_title"
+            android:summary="@string/battery_text_size_summary"
+            android:defaultValue="16"
+            android:max="48"
+            android:min="8"
+            app:showSeekBarValue="true"
+            app:seekBarIncrement="1" />
+
+        <com.danamir.batterymonitor.FloatSeekBarPreference
+            android:key="batteryWidthScale"
+            android:title="@string/battery_width_scale_title"
+            android:summary="@string/battery_width_scale_summary"
+            app:defaultFloatValue="1.5"
+            app:minFloatValue="0.5"
+            app:maxFloatValue="3.0"
+            app:floatStepSize="0.1" />
+
+        <SwitchPreferenceCompat
+            android:key="show_battery_percentage"
+            android:title="@string/show_battery_percentage_title"
+            android:summary="@string/show_battery_percentage_summary"
+            android:defaultValue="true" />
+
+        <SwitchPreferenceCompat
+            android:key="show_use_rate"
+            android:title="@string/show_use_rate_title"
+            android:summary="@string/show_use_rate_summary"
+            android:defaultValue="true" />
+
+        <SwitchPreferenceCompat
+            android:key="show_estimation"
+            android:title="@string/show_estimation_title"
+            android:summary="@string/show_estimation_summary"
+            android:defaultValue="true" />
+
+        <SwitchPreferenceCompat
+            android:key="show_time_estimation"
+            android:title="@string/show_time_estimation_title"
+            android:summary="@string/show_time_estimation_summary"
+            android:defaultValue="false" />
+
+        <SwitchPreferenceCompat
+            android:key="show_use_max_level"
+            android:title="@string/show_use_max_level_title"
+            android:summary="@string/show_use_max_level_summary"
+            android:defaultValue="false" />
+
+    </PreferenceCategory>
+</PreferenceScreen>

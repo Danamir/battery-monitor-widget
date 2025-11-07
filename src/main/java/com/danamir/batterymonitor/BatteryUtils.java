@@ -77,7 +77,7 @@ public class BatteryUtils {
         }
 
         // put debug here
-        boolean debug = true;
+        boolean debug = false;
         if (debug) {
             android.util.Log.d("BatteryUtils", "=== Battery Calculation Debug ===");
             android.util.Log.d("BatteryUtils", "isChargingPeriod: " + isChargingPeriod);

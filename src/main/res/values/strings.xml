@@ -91,4 +91,17 @@
     <string name="category_graph_title">Graph</string>
     <string name="category_battery_text_title">Battery Text</string>
     <string name="category_data_title">Data</string>
+    <string name="battery_text_settings_title">Battery Text Settings</string>
+    <string name="battery_text_settings_summary">Configure which information to display on the graph</string>
+    <string name="category_battery_text_display_title">Text Display Options</string>
+    <string name="show_battery_percentage_title">Battery Percentage</string>
+    <string name="show_battery_percentage_summary">Display current battery percentage</string>
+    <string name="show_use_rate_title">Use Rate</string>
+    <string name="show_use_rate_summary">Display battery usage rate</string>
+    <string name="show_estimation_title">Estimation</string>
+    <string name="show_estimation_summary">Display battery charge duration estimation</string>
+    <string name="show_time_estimation_title">Time Estimation</string>
+    <string name="show_time_estimation_summary">Display time and date estimation</string>
+    <string name="show_use_max_level_title">Use Max Level</string>
+    <string name="show_use_max_level_summary">Display usage since maximum charge level instead of using calculation time</string>
 </resources>
