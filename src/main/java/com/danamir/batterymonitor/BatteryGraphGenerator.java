@@ -255,13 +255,12 @@ public class BatteryGraphGenerator {
     }
 
     private static void drawGraph(Context context, Canvas canvas, List<BatteryData> dataPoints, List<StatusData> statusData, int displayHours, int width, int height) {
-        boolean usageRateFill = false;
-        boolean usageRateLine = true;
-        boolean usageRateLineOnly = true;
-        boolean fillWithLineColor = true;
-
         // Get padding and colors from preferences
         android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
+        boolean usageRateFill = prefs.getBoolean("usage_rate_fill", true);
+        boolean usageRateLine = prefs.getBoolean("usage_rate_line", true);
+        boolean usageRateLineOnly = prefs.getBoolean("usage_rate_line_only", true);
+        boolean fillWithLineColor = prefs.getBoolean("fill_with_line_color", false);
         int paddingHorizontalDp = prefs.getInt("horizontal_padding", 0);
         int paddingVerticalDp = prefs.getInt("vertical_padding", 0);
         int backgroundColor = prefs.getInt("main_color", 0x1A000000); // Default: transparent black
@@ -762,7 +761,7 @@ public class BatteryGraphGenerator {
                         if (data.isCharging()) {
                             // Use charging line color when charging
                             fillLineColor = chargingColor;
-                        } else if ((usageRateLine && !usageRateLineOnly) || usageRateFill) {
+                        } else if (!usageRateLineOnly && (usageRateLine || usageRateFill)) {
                             float lowThreshold = highUsageThreshold - highUsageBlend;
 
                             if (batteryUsage >= highUsageThreshold) {

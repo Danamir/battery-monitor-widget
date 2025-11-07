@@ -126,4 +126,31 @@
         android:title="@string/night_time_title"
         android:summary="" />
 
+    <PreferenceCategory
+        android:title="@string/fill_options_title" />
+
+    <SwitchPreferenceCompat
+        android:key="usage_rate_fill"
+        android:title="@string/usage_rate_fill_title"
+        android:summary="@string/usage_rate_fill_summary"
+        android:defaultValue="true" />
+
+    <SwitchPreferenceCompat
+        android:key="usage_rate_line"
+        android:title="@string/usage_rate_line_title"
+        android:summary="@string/usage_rate_line_summary"
+        android:defaultValue="true" />
+
+    <SwitchPreferenceCompat
+        android:key="usage_rate_line_only"
+        android:title="@string/usage_rate_line_only_title"
+        android:summary="@string/usage_rate_line_only_summary"
+        android:defaultValue="true" />
+
+    <SwitchPreferenceCompat
+        android:key="fill_with_line_color"
+        android:title="@string/fill_with_line_color_title"
+        android:summary="@string/fill_with_line_color_summary"
+        android:defaultValue="false" />
+
 </PreferenceScreen>
