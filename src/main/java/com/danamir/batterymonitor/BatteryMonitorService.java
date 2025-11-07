@@ -127,7 +127,7 @@ public class BatteryMonitorService extends Service {
         int highTargetPercent = prefs.getInt("high_target_percent", 80);
 
         String contentTitle;
-        String contentText = "Battery Monitor";
+        String contentText = "";
 
         if (currentBatteryLevel >= 0) {
             int minDuration = 10;
@@ -145,7 +145,12 @@ public class BatteryMonitorService extends Service {
                 double hoursToLevel = Math.abs(currentBatteryLevel - targetPercent) / usageRateValue;
                 String timeEstimate = BatteryUtils.formatTimeEstimate(hoursToLevel, targetPercent);
                 if (!timeEstimate.isEmpty()) {
-                    contentText = timeEstimate + BatteryUtils.TEXT_SEPARATOR + contentText;
+                    timeEstimate += " ("+BatteryUtils.formatDurationEndTime(hoursToLevel)+")";
+                    if (!contentText.isEmpty()) {
+                        contentText = timeEstimate + BatteryUtils.TEXT_SEPARATOR + contentText;
+                    } else {
+                        contentText = timeEstimate;
+                    }
                 }
             }
         } else {

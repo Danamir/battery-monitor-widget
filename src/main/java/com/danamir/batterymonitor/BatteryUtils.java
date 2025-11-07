@@ -1,6 +1,10 @@
 package com.danamir.batterymonitor;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class BatteryUtils {
     public static final String TEXT_SEPARATOR = "  •  ";
@@ -110,7 +114,7 @@ public class BatteryUtils {
 
         String targetPercentStr = "";
         if (targetPercent != null && targetPercent > 0 && targetPercent < 100) {
-            targetPercentStr = String.format(" to %d%%", targetPercent);
+            targetPercentStr = String.format(Locale.getDefault(), " to %d%%", targetPercent);
         } else if (targetPercent != null && targetPercent == 100) {
             targetPercentStr = " to Full";
         } else if (targetPercent != null && targetPercent == 0) {
@@ -121,13 +125,38 @@ public class BatteryUtils {
             int d = h / 24;
             h = h % 24;
             if(h == 0) {
-                return String.format("%dd%s", d, targetPercentStr);
+                return String.format(Locale.getDefault(), "%dd%s", d, targetPercentStr);
             }
-            return String.format("%dd %dh%s", d, h, targetPercentStr);
+            return String.format(Locale.getDefault(), "%dd %dh%s", d, h, targetPercentStr);
         } else if (h > 0) {
-            return String.format("%dh%02dm%s", h, m, targetPercentStr);
+            return String.format(Locale.getDefault(), "%dh%02dm%s", h, m, targetPercentStr);
         } else {
-            return String.format("%dm%s", m, targetPercentStr);
+            return String.format(Locale.getDefault(), "%dm%s", m, targetPercentStr);
+        }
+    }
+
+    /**
+     * Format duration end time to a human-readable string showing time of day.
+     *
+     * @param hours Time duration in hours from now
+     * @return Formatted string like "14:30" if today, or "Mon. @ 14:30" if another day
+     */
+    public static String formatDurationEndTime(double hours) {
+        Calendar now = Calendar.getInstance();
+        Calendar endTime = Calendar.getInstance();
+        endTime.add(Calendar.MILLISECOND, (int) Math.round(hours * 3600000));
+
+        SimpleDateFormat timeFormat = new SimpleDateFormat("H:mm", Locale.getDefault());
+
+        // Check if the end time falls on the same day
+        boolean isSameDay = now.get(Calendar.YEAR) == endTime.get(Calendar.YEAR)
+                && now.get(Calendar.DAY_OF_YEAR) == endTime.get(Calendar.DAY_OF_YEAR);
+
+        if (isSameDay) {
+            return timeFormat.format(endTime.getTime());
+        } else {
+            SimpleDateFormat dayFormat = new SimpleDateFormat("EEE", Locale.getDefault());
+            return dayFormat.format(endTime.getTime()) + " @ " + timeFormat.format(endTime.getTime());
         }
     }
 }

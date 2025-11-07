@@ -825,6 +825,7 @@ public class BatteryGraphGenerator {
                 double hoursToLevel = Math.abs(currentData.getLevel() - targetPercent) / usageRate;
                 String timeEstimate = BatteryUtils.formatTimeEstimate(hoursToLevel, targetPercent);
                 if (!timeEstimate.isEmpty()) {
+                    timeEstimate += " ("+BatteryUtils.formatDurationEndTime(hoursToLevel)+")";
                     levelText += BatteryUtils.TEXT_SEPARATOR + timeEstimate;
                 }
             }
