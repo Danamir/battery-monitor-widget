@@ -809,23 +809,23 @@ public class BatteryGraphGenerator {
 
         // Draw current battery level
         if (!dataPoints.isEmpty()) {
-            BatteryData currentData = dataPoints.get(dataPoints.size() - 1);
-            String levelText = currentData.getLevel() + "%";
-            if (currentData.isCharging()) {
+            java.util.Map<String, String> values = BatteryUtils.calculateValues(context);
+
+            String usageRate = values.get("usage_rate");
+            String hoursTo = values.get("hours_to");
+            String timeTo = values.get("time_to");
+            String levelText = values.get("current_percent");
+            boolean isCharging = "true".equals(values.get("is_charging"));
+
+            if (isCharging) {
                 levelText += " ⚡";
             }
 
-            // Calculate charge/discharge rate and time estimate
-            int minDuration = 10;
-            int targetPercent = BatteryUtils.getTargetPercent(lowTargetPercent, highTargetPercent, currentData.getLevel(), currentData.isCharging());
-            Double usageRate = BatteryUtils.calculateBatteryUsageRateValue(dataPoints, minDuration);
             if (usageRate != null) {
-                levelText += String.format(BatteryUtils.TEXT_SEPARATOR+"%.1f%%/h", usageRate);
+                levelText += String.format(BatteryUtils.TEXT_SEPARATOR + usageRate + "%%/h");
 
-                double hoursToLevel = Math.abs(currentData.getLevel() - targetPercent) / usageRate;
-                String timeEstimate = BatteryUtils.formatTimeEstimate(hoursToLevel, targetPercent);
-                if (!timeEstimate.isEmpty()) {
-                    timeEstimate += " ("+BatteryUtils.formatDurationEndTime(hoursToLevel)+")";
+                if (!hoursTo.isEmpty()) {
+                    String timeEstimate = hoursTo + " (" + timeTo + ")";
                     levelText += BatteryUtils.TEXT_SEPARATOR + timeEstimate;
                 }
             }

@@ -1,10 +1,13 @@
 package com.danamir.batterymonitor;
 
+import android.content.Context;
+
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class BatteryUtils {
     public static final String TEXT_SEPARATOR = "  •  ";
@@ -158,5 +161,70 @@ public class BatteryUtils {
             SimpleDateFormat dayFormat = new SimpleDateFormat("EEE", Locale.getDefault());
             return dayFormat.format(endTime.getTime()) + " @ " + timeFormat.format(endTime.getTime());
         }
+    }
+
+    /**
+     * Calculate battery usage values for display in notification or graph.
+     * This method fetches up-to-date data and settings to ensure consistency.
+     *
+     * @param context The application context
+     * @return Map with keys: "usage_rate", "charging", "hours_to", "time_to"
+     */
+    public static Map<String, String> calculateValues(Context context) {
+        Map<String, String> values = new HashMap<>();
+
+        // Get preferences
+        android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
+        int lowTargetPercent = prefs.getInt("low_target_percent", 20);
+        int highTargetPercent = prefs.getInt("high_target_percent", 80);
+        int displayLengthHours = Integer.parseInt(prefs.getString("display_length_hours", "48"));
+        int minDuration = 10;
+
+        // Get up-to-date data points
+        BatteryDataManager dataManager = BatteryDataManager.getInstance(context);
+        List<BatteryData> dataPoints = dataManager.getDataPoints(displayLengthHours);
+
+        if (dataPoints == null || dataPoints.isEmpty()) {
+            // No data available
+            values.put("usage_rate", "");
+            values.put("charging", "false");
+            values.put("current_percent", "-%");
+            values.put("current_level", "");
+            values.put("hours_to", "");
+            values.put("time_to", "");
+            return values;
+        }
+
+        // Get the last data point for current status
+        BatteryData lastPoint = dataPoints.get(dataPoints.size() - 1);
+        int currentBatteryLevel = lastPoint.getLevel();
+        boolean isCharging = lastPoint.isCharging();
+
+        values.put("current_level", String.valueOf(currentBatteryLevel));
+        values.put("current_percent", currentBatteryLevel + "%");
+        values.put("charging", String.valueOf(isCharging));
+
+        // Calculate target percent
+        int targetPercent = getTargetPercent(lowTargetPercent, highTargetPercent, currentBatteryLevel, isCharging);
+
+        // Calculate usage rate
+        Double usageRateValue = calculateBatteryUsageRateValue(dataPoints, minDuration);
+        if (usageRateValue != null) {
+            values.put("usage_rate", String.format(Locale.getDefault(), "%.1f", usageRateValue));
+
+            // Calculate time estimates
+            double hoursToLevel = Math.abs(currentBatteryLevel - targetPercent) / usageRateValue;
+            String hoursTo = formatTimeEstimate(hoursToLevel, targetPercent);
+            String timeTo = formatDurationEndTime(hoursToLevel);
+
+            values.put("hours_to", hoursTo);
+            values.put("time_to", timeTo);
+        } else {
+            values.put("usage_rate", "");
+            values.put("hours_to", "");
+            values.put("time_to", "");
+        }
+
+        return values;
     }
 }

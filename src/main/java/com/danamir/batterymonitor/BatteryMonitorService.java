@@ -21,8 +21,6 @@ public class BatteryMonitorService extends Service {
     private static final long UPDATE_INTERVAL = 60000; // 1 minute
     private static final int NOTIFICATION_ID = 1;
     private static final String CHANNEL_ID = "battery_monitor_channel";
-    private int currentBatteryLevel = -1;
-    private boolean isCharging = false;
 
     @Override
     public void onCreate() {
@@ -122,35 +120,30 @@ public class BatteryMonitorService extends Service {
         }
 
         // Get target percentages
-        android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
-        int lowTargetPercent = prefs.getInt("low_target_percent", 20);
-        int highTargetPercent = prefs.getInt("high_target_percent", 80);
+        // android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
 
         String contentTitle;
         String contentText = "";
 
-        if (currentBatteryLevel >= 0) {
-            int minDuration = 10;
-            int targetPercent = BatteryUtils.getTargetPercent(lowTargetPercent, highTargetPercent, currentBatteryLevel, isCharging);
+        java.util.Map<String, String> values = BatteryUtils.calculateValues(this);
+        if(!values.get("current_level").isEmpty()) {
 
-            BatteryDataManager dataManager = BatteryDataManager.getInstance(this);
-            java.util.List<BatteryData> dataPoints = dataManager.getDataPoints(24);
-            Double usageRateValue = BatteryUtils.calculateBatteryUsageRateValue(dataPoints, minDuration);
-            String usageRate = usageRateValue != null ? String.format("%.1f%%/h", usageRateValue) : null;
-            contentTitle = "Battery " + currentBatteryLevel + "%" + (isCharging ? " ⚡" : "")
-                        + (usageRate != null ? BatteryUtils.TEXT_SEPARATOR + usageRate : "");
+            String usageRate = values.get("usage_rate");
+            String hoursTo = values.get("hours_to");
+            String timeTo = values.get("time_to");
+            String currentPercent = values.get("current_percent");
+            boolean isCharging = "true".equals(values.get("is_charging"));
 
-            // Calculate time to target level if rate is available
-            if (usageRateValue != null) {
-                double hoursToLevel = Math.abs(currentBatteryLevel - targetPercent) / usageRateValue;
-                String timeEstimate = BatteryUtils.formatTimeEstimate(hoursToLevel, targetPercent);
-                if (!timeEstimate.isEmpty()) {
-                    timeEstimate += " ("+BatteryUtils.formatDurationEndTime(hoursToLevel)+")";
-                    if (!contentText.isEmpty()) {
-                        contentText = timeEstimate + BatteryUtils.TEXT_SEPARATOR + contentText;
-                    } else {
-                        contentText = timeEstimate;
-                    }
+            contentTitle = "Battery " + currentPercent + (isCharging ? " ⚡" : "")
+                        + (usageRate != null ? BatteryUtils.TEXT_SEPARATOR + usageRate + "%/h" : "");
+
+            // Add time estimate if available
+            if (usageRate != null && !hoursTo.isEmpty()) {
+                String timeEstimate = hoursTo + " (" + timeTo + ")";
+                if (!contentText.isEmpty()) {
+                    contentText = timeEstimate + BatteryUtils.TEXT_SEPARATOR + contentText;
+                } else {
+                    contentText = timeEstimate;
                 }
             }
         } else {
@@ -167,9 +160,6 @@ public class BatteryMonitorService extends Service {
     }
 
     public void updateNotification(int batteryLevel, boolean charging) {
-        this.currentBatteryLevel = batteryLevel;
-        this.isCharging = charging;
-
         NotificationManager manager = getSystemService(NotificationManager.class);
         if (manager != null) {
             manager.notify(NOTIFICATION_ID, createNotification());
