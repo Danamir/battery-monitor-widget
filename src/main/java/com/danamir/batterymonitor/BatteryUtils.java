@@ -198,8 +198,8 @@ public class BatteryUtils {
         boolean debug = false;
         if (debug) {
             android.util.Log.d("BatteryUtils", "=== Battery Usage Since Max Debug ===");
-            android.util.Log.d("BatteryUtils", "startPoint: " + new java.util.Date(startPoint.getTimestamp()) + " @ " + startPoint.getLevel() + "%");
-            android.util.Log.d("BatteryUtils", "lastPoint: " + new java.util.Date(lastPoint.getTimestamp()) + " @ " + lastPoint.getLevel() + "%");
+            android.util.Log.d("BatteryUtils", "startPoint: " + new java.util.Date(startPoint.getTimestamp()) + " at " + startPoint.getLevel() + "%");
+            android.util.Log.d("BatteryUtils", "lastPoint: " + new java.util.Date(lastPoint.getTimestamp()) + " at " + lastPoint.getLevel() + "%");
             android.util.Log.d("BatteryUtils", "targetCharge: " + targetCharge + "%");
             android.util.Log.d("BatteryUtils", "maxChargeLevel: " + maxChargeLevel + "%");
             android.util.Log.d("BatteryUtils", "usedTargetChargePoint: " + (targetChargePoint != null));
@@ -288,7 +288,7 @@ public class BatteryUtils {
      * Format duration end time to a human-readable string showing time of day.
      *
      * @param hours Time duration in hours from now
-     * @return Formatted string like "14:30" if today, or "Mon. @ 14:30" if another day
+     * @return Formatted string like "14:30" if today, or "Mon. at 14:30" if another day
      */
     public static String formatDurationEndTime(double hours) {
         Calendar now = Calendar.getInstance();
@@ -305,7 +305,7 @@ public class BatteryUtils {
             return timeFormat.format(endTime.getTime());
         } else {
             SimpleDateFormat dayFormat = new SimpleDateFormat("EEE", Locale.getDefault());
-            return dayFormat.format(endTime.getTime()) + " @ " + timeFormat.format(endTime.getTime());
+            return dayFormat.format(endTime.getTime()) + " at " + timeFormat.format(endTime.getTime());
         }
     }
 

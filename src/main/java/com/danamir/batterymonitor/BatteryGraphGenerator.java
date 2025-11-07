@@ -809,36 +809,79 @@ public class BatteryGraphGenerator {
 
         // Draw current battery level
         if (!dataPoints.isEmpty()) {
+            boolean showBatteryPercentage = prefs.getBoolean("show_battery_percentage", true);
+            boolean showUseRate = prefs.getBoolean("show_use_rate", true);
+            boolean showEstimation = prefs.getBoolean("show_estimation", true);
+            boolean showTimeEstimation = prefs.getBoolean("show_time_estimation", false);
+            boolean useMaxLevel = prefs.getBoolean("use_max_level", false);
+
             java.util.Map<String, String> values = BatteryUtils.calculateValues(context, true);
 
+            boolean isCharging = "true".equals(values.get("is_charging"));
             String usageRate = values.get("usage_rate");
             String hoursTo = values.get("hours_to");
             String timeTo = values.get("time_to");
-            String levelText = values.get("current_percent");
+            String levelText = showBatteryPercentage ? values.get("current_percent") + (isCharging ? " ⚡" : "") : "";
 
             String usageRateSinceMax = values.get("usage_rate_since_max");
             String hoursToSinceMax = values.get("hours_to_since_max");
             String timeToSinceMax = values.get("time_to_since_max");
 
-            boolean isCharging = "true".equals(values.get("is_charging"));
+            if (showUseRate || showEstimation || showTimeEstimation) {
+                if (!usageRate.isEmpty() && !useMaxLevel) {
+                    if(showBatteryPercentage) {
+                        levelText += BatteryUtils.TEXT_SEPARATOR;
+                    }
 
-            if (isCharging) {
-                levelText += " ⚡";
-            }
+                    if (showUseRate) {
+                        levelText += String.format(usageRate + "%%/h");
+                    }
 
-            if (!usageRate.isEmpty()) {
-                levelText += String.format(BatteryUtils.TEXT_SEPARATOR + usageRate + "%%/h");
+                    if (!hoursTo.isEmpty() && (showEstimation || showTimeEstimation)) {
+                        if (showUseRate) {
+                            levelText += BatteryUtils.TEXT_SEPARATOR;
+                        }
 
-                if (!hoursTo.isEmpty()) {
-                    String timeEstimate = hoursTo + " (" + timeTo + ")";
-                    levelText += BatteryUtils.TEXT_SEPARATOR + timeEstimate;
-                }
-            } else if(!usageRateSinceMax.isEmpty()) {
-                levelText += String.format(BatteryUtils.TEXT_SEPARATOR + usageRateSinceMax + "%%/h");
+                        String timeEstimate = "";
+                        if (showEstimation && showTimeEstimation) {
+                            timeEstimate = hoursTo + " (" + timeTo + ")";
+                        } else if (showEstimation) {
+                            timeEstimate = hoursTo;
+                        } else if (showTimeEstimation) {
+                            timeEstimate = hoursTo.replaceFirst(".* to (.*)", "$1 ") + timeTo;
+                        }
 
-                if (!hoursToSinceMax.isEmpty()) {
-                    String timeEstimate = hoursToSinceMax + " (" + timeToSinceMax + ")";
-                    levelText += BatteryUtils.TEXT_SEPARATOR + timeEstimate;
+                        if (!timeEstimate.isEmpty()) {
+                            levelText += timeEstimate;
+                        }
+                    }
+                } else if(!usageRateSinceMax.isEmpty()) {
+                    if(showBatteryPercentage) {
+                        levelText += BatteryUtils.TEXT_SEPARATOR;
+                    }
+
+                    if (showUseRate) {
+                        levelText += String.format(usageRateSinceMax + "%%/h");
+                    }
+
+                    if (!hoursToSinceMax.isEmpty() && (showEstimation || showTimeEstimation)) {
+                        if (showUseRate) {
+                            levelText += BatteryUtils.TEXT_SEPARATOR;
+                        }
+
+                        String timeEstimate = "";
+                        if (showEstimation && showTimeEstimation) {
+                            timeEstimate = hoursToSinceMax + " (" + timeToSinceMax + ")";
+                        } else if (showEstimation) {
+                            timeEstimate = hoursToSinceMax;
+                        } else if (showTimeEstimation) {
+                            timeEstimate = hoursToSinceMax.replaceFirst(".* to (.*)", "$1 ") + timeToSinceMax;
+                        }
+
+                        if (!timeEstimate.isEmpty()) {
+                            levelText += timeEstimate;
+                        }
+                    }
                 }
             }
 

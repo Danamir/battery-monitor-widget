@@ -102,6 +102,6 @@
     <string name="show_estimation_summary">Display battery charge duration estimation</string>
     <string name="show_time_estimation_title">Time Estimation</string>
     <string name="show_time_estimation_summary">Display time and date estimation</string>
-    <string name="show_use_max_level_title">Use Max Level</string>
-    <string name="show_use_max_level_summary">Display usage since maximum charge level instead of using calculation time</string>
+    <string name="use_max_level_title">Use Max Level</string>
+    <string name="use_max_level_summary">Display usage since maximum charge level instead of using calculation time</string>
 </resources>
