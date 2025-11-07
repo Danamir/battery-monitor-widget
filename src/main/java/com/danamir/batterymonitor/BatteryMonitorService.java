@@ -135,10 +135,10 @@ public class BatteryMonitorService extends Service {
             boolean isCharging = "true".equals(values.get("is_charging"));
 
             contentTitle = "Battery " + currentPercent + (isCharging ? " ⚡" : "")
-                        + (usageRate != null ? BatteryUtils.TEXT_SEPARATOR + usageRate + "%/h" : "");
+                        + (!usageRate.isEmpty() ? BatteryUtils.TEXT_SEPARATOR + usageRate + "%/h" : "");
 
             // Add time estimate if available
-            if (usageRate != null && !hoursTo.isEmpty()) {
+            if (!usageRate.isEmpty() && !hoursTo.isEmpty()) {
                 String timeEstimate = hoursTo + " (" + timeTo + ")";
                 if (!contentText.isEmpty()) {
                     contentText = timeEstimate + BatteryUtils.TEXT_SEPARATOR + contentText;

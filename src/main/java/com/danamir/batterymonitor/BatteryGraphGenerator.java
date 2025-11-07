@@ -821,7 +821,7 @@ public class BatteryGraphGenerator {
                 levelText += " ⚡";
             }
 
-            if (usageRate != null) {
+            if (!usageRate.isEmpty()) {
                 levelText += String.format(BatteryUtils.TEXT_SEPARATOR + usageRate + "%%/h");
 
                 if (!hoursTo.isEmpty()) {

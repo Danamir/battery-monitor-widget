@@ -19,9 +19,10 @@ public class BatteryUtils {
      *
      * @param dataPoints List of battery data points
      * @param minDuration Minimum duration to do the calculation
+     * @param maxDuration Maximum duration to do the calculation (optional)
      * @return Battery usage rate in %/h, or null if insufficient data
      */
-    public static Double calculateBatteryUsageRateValue(List<BatteryData> dataPoints, int minDuration) {
+    public static Double calculateBatteryUsageRateValue(List<BatteryData> dataPoints, int minDuration, Integer maxDuration) {
         if (dataPoints == null || dataPoints.size() < 2) {
             return null;
         }
@@ -29,7 +30,11 @@ public class BatteryUtils {
         // Check if the last data point is charging
         BatteryData lastPoint = dataPoints.get(dataPoints.size() - 1);
         boolean isChargingPeriod = lastPoint.isCharging();
-        int differentPeriodAllowed = 10;
+        int differentPeriodsAllowed = 1;
+        if (maxDuration != null) {
+            // Give more leeway to find a concurrent dataPoints period if maxDuration is defined
+            differentPeriodsAllowed = 10;
+        }
 
         // Find the most recent continuous discharge or charge period
         BatteryData endPoint = null;
@@ -42,14 +47,14 @@ public class BatteryUtils {
                 endPoint = point;
             } else if (endPoint != null && point.isCharging() == isChargingPeriod) {
                 startPoint = point;
-                // Check if we've reached minDuration
+                // Check if we've reached maxDuration
                 long currentTimeDiff = endPoint.getTimestamp() - startPoint.getTimestamp();
-                if (currentTimeDiff >= minDuration * 60 * 1000) {
+                if (maxDuration != null && currentTimeDiff >= maxDuration * 60 * 1000) {
                     break;
                 }
             } else if (endPoint != null && point.isCharging() != isChargingPeriod) {
-                differentPeriodAllowed--;
-                if (differentPeriodAllowed < 0) {
+                differentPeriodsAllowed--;
+                if (differentPeriodsAllowed < 0) {
                     break;
                 }
             }
@@ -84,6 +89,7 @@ public class BatteryUtils {
             android.util.Log.d("BatteryUtils", "timeDiffMs: " + (timeDiffMs / 60000.0) + " minutes, " + (timeDiffMs / 3600000.0) + " hours");
             android.util.Log.d("BatteryUtils", "levelDiff: " + levelDiff + "%");
             android.util.Log.d("BatteryUtils", "minDuration: " + minDuration + " minutes");
+            android.util.Log.d("BatteryUtils", "maxDuration: " + maxDuration + " minutes");
         }
 
         // Need at least that many minutes of data for reasonable calculation
@@ -200,6 +206,7 @@ public class BatteryUtils {
         int highTargetPercent = prefs.getInt("high_target_percent", 80);
         int displayLengthHours = Integer.parseInt(prefs.getString("display_length_hours", "48"));
         int minDuration = 10;
+        int maxDuration = 10;
 
         // Get up-to-date data points
         BatteryDataManager dataManager = BatteryDataManager.getInstance(context);
@@ -229,7 +236,7 @@ public class BatteryUtils {
         int targetPercent = getTargetPercent(lowTargetPercent, highTargetPercent, currentBatteryLevel, isCharging);
 
         // Calculate usage rate
-        Double usageRateValue = calculateBatteryUsageRateValue(dataPoints, minDuration);
+        Double usageRateValue = calculateBatteryUsageRateValue(dataPoints, minDuration, maxDuration);
         if (usageRateValue != null) {
             values.put("usage_rate", String.format(Locale.getDefault(), "%.1f", usageRateValue));
 
