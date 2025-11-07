@@ -139,13 +139,7 @@
         android:key="usage_rate_line"
         android:title="@string/usage_rate_line_title"
         android:summary="@string/usage_rate_line_summary"
-        android:defaultValue="true" />
-
-    <SwitchPreferenceCompat
-        android:key="usage_rate_line_only"
-        android:title="@string/usage_rate_line_only_title"
-        android:summary="@string/usage_rate_line_only_summary"
-        android:defaultValue="true" />
+        android:defaultValue="false" />
 
     <SwitchPreferenceCompat
         android:key="fill_with_line_color"

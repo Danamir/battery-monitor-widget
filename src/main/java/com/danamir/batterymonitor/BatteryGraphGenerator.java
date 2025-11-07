@@ -258,8 +258,7 @@ public class BatteryGraphGenerator {
         // Get padding and colors from preferences
         android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
         boolean usageRateFill = prefs.getBoolean("usage_rate_fill", true);
-        boolean usageRateLine = prefs.getBoolean("usage_rate_line", true);
-        boolean usageRateLineOnly = prefs.getBoolean("usage_rate_line_only", true);
+        boolean usageRateLine = prefs.getBoolean("usage_rate_line", false);
         boolean fillWithLineColor = prefs.getBoolean("fill_with_line_color", false);
         int paddingHorizontalDp = prefs.getInt("horizontal_padding", 0);
         int paddingVerticalDp = prefs.getInt("vertical_padding", 0);
@@ -761,7 +760,7 @@ public class BatteryGraphGenerator {
                         if (data.isCharging()) {
                             // Use charging line color when charging
                             fillLineColor = chargingColor;
-                        } else if (!usageRateLineOnly && (usageRateLine || usageRateFill)) {
+                        } else if (usageRateFill) {
                             float lowThreshold = highUsageThreshold - highUsageBlend;
 
                             if (batteryUsage >= highUsageThreshold) {

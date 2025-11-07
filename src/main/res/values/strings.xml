@@ -109,8 +109,6 @@
     <string name="usage_rate_fill_summary">Use usage rate colors for fill</string>
     <string name="usage_rate_line_title">Usage Rate Line</string>
     <string name="usage_rate_line_summary">Blend usage rate colors with line color</string>
-    <string name="usage_rate_line_only_title">Usage Rate Line Only</string>
-    <string name="usage_rate_line_only_summary">Apply usage rate colors only to line</string>
     <string name="fill_with_line_color_title">Fill With Line Color</string>
     <string name="fill_with_line_color_summary">Use line color for fill area</string>
 </resources>
