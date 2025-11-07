@@ -74,7 +74,8 @@ public class SettingsActivity extends AppCompatActivity {
                     updateColorPreview();
                 }
                 // Update notification for relevant settings
-                if ("low_target_percent".equals(key) || "high_target_percent".equals(key) || "display_length_hours".equals(key)) {
+                if ("low_target_percent".equals(key) || "high_target_percent".equals(key) || "display_length_hours".equals(key)
+                    || ("usage_calculation_time").equals(key)) {
                     Intent serviceIntent = new Intent(getContext(), BatteryMonitorService.class);
                     getContext().startService(serviceIntent);
                 }
@@ -92,6 +93,8 @@ public class SettingsActivity extends AppCompatActivity {
                     findPreference("gridVerticalIntervalSubdivisionPref");
             androidx.preference.Preference backgroundColorPref =
                     findPreference("main_color");
+            androidx.preference.SeekBarPreference usageCalculationTimePref =
+                    findPreference("usage_calculation_time");
 
             if (displayLengthPref != null) {
                 displayLengthPref.setOnPreferenceChangeListener((preference, newValue) -> {
@@ -162,6 +165,22 @@ public class SettingsActivity extends AppCompatActivity {
 
                 // Enforce minimum value of 1
                 subdivisionPref.setOnPreferenceChangeListener((preference, newValue) -> {
+                    int value = (int) newValue;
+                    if (value < 1) {
+                        return false; // Reject values less than 1
+                    }
+                    return true;
+                });
+            }
+
+            if (usageCalculationTimePref != null) {
+                // Ensure current value is at least 1
+                if (usageCalculationTimePref.getValue() < 1) {
+                    usageCalculationTimePref.setValue(1);
+                }
+
+                // Enforce minimum value of 1
+                usageCalculationTimePref.setOnPreferenceChangeListener((preference, newValue) -> {
                     int value = (int) newValue;
                     if (value < 1) {
                         return false; // Reject values less than 1

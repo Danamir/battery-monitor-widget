@@ -43,6 +43,16 @@
             app:showSeekBarValue="true"
             app:seekBarIncrement="1" />
 
+        <SeekBarPreference
+            android:key="usage_calculation_time"
+            android:title="@string/usage_calculation_time_title"
+            android:summary="@string/usage_calculation_time_summary"
+            android:defaultValue="10"
+            android:max="60"
+            android:min="1"
+            app:showSeekBarValue="true"
+            app:seekBarIncrement="1" />
+
     </PreferenceCategory>
 
     <PreferenceCategory

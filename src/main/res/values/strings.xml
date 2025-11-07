@@ -77,6 +77,8 @@
     <string name="low_target_percent_summary">Low battery target for discharge time estimation</string>
     <string name="high_target_percent_title">Full Battery Target (%)</string>
     <string name="high_target_percent_summary">High battery target for charge time estimation</string>
+    <string name="usage_calculation_time_title">Usage Calculation Time (minutes)</string>
+    <string name="usage_calculation_time_summary">Time period in minutes used to calculate battery usage</string>
     <string name="battery_text_size_title">Battery Level Text Size</string>
     <string name="battery_text_size_summary">Adjust the size of the battery level text</string>
     <string name="battery_width_scale_title">Battery Level Width Scale</string>

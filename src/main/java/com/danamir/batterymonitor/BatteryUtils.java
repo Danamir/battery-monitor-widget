@@ -77,7 +77,7 @@ public class BatteryUtils {
         }
 
         // put debug here
-        boolean debug = false;
+        boolean debug = true;
         if (debug) {
             android.util.Log.d("BatteryUtils", "=== Battery Calculation Debug ===");
             android.util.Log.d("BatteryUtils", "isChargingPeriod: " + isChargingPeriod);
@@ -336,8 +336,8 @@ public class BatteryUtils {
         int lowTargetPercent = prefs.getInt("low_target_percent", 20);
         int highTargetPercent = prefs.getInt("high_target_percent", 80);
         int displayLengthHours = Integer.parseInt(prefs.getString("display_length_hours", "48"));
-        int minDuration = 10;
-        int maxDuration = 10;
+        int maxDuration = prefs.getInt("usage_calculation_time", 10);
+        int minDuration = Math.min(maxDuration, 10);
         values.put("calculation_duration", maxDuration+"m");
 
         // Get up-to-date data points
