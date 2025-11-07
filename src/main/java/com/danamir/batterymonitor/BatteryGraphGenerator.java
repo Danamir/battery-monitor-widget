@@ -809,12 +809,17 @@ public class BatteryGraphGenerator {
 
         // Draw current battery level
         if (!dataPoints.isEmpty()) {
-            java.util.Map<String, String> values = BatteryUtils.calculateValues(context);
+            java.util.Map<String, String> values = BatteryUtils.calculateValues(context, true);
 
             String usageRate = values.get("usage_rate");
             String hoursTo = values.get("hours_to");
             String timeTo = values.get("time_to");
             String levelText = values.get("current_percent");
+
+            String usageRateSinceMax = values.get("usage_rate_since_max");
+            String hoursToSinceMax = values.get("hours_to_since_max");
+            String timeToSinceMax = values.get("time_to_since_max");
+
             boolean isCharging = "true".equals(values.get("is_charging"));
 
             if (isCharging) {
@@ -826,6 +831,13 @@ public class BatteryGraphGenerator {
 
                 if (!hoursTo.isEmpty()) {
                     String timeEstimate = hoursTo + " (" + timeTo + ")";
+                    levelText += BatteryUtils.TEXT_SEPARATOR + timeEstimate;
+                }
+            } else if(!usageRateSinceMax.isEmpty()) {
+                levelText += String.format(BatteryUtils.TEXT_SEPARATOR + usageRateSinceMax + "%%/h");
+
+                if (!hoursToSinceMax.isEmpty()) {
+                    String timeEstimate = hoursToSinceMax + " (" + timeToSinceMax + ")";
                     levelText += BatteryUtils.TEXT_SEPARATOR + timeEstimate;
                 }
             }

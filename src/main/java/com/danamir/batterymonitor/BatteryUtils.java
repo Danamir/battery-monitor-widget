@@ -11,6 +11,7 @@ import java.util.Map;
 
 public class BatteryUtils {
     public static final String TEXT_SEPARATOR = "  •  ";
+    public static final String TEXT_SEPARATOR_ALT = "  —  ";
     // public static final String TEXT_SEPARATOR = "  |  ";
 
     /**
@@ -101,6 +102,124 @@ public class BatteryUtils {
         double hours = timeDiffMs / 3600000.0;
         double ratePerHour = levelDiff / hours;
 
+        return ratePerHour;
+    }
+
+    /**
+     * Calculate the battery discharge rate in percent per hour since the maximum charge level.
+     * This method analyzes data points from the nearest charge >= target charge, or from the max charge level found.
+     * If a limited charging period (< target charge) is present, the gained charge is subtracted from the calculation.
+     *
+     * @param dataPoints List of battery data points
+     * @param minDuration Minimum duration to do the calculation (in minutes)
+     * @param targetCharge Target charge percentage to look for (e.g., 80%)
+     * @return Battery usage rate in %/h, or null if insufficient data
+     */
+    public static Double calculateBatteryUsageRateValueSinceMax(List<BatteryData> dataPoints, int minDuration, int targetCharge) {
+        if (dataPoints == null || dataPoints.size() < 2) {
+            return null;
+        }
+
+        BatteryData lastPoint = dataPoints.get(dataPoints.size() - 1);
+        
+        // If currently charging, return null
+        if (lastPoint.isCharging()) {
+            return null;
+        }
+
+        BatteryData maxChargePoint = null;
+        int maxChargeLevel = 0;
+        BatteryData targetChargePoint = null;
+        
+        // Find the nearest charge >= targetCharge, or the max charge level
+        for (int i = dataPoints.size() - 1; i >= 0; i--) {
+            BatteryData point = dataPoints.get(i);
+            
+            // Track the maximum charge level found
+            if (point.getLevel() > maxChargeLevel) {
+                maxChargeLevel = point.getLevel();
+                maxChargePoint = point;
+            }
+            
+            // Look for a charging period that reached or exceeded target charge
+            if (point.isCharging() && point.getLevel() >= targetCharge) {
+                targetChargePoint = point;
+                break;
+            }
+        }
+        
+        // Use targetChargePoint if found, otherwise use maxChargePoint
+        BatteryData startPoint = (targetChargePoint != null) ? targetChargePoint : maxChargePoint;
+        
+        if (startPoint == null) {
+            return null;
+        }
+        
+        // Calculate base time and level differences
+        long timeDiffMs = lastPoint.getTimestamp() - startPoint.getTimestamp();
+        int levelDiff = startPoint.getLevel() - lastPoint.getLevel();
+        
+        // Check minimum duration requirement
+        if (timeDiffMs < minDuration * 60 * 1000) {
+            return null;
+        }
+        
+        // Find and subtract any charging periods between startPoint and lastPoint
+        int chargeGained = 0;
+        long chargeTimeDuration = 0;
+        
+        for (int i = 0; i < dataPoints.size() - 1; i++) {
+            BatteryData current = dataPoints.get(i);
+            BatteryData next = dataPoints.get(i + 1);
+            
+            // Only consider data points between startPoint and lastPoint
+            if (current.getTimestamp() < startPoint.getTimestamp()) {
+                continue;
+            }
+            if (current.getTimestamp() > lastPoint.getTimestamp()) {
+                break;
+            }
+            
+            // If this is a charging period (and it didn't reach target charge)
+            if (current.isCharging() && next.getLevel() < targetCharge) {
+                int levelIncrease = next.getLevel() - current.getLevel();
+                if (levelIncrease > 0) {
+                    chargeGained += levelIncrease;
+                    chargeTimeDuration += (next.getTimestamp() - current.getTimestamp());
+                }
+            }
+        }
+        
+        // Adjust the level difference by subtracting charge gained during limited charging periods
+        int adjustedLevelDiff = levelDiff + chargeGained;
+        long adjustedTimeDiffMs = timeDiffMs - chargeTimeDuration;
+        
+        // Debug logging
+        boolean debug = false;
+        if (debug) {
+            android.util.Log.d("BatteryUtils", "=== Battery Usage Since Max Debug ===");
+            android.util.Log.d("BatteryUtils", "startPoint: " + new java.util.Date(startPoint.getTimestamp()) + " @ " + startPoint.getLevel() + "%");
+            android.util.Log.d("BatteryUtils", "lastPoint: " + new java.util.Date(lastPoint.getTimestamp()) + " @ " + lastPoint.getLevel() + "%");
+            android.util.Log.d("BatteryUtils", "targetCharge: " + targetCharge + "%");
+            android.util.Log.d("BatteryUtils", "maxChargeLevel: " + maxChargeLevel + "%");
+            android.util.Log.d("BatteryUtils", "usedTargetChargePoint: " + (targetChargePoint != null));
+            android.util.Log.d("BatteryUtils", "timeDiffMs: " + (timeDiffMs / 60000.0) + " minutes");
+            android.util.Log.d("BatteryUtils", "levelDiff: " + levelDiff + "%");
+            android.util.Log.d("BatteryUtils", "chargeGained: " + chargeGained + "%");
+            android.util.Log.d("BatteryUtils", "chargeTimeDuration: " + (chargeTimeDuration / 60000.0) + " minutes");
+            android.util.Log.d("BatteryUtils", "adjustedLevelDiff: " + adjustedLevelDiff + "%");
+            android.util.Log.d("BatteryUtils", "adjustedTimeDiffMs: " + (adjustedTimeDiffMs / 60000.0) + " minutes");
+        }
+        
+        // Ensure we have valid data after adjustments
+        if (adjustedTimeDiffMs < minDuration * 60 * 1000 || adjustedLevelDiff <= 0) {
+            return null;
+        }
+        
+        // Calculate rate per hour
+        double hours = adjustedTimeDiffMs / 3600000.0;
+        double ratePerHour = adjustedLevelDiff / hours;
+        
         return ratePerHour;
     }
 
@@ -198,6 +317,18 @@ public class BatteryUtils {
      * @return Map with keys: "usage_rate", "charging", "hours_to", "time_to"
      */
     public static Map<String, String> calculateValues(Context context) {
+        return calculateValues(context, false);
+    }
+
+    /**
+     * Calculate battery usage values for display in notification or graph.
+     * This method fetches up-to-date data and settings to ensure consistency.
+     *
+     * @param context         The application context
+     * @param includeSinceMax Whether to include usage rate calculations since max charge level
+     * @return Map with keys: "usage_rate", "charging", "hours_to", "time_to"
+     */
+    public static Map<String, String> calculateValues(Context context, boolean includeSinceMax) {
         Map<String, String> values = new HashMap<>();
 
         // Get preferences
@@ -207,6 +338,7 @@ public class BatteryUtils {
         int displayLengthHours = Integer.parseInt(prefs.getString("display_length_hours", "48"));
         int minDuration = 10;
         int maxDuration = 10;
+        values.put("calculation_duration", maxDuration+"m");
 
         // Get up-to-date data points
         BatteryDataManager dataManager = BatteryDataManager.getInstance(context);
@@ -220,6 +352,10 @@ public class BatteryUtils {
             values.put("current_level", "");
             values.put("hours_to", "");
             values.put("time_to", "");
+
+            values.put("usage_rate_since_max", "");
+            values.put("hours_to_since_max", "");
+            values.put("time_to_since_max", "");
             return values;
         }
 
@@ -251,6 +387,26 @@ public class BatteryUtils {
             values.put("usage_rate", "");
             values.put("hours_to", "");
             values.put("time_to", "");
+        }
+
+        if (includeSinceMax) {
+            // Calculate usage rate since max
+            Double usageRateValueSinceMax = calculateBatteryUsageRateValueSinceMax(dataPoints, minDuration, highTargetPercent);
+            if (usageRateValueSinceMax != null) {
+                values.put("usage_rate_since_max", String.format(Locale.getDefault(), "%.1f", usageRateValueSinceMax));
+
+                // Calculate time estimates
+                double hoursToLevel = Math.abs(currentBatteryLevel - targetPercent) / usageRateValueSinceMax;
+                String hoursTo = formatTimeEstimate(hoursToLevel, targetPercent);
+                String timeTo = formatDurationEndTime(hoursToLevel);
+
+                values.put("hours_to_since_max", hoursTo);
+                values.put("time_to_since_max", timeTo);
+            } else {
+                values.put("usage_rate_since_max", "");
+                values.put("hours_to_since_max", "");
+                values.put("time_to_since_max", "");
+            }
         }
 
         return values;

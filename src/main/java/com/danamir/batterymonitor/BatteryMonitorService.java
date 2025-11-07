@@ -125,13 +125,14 @@ public class BatteryMonitorService extends Service {
         String contentTitle;
         String contentText = "";
 
-        java.util.Map<String, String> values = BatteryUtils.calculateValues(this);
+        java.util.Map<String, String> values = BatteryUtils.calculateValues(this, true);
         if(!values.get("current_level").isEmpty()) {
 
             String usageRate = values.get("usage_rate");
             String hoursTo = values.get("hours_to");
             String timeTo = values.get("time_to");
             String currentPercent = values.get("current_percent");
+            String calculationDuration = values.get("calculation_duration");
             boolean isCharging = "true".equals(values.get("is_charging"));
 
             contentTitle = "Battery " + currentPercent + (isCharging ? " ⚡" : "")
@@ -140,11 +141,21 @@ public class BatteryMonitorService extends Service {
             // Add time estimate if available
             if (!usageRate.isEmpty() && !hoursTo.isEmpty()) {
                 String timeEstimate = hoursTo + " (" + timeTo + ")";
+                contentText = timeEstimate + " Last " + calculationDuration;
+            }
+
+            // Since max charge
+            String usageRateSinceMax = values.get("usage_rate_since_max");
+            String hoursToSinceMax = values.get("hours_to_since_max");
+            String timeToSinceMax = values.get("time_to_since_max");
+            if (!usageRateSinceMax.isEmpty()) {
+                contentTitle += BatteryUtils.TEXT_SEPARATOR_ALT + usageRateSinceMax + "%/h";
+
+                String timeEstimate = hoursToSinceMax + " (" + timeToSinceMax + ")";
                 if (!contentText.isEmpty()) {
-                    contentText = timeEstimate + BatteryUtils.TEXT_SEPARATOR + contentText;
-                } else {
-                    contentText = timeEstimate;
+                    contentText += "\n";
                 }
+                contentText += timeEstimate + " Since max";
             }
         } else {
             contentTitle = "Battery Monitor";
