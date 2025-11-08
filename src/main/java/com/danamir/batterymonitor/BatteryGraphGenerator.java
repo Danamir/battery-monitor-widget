@@ -327,7 +327,7 @@ public class BatteryGraphGenerator {
             highUsageBlend = highUsageThreshold;
         }
         int highUsageColor = prefs.getInt("high_usage_color", 0xBFFF00FF);
-        int highUsageRangeMinutes = prefs.getInt("high_usage_range", 60);
+        int highUsageRangeMinutes = prefs.getInt("high_usage_range", 30);
 
         // Get target percentages
         int lowTargetPercent = prefs.getInt("low_target_percent", 20);

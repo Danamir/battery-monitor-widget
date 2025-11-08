@@ -99,7 +99,7 @@
         android:key="high_usage_range"
         android:title="@string/high_usage_range_title"
         android:summary="@string/high_usage_range_summary"
-        android:defaultValue="60"
+        android:defaultValue="30"
         android:max="240"
         android:min="0"
         app:showSeekBarValue="true"
