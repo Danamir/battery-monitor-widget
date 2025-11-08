@@ -59,6 +59,12 @@
             app:showSeekBarValue="true"
             app:seekBarIncrement="1" />
 
+        <SwitchPreferenceCompat
+            android:key="rounded_time_estimates"
+            android:title="@string/rounded_time_estimates_title"
+            android:summary="@string/rounded_time_estimates_summary"
+            android:defaultValue="true" />
+
     </PreferenceCategory>
 
     <PreferenceCategory

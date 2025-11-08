@@ -248,13 +248,17 @@ public class BatteryUtils {
     /**
      * Format time estimate to a human-readable string.
      *
-     * @param hours Time in hours
+     * @param hours         Time in hours
      * @param targetPercent Target battery percentage to display
      * @return Formatted string like "~2h15m to 20%" or "~45m to Empty"
      */
-    public static String formatTimeEstimate(double hours, Integer targetPercent) {
+    public static String formatTimeEstimate(double hours, Integer targetPercent, boolean rounded) {
         if (hours < 0) {
             return "";
+        }
+
+        if (rounded) {
+            hours = getRoundedHours(hours);
         }
 
         int totalMinutes = (int) Math.round(hours * 60);
@@ -277,23 +281,97 @@ public class BatteryUtils {
                 return String.format(Locale.getDefault(), "%dd%s", d, targetPercentStr);
             }
             return String.format(Locale.getDefault(), "%dd %dh%s", d, h, targetPercentStr);
-        } else if (h > 0) {
+        } else if (h > 0 && m > 0) {
             return String.format(Locale.getDefault(), "%dh%02dm%s", h, m, targetPercentStr);
+        } else if (h > 0) {
+            return String.format(Locale.getDefault(), "%dh%s", h, targetPercentStr);
         } else {
             return String.format(Locale.getDefault(), "%dm%s", m, targetPercentStr);
         }
     }
 
     /**
+     * Rounds hours value based on magnitude for display purposes.
+     * - For hours >= 24: rounds to nearest hour
+     * - For hours >= 12: rounds to nearest 30 minutes (0.5 hour)
+     * - For hours >= 6: rounds to nearest 15 minutes (0.25 hour)
+     * - For hours < 6: returns unmodified value
+     *
+     * @param hours The number of hours to round
+     * @return The rounded hours value
+     */
+    private static double getRoundedHours(double hours) {
+        if (hours >= 24) {
+            // Round to nearest hour if hours >= 24
+            hours = Math.round(hours);
+        } else if (hours >= 12) {
+            // Round to nearest 30 minutes (0.5 hours) for hours >= 12
+            hours = Math.round(hours * 2) / 2.0;
+        } else if (hours >= 6) {
+            // Round to nearest 15 minutes (0.25 hours) for hours >= 6
+            hours = Math.round(hours * 4) / 4.0;
+        }
+        return hours;
+    }
+
+    /**
+     * Round a Calendar time based on the duration in hours.
+     * Applies progressive rounding: hours >= 24 rounds to full hours,
+     * hours >= 12 rounds to half hours (30 min), hours >= 6 rounds to quarter hours (15 min).
+     *
+     * @param hours Duration in hours used to determine rounding precision
+     * @param time Calendar object to round (modified in place)
+     * @return The rounded Calendar object
+     */
+    private static Calendar getRoundedTime(double hours, Calendar time) {
+        Calendar returnTime = (Calendar) time.clone();
+        int minute = returnTime.get(Calendar.MINUTE);
+        
+        if (hours >= 24) {
+            // Round to nearest hour if hours >= 24
+            if (minute >= 30) {
+                returnTime.add(Calendar.HOUR_OF_DAY, 1);
+            }
+            returnTime.set(Calendar.MINUTE, 0);
+        } else if (hours >= 12) {
+            // Round to nearest 30 minutes for hours >= 12
+            minute = ((minute + 15) / 30) * 30;
+            if (minute >= 60) {
+                returnTime.add(Calendar.HOUR_OF_DAY, 1);
+                minute = 0;
+            }
+            returnTime.set(Calendar.MINUTE, minute);
+        } else if (hours >= 6) {
+            // Round to nearest 15 minutes for hours >= 6
+            minute = ((minute + 7) / 15) * 15;
+            if (minute >= 60) {
+                returnTime.add(Calendar.HOUR_OF_DAY, 1);
+                minute = 0;
+            }
+            returnTime.set(Calendar.MINUTE, minute);
+        }
+        
+        returnTime.set(Calendar.SECOND, 0);
+        returnTime.set(Calendar.MILLISECOND, 0);
+
+        return returnTime;
+    }
+
+    /**
      * Format duration end time to a human-readable string showing time of day.
      *
-     * @param hours Time duration in hours from now
-     * @return Formatted string like "14:30" if today, or "Mon. at 14:30" if another day
+     * @param hours   Time duration in hours from now
+     * @param rounded
+     * @return Formatted string like "14:30" if soon or today, or "Mon. at 14:30" if another day
      */
-    public static String formatDurationEndTime(double hours) {
+    public static String formatDurationEndTime(double hours, boolean rounded) {
         Calendar now = Calendar.getInstance();
         Calendar endTime = Calendar.getInstance();
         endTime.add(Calendar.MILLISECOND, (int) Math.round(hours * 3600000));
+
+        if (rounded) {
+            endTime = getRoundedTime(hours, endTime);
+        }
 
         SimpleDateFormat timeFormat = new SimpleDateFormat("H:mm", Locale.getDefault());
 
@@ -301,7 +379,7 @@ public class BatteryUtils {
         boolean isSameDay = now.get(Calendar.YEAR) == endTime.get(Calendar.YEAR)
                 && now.get(Calendar.DAY_OF_YEAR) == endTime.get(Calendar.DAY_OF_YEAR);
 
-        if (isSameDay) {
+        if (isSameDay || hours < 12.0f || (hours < 18.0f && endTime.get(Calendar.HOUR_OF_DAY) <= 6)) {
             return timeFormat.format(endTime.getTime());
         } else {
             SimpleDateFormat dayFormat = new SimpleDateFormat("EEE", Locale.getDefault());
@@ -338,6 +416,7 @@ public class BatteryUtils {
         int displayLengthHours = Integer.parseInt(prefs.getString("display_length_hours", "48"));
         int maxDuration = prefs.getInt("usage_calculation_time", 10);
         int minDuration = Math.min(maxDuration, 10);
+        boolean rounded = prefs.getBoolean("rounded_time_estimates", true);
         values.put("calculation_duration", maxDuration+"m");
 
         // Get up-to-date data points
@@ -381,8 +460,8 @@ public class BatteryUtils {
 
             // Calculate time estimates
             double hoursToLevel = Math.abs(currentBatteryLevel - targetPercent) / usageRateValue;
-            String hoursTo = formatTimeEstimate(hoursToLevel, targetPercent);
-            String timeTo = formatDurationEndTime(hoursToLevel);
+            String hoursTo = formatTimeEstimate(hoursToLevel, targetPercent, rounded);
+            String timeTo = formatDurationEndTime(hoursToLevel, rounded);
 
             values.put("hours_to", hoursTo);
             values.put("time_to", timeTo);
@@ -400,8 +479,8 @@ public class BatteryUtils {
 
                 // Calculate time estimates
                 double hoursToLevel = Math.abs(currentBatteryLevel - targetPercent) / usageRateValueSinceMax;
-                String hoursTo = formatTimeEstimate(hoursToLevel, targetPercent);
-                String timeTo = formatDurationEndTime(hoursToLevel);
+                String hoursTo = formatTimeEstimate(hoursToLevel, targetPercent, rounded);
+                String timeTo = formatDurationEndTime(hoursToLevel, rounded);
 
                 values.put("hours_to_since_max", hoursTo);
                 values.put("time_to_since_max", timeTo);

@@ -79,6 +79,8 @@
     <string name="high_target_percent_summary">High battery target for charge time estimation</string>
     <string name="usage_calculation_time_title">Usage Calculation Time (minutes)</string>
     <string name="usage_calculation_time_summary">Time period in minutes used to calculate battery usage</string>
+    <string name="rounded_time_estimates_title">Round Time Estimates</string>
+    <string name="rounded_time_estimates_summary">Rounded time display to nearest 15min for 6h+, 30min for 12h+, 1h for 24h+</string>
     <string name="battery_text_size_title">Battery Level Text Size</string>
     <string name="battery_text_size_summary">Adjust the size of the battery level text</string>
     <string name="battery_width_scale_title">Battery Level Width Scale</string>

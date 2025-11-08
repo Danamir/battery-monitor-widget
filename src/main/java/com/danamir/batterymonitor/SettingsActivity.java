@@ -75,7 +75,7 @@ public class SettingsActivity extends AppCompatActivity {
                 }
                 // Update notification for relevant settings
                 if ("low_target_percent".equals(key) || "high_target_percent".equals(key) || "display_length_hours".equals(key)
-                    || ("usage_calculation_time").equals(key)) {
+                    || "usage_calculation_time".equals(key) || "rounded_time_estimates".equals(key)) {
                     Intent serviceIntent = new Intent(getContext(), BatteryMonitorService.class);
                     getContext().startService(serviceIntent);
                 }
