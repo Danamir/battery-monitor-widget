@@ -363,6 +363,9 @@ public class BatteryUtils {
         BatteryData lastPoint = dataPoints.get(dataPoints.size() - 1);
         int currentBatteryLevel = lastPoint.getLevel();
         boolean isCharging = lastPoint.isCharging();
+        if (isCharging) {
+            minDuration = 1;
+        }
 
         values.put("current_level", String.valueOf(currentBatteryLevel));
         values.put("current_percent", currentBatteryLevel + "%");

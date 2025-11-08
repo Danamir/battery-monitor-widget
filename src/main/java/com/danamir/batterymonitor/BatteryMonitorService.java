@@ -78,7 +78,7 @@ public class BatteryMonitorService extends Service {
         // Update battery level from intent if available
         if (intent != null && intent.hasExtra("battery_level")) {
             int batteryLevel = intent.getIntExtra("battery_level", -1);
-            boolean charging = intent.getBooleanExtra("is_charging", false);
+            boolean charging = intent.getBooleanExtra("charging", false);
             updateNotification(batteryLevel, charging);
         }
 
@@ -133,7 +133,7 @@ public class BatteryMonitorService extends Service {
             String timeTo = values.get("time_to");
             String currentPercent = values.get("current_percent");
             String calculationDuration = values.get("calculation_duration");
-            boolean isCharging = "true".equals(values.get("is_charging"));
+            boolean isCharging = "true".equals(values.get("charging"));
 
             contentTitle = "Battery " + currentPercent + (isCharging ? " ⚡" : "")
                         + (!usageRate.isEmpty() ? BatteryUtils.TEXT_SEPARATOR + usageRate + "%/h" : "");

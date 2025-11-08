@@ -920,7 +920,7 @@ public class BatteryGraphGenerator {
 
             java.util.Map<String, String> values = BatteryUtils.calculateValues(context, true);
 
-            boolean isCharging = "true".equals(values.get("is_charging"));
+            boolean isCharging = "true".equals(values.get("charging"));
             String usageRate = values.get("usage_rate");
             String hoursTo = values.get("hours_to");
             String timeTo = values.get("time_to");
