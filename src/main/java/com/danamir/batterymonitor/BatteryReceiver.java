@@ -13,8 +13,9 @@ public class BatteryReceiver extends BroadcastReceiver {
     /**
      * Query and update current battery status to ensure fresh data.
      * @param context The application context
+     * @return int array with [batteryPct, isCharging ? 1 : 0] or null if failed
      */
-    private void updateCurrentBatteryStatus(Context context) {
+    private int[] updateCurrentBatteryStatus(Context context) {
         android.content.IntentFilter batteryFilter = new android.content.IntentFilter(Intent.ACTION_BATTERY_CHANGED);
         Intent batteryIntent = context.registerReceiver(null, batteryFilter);
 
@@ -32,8 +33,11 @@ public class BatteryReceiver extends BroadcastReceiver {
                 // Update battery data with current status
                 BatteryDataManager dataManager = BatteryDataManager.getInstance(context);
                 dataManager.addDataPoint(batteryPct, isCharging);
+
+                return new int[]{batteryPct, isCharging ? 1 : 0};
             }
         }
+        return null;
     }
 
     @Override
@@ -55,10 +59,26 @@ public class BatteryReceiver extends BroadcastReceiver {
             EventLogManager eventLogManager = EventLogManager.getInstance(context);
             eventLogManager.logEvent("Device unlocked");
 
-            // Query current battery status to ensure fresh data
-            updateCurrentBatteryStatus(context);
+            // Query current battery status to ensure fresh data - use unified source
+            int[] batteryData = updateCurrentBatteryStatus(context);
 
             BatteryWidgetProvider.updateAllWidgets(context);
+
+            // Update notification with the same battery data used for widgets
+            if (batteryData != null) {
+                Intent serviceIntent = new Intent(context, BatteryMonitorService.class);
+                serviceIntent.putExtra("battery_level", batteryData[0]);
+                serviceIntent.putExtra("charging", batteryData[1] == 1);
+                try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        context.startForegroundService(serviceIntent);
+                    } else {
+                        context.startService(serviceIntent);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             return;
         }
 
