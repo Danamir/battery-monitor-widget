@@ -10,6 +10,32 @@ import android.os.Build;
 
 public class BatteryReceiver extends BroadcastReceiver {
 
+    /**
+     * Query and update current battery status to ensure fresh data.
+     * @param context The application context
+     */
+    private void updateCurrentBatteryStatus(Context context) {
+        android.content.IntentFilter batteryFilter = new android.content.IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+        Intent batteryIntent = context.registerReceiver(null, batteryFilter);
+
+        if (batteryIntent != null) {
+            int level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+            int scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
+            int status = batteryIntent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+
+            boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                               status == BatteryManager.BATTERY_STATUS_FULL;
+
+            if (level >= 0 && scale > 0) {
+                int batteryPct = (int) ((level / (float) scale) * 100);
+
+                // Update battery data with current status
+                BatteryDataManager dataManager = BatteryDataManager.getInstance(context);
+                dataManager.addDataPoint(batteryPct, isCharging);
+            }
+        }
+    }
+
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();
@@ -29,6 +55,9 @@ public class BatteryReceiver extends BroadcastReceiver {
             EventLogManager eventLogManager = EventLogManager.getInstance(context);
             eventLogManager.logEvent("Device unlocked");
 
+            // Query current battery status to ensure fresh data
+            updateCurrentBatteryStatus(context);
+
             BatteryWidgetProvider.updateAllWidgets(context);
             return;
         }
@@ -42,7 +71,10 @@ public class BatteryReceiver extends BroadcastReceiver {
         }
 
         if (Intent.ACTION_SCREEN_ON.equals(action)) {
-            // Screen turned on - update widgets to show latest data
+            // Screen turned on - query current battery status for fresh data
+            updateCurrentBatteryStatus(context);
+
+            // Update widgets to show latest data
             BatteryWidgetProvider.updateAllWidgets(context);
             return;
         }
