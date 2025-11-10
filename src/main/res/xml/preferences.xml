@@ -53,7 +53,7 @@
             android:key="usage_calculation_time"
             android:title="@string/usage_calculation_time_title"
             android:summary="@string/usage_calculation_time_summary"
-            android:defaultValue="10"
+            android:defaultValue="15"
             android:max="60"
             android:min="1"
             app:showSeekBarValue="true"
@@ -153,14 +153,14 @@
         android:key="category_data">
 
         <Preference
-            android:key="view_event_log"
-            android:title="@string/view_event_log_title"
-            android:summary="@string/view_event_log_summary" />
-
-        <Preference
             android:key="clear_preferences"
             android:title="@string/clear_preferences_title"
             android:summary="@string/clear_preferences_summary" />
+
+        <Preference
+            android:key="view_event_log"
+            android:title="@string/view_event_log_title"
+            android:summary="@string/view_event_log_summary" />
 
     </PreferenceCategory>
 </PreferenceScreen>

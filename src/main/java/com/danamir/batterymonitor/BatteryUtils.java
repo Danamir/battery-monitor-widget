@@ -414,7 +414,7 @@ public class BatteryUtils {
         int lowTargetPercent = prefs.getInt("low_target_percent", 20);
         int highTargetPercent = prefs.getInt("high_target_percent", 80);
         int displayLengthHours = Integer.parseInt(prefs.getString("display_length_hours", "48"));
-        int maxDuration = prefs.getInt("usage_calculation_time", 10);
+        int maxDuration = prefs.getInt("usage_calculation_time", 15);
         int minDuration = Math.min(maxDuration, 10);
         boolean rounded = prefs.getBoolean("rounded_time_estimates", true);
         values.put("calculation_duration", maxDuration+"m");
