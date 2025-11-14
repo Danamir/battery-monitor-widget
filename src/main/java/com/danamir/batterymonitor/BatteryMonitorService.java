@@ -144,14 +144,14 @@ public class BatteryMonitorService extends Service {
                 contentText = timeEstimate + " Last " + calculationDuration;
             }
 
-            // Since max charge or All-time stats
-            String usageRateSinceMax = values.get("usage_rate_since_max");
-            String hoursToSinceMax = values.get("hours_to_since_max");
-            String timeToSinceMax = values.get("time_to_since_max");
-            if (!usageRateSinceMax.isEmpty()) {
-                contentTitle += BatteryUtils.TEXT_SEPARATOR_ALT + usageRateSinceMax + "%/h";
+            // Long-term estimation (max charge or all-time stats)
+            String usageRateLongTerm = values.get("usage_rate_long_term");
+            String hoursToLongTerm = values.get("hours_to_long_term");
+            String timeToLongTerm = values.get("time_to_long_term");
+            if (!usageRateLongTerm.isEmpty()) {
+                contentTitle += BatteryUtils.TEXT_SEPARATOR_ALT + usageRateLongTerm + "%/h";
 
-                String timeEstimate = hoursToSinceMax + " (" + timeToSinceMax + ")";
+                String timeEstimate = hoursToLongTerm + " (" + timeToLongTerm + ")";
                 if (!contentText.isEmpty()) {
                     contentText += "\n";
                 }

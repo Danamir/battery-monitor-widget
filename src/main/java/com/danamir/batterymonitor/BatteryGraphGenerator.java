@@ -957,9 +957,9 @@ public class BatteryGraphGenerator {
             String timeTo = values.get("time_to");
             String levelText = showBatteryPercentage ? values.get("current_percent") + (isCharging ? " ⚡" : "") : "";
 
-            String usageRateSinceMax = values.get("usage_rate_since_max");
-            String hoursToSinceMax = values.get("hours_to_since_max");
-            String timeToSinceMax = values.get("time_to_since_max");
+            String usageRateLongTerm = values.get("usage_rate_long_term");
+            String hoursToLongTerm = values.get("hours_to_long_term");
+            String timeToLongTerm = values.get("time_to_long_term");
 
             if (showUseRate || showEstimation || showTimeEstimation) {
                 if (!usageRate.isEmpty() && !useMaxLevel) {
@@ -989,27 +989,27 @@ public class BatteryGraphGenerator {
                             levelText += timeEstimate;
                         }
                     }
-                } else if(!usageRateSinceMax.isEmpty()) {
+                } else if(!usageRateLongTerm.isEmpty()) {
                     if(showBatteryPercentage) {
                         levelText += BatteryUtils.TEXT_SEPARATOR;
                     }
 
                     if (showUseRate) {
-                        levelText += String.format(usageRateSinceMax + "%%/h");
+                        levelText += String.format(usageRateLongTerm + "%%/h");
                     }
 
-                    if (!hoursToSinceMax.isEmpty() && (showEstimation || showTimeEstimation)) {
+                    if (!hoursToLongTerm.isEmpty() && (showEstimation || showTimeEstimation)) {
                         if (showUseRate) {
                             levelText += BatteryUtils.TEXT_SEPARATOR;
                         }
 
                         String timeEstimate = "";
                         if (showEstimation && showTimeEstimation) {
-                            timeEstimate = hoursToSinceMax + " (" + timeToSinceMax + ")";
+                            timeEstimate = hoursToLongTerm + " (" + timeToLongTerm + ")";
                         } else if (showEstimation) {
-                            timeEstimate = hoursToSinceMax;
+                            timeEstimate = hoursToLongTerm;
                         } else if (showTimeEstimation) {
-                            timeEstimate = hoursToSinceMax.replaceFirst(".* to (.*)", "$1 ") + timeToSinceMax;
+                            timeEstimate = hoursToLongTerm.replaceFirst(".* to (.*)", "$1 ") + timeToLongTerm;
                         }
 
                         if (!timeEstimate.isEmpty()) {

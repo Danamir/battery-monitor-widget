@@ -464,9 +464,9 @@ public class BatteryUtils {
             values.put("hours_to", "");
             values.put("time_to", "");
 
-            values.put("usage_rate_since_max", "");
-            values.put("hours_to_since_max", "");
-            values.put("time_to_since_max", "");
+            values.put("usage_rate_long_term", "");
+            values.put("hours_to_long_term", "");
+            values.put("time_to_long_term", "");
             return values;
         }
 
@@ -526,19 +526,19 @@ public class BatteryUtils {
             }
             
             if (usageRateValueSinceMax != null) {
-                values.put("usage_rate_since_max", String.format(Locale.getDefault(), "%.1f", usageRateValueSinceMax));
+                values.put("usage_rate_long_term", String.format(Locale.getDefault(), "%.1f", usageRateValueSinceMax));
 
                 // Calculate time estimates
                 double hoursToLevel = Math.abs(currentBatteryLevel - targetPercent) / usageRateValueSinceMax;
                 String hoursTo = formatTimeEstimate(hoursToLevel, targetPercent, rounded);
                 String timeTo = formatDurationEndTime(hoursToLevel, rounded);
 
-                values.put("hours_to_since_max", hoursTo);
-                values.put("time_to_since_max", timeTo);
+                values.put("hours_to_long_term", hoursTo);
+                values.put("time_to_long_term", timeTo);
             } else {
-                values.put("usage_rate_since_max", "");
-                values.put("hours_to_since_max", "");
-                values.put("time_to_since_max", "");
+                values.put("usage_rate_long_term", "");
+                values.put("hours_to_long_term", "");
+                values.put("time_to_long_term", "");
             }
         }
 
