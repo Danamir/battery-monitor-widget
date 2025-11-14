@@ -506,8 +506,9 @@ public class BatteryUtils {
         if (includeSinceMax) {
             Double usageRateValueSinceMax = null;
             
-            // Check if we should use all-time stats
-            if ("all_time_stats".equals(estimationSource)) {
+            // When charging, always use all-time stats (since max is not relevant)
+            // When discharging, use the preference setting
+            if (isCharging || "all_time_stats".equals(estimationSource)) {
                 // Use all-time statistics
                 if (isCharging) {
                     double meanChargeRate = DataProvider.getMeanChargeRate(context);
@@ -521,9 +522,11 @@ public class BatteryUtils {
                     }
                 }
             } else {
-                // Use max charge calculation (default)
+                // Use max charge calculation (default, only when discharging)
                 usageRateValueSinceMax = calculateBatteryUsageRateValueSinceMax(dataPoints, minDuration, highTargetPercent);
             }
+            
+            // If no short-term rate available and we have long-term rate, it will be used by the display logic
             
             if (usageRateValueSinceMax != null) {
                 values.put("usage_rate_long_term", String.format(Locale.getDefault(), "%.1f", usageRateValueSinceMax));

@@ -156,10 +156,15 @@ public class BatteryMonitorService extends Service {
                     contentText += "\n";
                 }
                 
-                // Determine label based on estimation source preference
-                android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
-                String estimationSource = prefs.getString("estimation_source", "max_charge");
-                String label = "all_time_stats".equals(estimationSource) ? "All-time" : "Since max";
+                // Determine label: always "All-time" when charging, otherwise use preference
+                String label;
+                if (isCharging) {
+                    label = "All-time";
+                } else {
+                    android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
+                    String estimationSource = prefs.getString("estimation_source", "max_charge");
+                    label = "all_time_stats".equals(estimationSource) ? "All-time" : "Since max";
+                }
                 
                 contentText += timeEstimate + " " + label;
             }
