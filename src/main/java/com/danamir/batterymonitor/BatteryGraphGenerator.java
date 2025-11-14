@@ -83,6 +83,39 @@ public class BatteryGraphGenerator {
     }
 
     /**
+     * Blend between two colors using a logarithmic scale.
+     * @param color1 The first color
+     * @param color2 The second color
+     * @param ratio The blend ratio (0.0 = color1, 1.0 = color2)
+     * @param useAlpha Use the second color alpha to modulate the ratio.
+     * @param logBase The logarithm base (e.g., 10.0 for log10, 2.718 for ln). Higher values create sharper curves. Use 1.0 or less for linear blending.
+     * @return The blended color
+     */
+    private static int blendColors(int color1, int color2, float ratio, boolean useAlpha, double logBase) {
+        // Use linear blending when logBase <= 1 to avoid mathematical issues
+        if (logBase <= 1.0) {
+            return blendColors(color1, color2, ratio, useAlpha);
+        }
+
+        if (useAlpha) {
+            ratio = ratio * Color.alpha(color2) / 255.0f;
+        }
+
+        // Apply logarithmic transformation to the ratio
+        // Using log scale: log(1 + ratio * (base-1)) / log(base) to map [0, 1] -> [0, 1] with log curve
+        // Logarithmic curve: slower at the beginning and faster at the end
+        float logRatio = (float) (Math.log(1.0 + ratio * (logBase - 1.0)) / Math.log(logBase));
+        float inverseRatio = 1.0f - logRatio;
+
+        int r = (int) (Color.red(color1) * inverseRatio + Color.red(color2) * logRatio);
+        int g = (int) (Color.green(color1) * inverseRatio + Color.green(color2) * logRatio);
+        int b = (int) (Color.blue(color1) * inverseRatio + Color.blue(color2) * logRatio);
+        int a = (int) (Color.alpha(color1) * inverseRatio + Color.alpha(color2) * logRatio);
+
+        return Color.argb(a, r, g, b);
+    }
+
+    /**
      * Parse time string in HH:mm format to minutes since midnight.
      * @param timeStr Time string (e.g., "20:00" or "08:00")
      * @return Minutes since midnight, or -1 if invalid
@@ -322,12 +355,14 @@ public class BatteryGraphGenerator {
 
         // Get high usage settings
         float highUsageThreshold = prefs.getFloat("high_usage_level", 10.0f);
+        float normalUsageThreshold = prefs.getFloat("normal_usage_threshold", 1.0f);
         float highUsageBlend = 1.0f;
         if (prefs.getBoolean("high_usage_blend", true)) {
             highUsageBlend = highUsageThreshold;
         }
         int highUsageColor = prefs.getInt("high_usage_color", 0xBFFF00FF);
         int highUsageRangeMinutes = prefs.getInt("high_usage_range", 30);
+        double blendCurve = prefs.getFloat("blend_curve", 1.0f);
 
         // Get target percentages
         int lowTargetPercent = prefs.getInt("low_target_percent", 20);
@@ -704,7 +739,9 @@ public class BatteryGraphGenerator {
                     for (int j = i - 1; j >= 0; j--) {
                         BatteryData currentPoint = dataPoints.get(j);
                         if (currentPoint.getTimestamp() < rangeStartTime) {
-                            break; // Past the range
+                            if (!usageRates.isEmpty()) { // Select at least one usage rate
+                                break; // Past the range
+                            }
                         }
 
                         if (j > 0) {
@@ -753,7 +790,6 @@ public class BatteryGraphGenerator {
 
                     if (fillWithLineColor) {
                         // Mode: Use blended line color as fill color (with alpha from fillColor)
-
                         int fillLineColor = blendedColor;
 
                         // Apply high usage blending if usageRateLine is true and not charging
@@ -761,15 +797,13 @@ public class BatteryGraphGenerator {
                             // Use charging line color when charging
                             fillLineColor = chargingColor;
                         } else if (usageRateFill) {
-                            float lowThreshold = highUsageThreshold - highUsageBlend;
-
                             if (batteryUsage >= highUsageThreshold) {
                                 // Full high usage color when above threshold
-                                fillLineColor = blendColors(fillLineColor, highUsageColor, 1.0f, false);
-                            } else if (batteryUsage > lowThreshold) {
-                                // Blend between lowThreshold and highUsageThreshold
-                                float usageRatio = (batteryUsage - lowThreshold) / highUsageBlend;
-                                fillLineColor = blendColors(fillLineColor, highUsageColor, usageRatio, false);
+                                fillLineColor = blendColors(fillLineColor, highUsageColor, 1.0f, false, blendCurve);
+                            } else if (batteryUsage > normalUsageThreshold) {
+                                // Blend between normalUsageThreshold and highUsageThreshold
+                                float usageRatio = (batteryUsage - normalUsageThreshold) / highUsageBlend;
+                                fillLineColor = blendColors(fillLineColor, highUsageColor, usageRatio, false, blendCurve);
                             }
                         }
 
@@ -799,16 +833,15 @@ public class BatteryGraphGenerator {
 
                         // Calculate usage rate color for fill
                         if (!data.isCharging()) {
-                            float lowThreshold = highUsageThreshold - highUsageBlend;
                             int usageRateFillColor = fillColor; // Default fill color
 
                             if (batteryUsage >= highUsageThreshold) {
                                 // Full high usage color when above threshold
-                                usageRateFillColor = blendColors(fillColor, highUsageColor, 1.0f, false);
-                            } else if (batteryUsage > lowThreshold) {
-                                // Blend between lowThreshold and highUsageThreshold
-                                float usageRatio = (batteryUsage - lowThreshold) / highUsageBlend;
-                                usageRateFillColor = blendColors(fillColor, highUsageColor, usageRatio, false);
+                                usageRateFillColor = blendColors(fillColor, highUsageColor, 1.0f, false, blendCurve);
+                            } else if (batteryUsage > normalUsageThreshold) {
+                                // Blend between normalUsageThreshold and highUsageThreshold
+                                float usageRatio = (batteryUsage - normalUsageThreshold) / highUsageBlend;
+                                usageRateFillColor = blendColors(fillColor, highUsageColor, usageRatio, false, blendCurve);
                             }
 
                             // Draw fill segment with usage rate color
@@ -839,17 +872,15 @@ public class BatteryGraphGenerator {
                         // Mode: Blend line color with usage rate colors
                         // Apply high usage blending to line color if not charging
                         if (!data.isCharging()) {
-                            float lowThreshold = highUsageThreshold - highUsageBlend;
-
                             if (batteryUsage >= highUsageThreshold) {
                                 // Full high usage color when above threshold
-                                blendedColor = blendColors(blendedColor, highUsageColor, 1.0f, true);
-                            } else if (batteryUsage > lowThreshold) {
-                                // Blend between lowThreshold and highUsageThreshold
-                                float usageRatio = (batteryUsage - lowThreshold) / highUsageBlend;
-                                blendedColor = blendColors(blendedColor, highUsageColor, usageRatio, true);
+                                blendedColor = blendColors(blendedColor, highUsageColor, 1.0f, true, blendCurve);
+                            } else if (batteryUsage > normalUsageThreshold) {
+                                // Blend between normalUsageThreshold and highUsageThreshold
+                                float usageRatio = (batteryUsage - normalUsageThreshold) / highUsageBlend;
+                                blendedColor = blendColors(blendedColor, highUsageColor, usageRatio, true, blendCurve);
                             }
-                            // Below lowThreshold: ratio is 0.0 (no blending, keep original color)
+                            // Below normalUsageThreshold: ratio is 0.0 (no blending, keep original color)
                         }
 
                         segmentPaint.setColor(blendedColor);
