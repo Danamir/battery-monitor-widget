@@ -15,6 +15,37 @@ public class BatteryUtils {
     // public static final String TEXT_SEPARATOR = "  |  ";
 
     /**
+     * Format duration in milliseconds to a human-readable string.
+     *
+     * @param milliseconds Duration in milliseconds
+     * @return Formatted string like "2d 5h", "3h 45min", "15min", or "30s"
+     */
+    public static String formatDuration(long milliseconds) {
+        long seconds = milliseconds / 1000;
+        long minutes = seconds / 60;
+        long hours = minutes / 60;
+        long days = hours / 24;
+
+        if (days > 0) {
+            long remainingHours = hours % 24;
+            if (remainingHours > 0) {
+                return String.format("%dd %dh", days, remainingHours);
+            }
+            return String.format("%dd", days);
+        } else if (hours > 0) {
+            long remainingMinutes = minutes % 60;
+            if (remainingMinutes > 0) {
+                return String.format("%dh %dmin", hours, remainingMinutes);
+            }
+            return String.format("%dh", hours);
+        } else if (minutes > 0) {
+            return String.format("%dmin", minutes);
+        } else {
+            return String.format("%ds", seconds);
+        }
+    }
+
+    /**
      * Calculate the battery discharge rate in percent per hour.
      * Analyzes the most recent continuous discharge period.
      *

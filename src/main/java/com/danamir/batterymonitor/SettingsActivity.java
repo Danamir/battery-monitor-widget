@@ -273,19 +273,47 @@ public class SettingsActivity extends AppCompatActivity {
             textView.setTextIsSelectable(true);
             textView.setTextSize(12);
 
+            StringBuilder logText = new StringBuilder();
+
+            // Add all-time statistics at the top
+            double meanChargeRate = DataProvider.getMeanChargeRate(getContext());
+            double meanDischargeRate = DataProvider.getMeanDischargeRate(getContext());
+            long totalChargeTime = DataProvider.getTotalChargeTime(getContext());
+            long totalDischargeTime = DataProvider.getTotalDischargeTime(getContext());
+
+            logText.append("=== All-Time Statistics ===\n");
+
+            if (totalChargeTime > 0) {
+                logText.append(String.format("Mean Charge Rate: %.2f %%/hour\n", meanChargeRate));
+                logText.append(String.format("Total Charge Time: %s\n", BatteryUtils.formatDuration(totalChargeTime)));
+            } else {
+                logText.append("Mean Charge Rate: No data\n");
+                logText.append("Total Charge Time: No data\n");
+            }
+
+            if (totalDischargeTime > 0) {
+                logText.append(String.format("Mean Discharge Rate: %.2f %%/hour\n", meanDischargeRate));
+                logText.append(String.format("Total Discharge Time: %s\n", BatteryUtils.formatDuration(totalDischargeTime)));
+            } else {
+                logText.append("Mean Discharge Rate: No data\n");
+                logText.append("Total Discharge Time: No data\n");
+            }
+
+            logText.append("\n=== Event Log ===\n");
+
             if (eventLog.isEmpty()) {
-                textView.setText(R.string.event_log_empty);
+                logText.append(getString(R.string.event_log_empty));
             } else {
                 // Display in reverse order (newest first)
-                StringBuilder logText = new StringBuilder();
                 for (int i = eventLog.size() - 1; i >= 0; i--) {
                     logText.append(eventLog.get(i));
                     if (i > 0) {
                         logText.append("\n");
                     }
                 }
-                textView.setText(logText.toString());
             }
+
+            textView.setText(logText.toString());
 
             // Wrap in ScrollView
             android.widget.ScrollView scrollView = new android.widget.ScrollView(getContext());

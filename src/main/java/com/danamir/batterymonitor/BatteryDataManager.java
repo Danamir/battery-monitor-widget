@@ -70,6 +70,80 @@ public class BatteryDataManager {
         }
 
         if (shouldAddPoint) {
+            // Calculate and update all-time statistics before adding the point
+            if (dataPoints.size() >= 2) {
+                BatteryData lastPoint = dataPoints.get(dataPoints.size() - 1);
+                BatteryData secondLastPoint = dataPoints.get(dataPoints.size() - 2);
+
+                long timeDelta = timestamp - lastPoint.getTimestamp();
+                int levelDelta = level - lastPoint.getLevel();
+
+                // Check if we're replacing a data point (same level, just updating time)
+                if (levelDelta == 0 && lastPoint.isCharging() == isCharging) {
+                    // Battery level hasn't changed but time passed
+                    // Need to correct statistics: the rate is slower than initially calculated
+                    long oldTimeDelta = lastPoint.getTimestamp() - secondLastPoint.getTimestamp();
+                    int oldLevelDelta = lastPoint.getLevel() - secondLastPoint.getLevel();
+
+                    if (oldTimeDelta > 0 && oldLevelDelta != 0) {
+                        // Remove the old (faster) rate calculation
+                        double oldRate = Math.abs((double) oldLevelDelta / oldTimeDelta * 3600000);
+
+                        if (secondLastPoint.isCharging() && oldLevelDelta > 0) {
+                            DataProvider.removeChargeStats(context, oldRate, oldTimeDelta);
+                        } else if (!secondLastPoint.isCharging() && oldLevelDelta < 0) {
+                            DataProvider.removeDischargeStats(context, oldRate, oldTimeDelta);
+                        }
+
+                        // Add the new (slower) rate calculation with extended time
+                        long newTimeDelta = timestamp - secondLastPoint.getTimestamp();
+                        double newRate = Math.abs((double) oldLevelDelta / newTimeDelta * 3600000);
+
+                        if (secondLastPoint.isCharging() && oldLevelDelta > 0) {
+                            DataProvider.updateChargeStats(context, newRate, newTimeDelta);
+                        } else if (!secondLastPoint.isCharging() && oldLevelDelta < 0) {
+                            DataProvider.updateDischargeStats(context, newRate, newTimeDelta);
+                        }
+                    }
+
+                    // Remove the last point before adding the new one
+                    dataPoints.remove(dataPoints.size() - 1);
+                } else if (timeDelta > 0 && levelDelta != 0) {
+                    // Level changed - calculate and record statistics
+                    // Calculate rate in %/hour
+                    double rate = Math.abs((double) levelDelta / timeDelta * 3600000);
+
+                    // Update appropriate statistics based on charging state
+                    if (lastPoint.isCharging() && levelDelta > 0) {
+                        // Was charging and level increased
+                        DataProvider.updateChargeStats(context, rate, timeDelta);
+                    } else if (!lastPoint.isCharging() && levelDelta < 0) {
+                        // Was discharging and level decreased
+                        DataProvider.updateDischargeStats(context, rate, timeDelta);
+                    }
+                }
+            } else if (dataPoints.size() == 1) {
+                // Only one point exists
+                BatteryData lastPoint = dataPoints.get(0);
+                long timeDelta = timestamp - lastPoint.getTimestamp();
+                int levelDelta = level - lastPoint.getLevel();
+
+                // Only update stats if there's a meaningful time and level change
+                if (timeDelta > 0 && levelDelta != 0) {
+                    // Calculate rate in %/hour
+                    double rate = Math.abs((double) levelDelta / timeDelta * 3600000);
+
+                    // Update appropriate statistics based on charging state
+                    if (lastPoint.isCharging() && levelDelta > 0) {
+                        // Was charging and level increased
+                        DataProvider.updateChargeStats(context, rate, timeDelta);
+                    } else if (!lastPoint.isCharging() && levelDelta < 0) {
+                        // Was discharging and level decreased
+                        DataProvider.updateDischargeStats(context, rate, timeDelta);
+                    }
+                }
+            }
+
             dataPoints.add(new BatteryData(timestamp, level, isCharging));
 
             // Keep only recent data

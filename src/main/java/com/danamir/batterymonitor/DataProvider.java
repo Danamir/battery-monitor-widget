@@ -16,6 +16,12 @@ public class DataProvider extends ContentProvider {
     private static final String COLUMN_DATA = "data";
     private static final String PREF_BATTERY_DATA = "battery_data";
 
+    // All-time statistics keys
+    private static final String PREF_TOTAL_CHARGE_TIME = "total_charge_time";
+    private static final String PREF_TOTAL_DISCHARGE_TIME = "total_discharge_time";
+    private static final String PREF_MEAN_CHARGE_RATE = "mean_charge_rate";
+    private static final String PREF_MEAN_DISCHARGE_RATE = "mean_discharge_rate";
+
     @Override
     public boolean onCreate() {
         return true;
@@ -79,5 +85,180 @@ public class DataProvider extends ContentProvider {
         // Use insert for updates
         insert(uri, values);
         return 1;
+    }
+
+    // Methods to manage all-time statistics
+
+    /**
+     * Updates all-time mean charge rate and total charge time.
+     * Calculates weighted mean: (oldMean * oldTime + newRate * newTime) / (oldTime + newTime)
+     *
+     * @param newRate The new charge rate in %/hour
+     * @param newTime The time duration for this rate in milliseconds
+     */
+    public static void updateChargeStats(Context context, double newRate, long newTime) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        long totalTime = prefs.getLong(PREF_TOTAL_CHARGE_TIME, 0);
+        double meanRate = Double.longBitsToDouble(prefs.getLong(PREF_MEAN_CHARGE_RATE, 0));
+
+        // Calculate new weighted mean
+        double newMean;
+        if (totalTime == 0) {
+            newMean = newRate;
+        } else {
+            newMean = (meanRate * totalTime + newRate * newTime) / (totalTime + newTime);
+        }
+
+        totalTime += newTime;
+
+        // Store updated values
+        prefs.edit()
+            .putLong(PREF_TOTAL_CHARGE_TIME, totalTime)
+            .putLong(PREF_MEAN_CHARGE_RATE, Double.doubleToRawLongBits(newMean))
+            .apply();
+    }
+
+    /**
+     * Removes a previous charge rate contribution from the statistics.
+     * Used when correcting the mean after replacing a data point.
+     *
+     * @param oldRate The old charge rate to remove in %/hour
+     * @param oldTime The time duration to remove in milliseconds
+     */
+    public static void removeChargeStats(Context context, double oldRate, long oldTime) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        long totalTime = prefs.getLong(PREF_TOTAL_CHARGE_TIME, 0);
+        double meanRate = Double.longBitsToDouble(prefs.getLong(PREF_MEAN_CHARGE_RATE, 0));
+
+        // Calculate new weighted mean by removing the old contribution
+        if (totalTime > oldTime) {
+            double newMean = (meanRate * totalTime - oldRate * oldTime) / (totalTime - oldTime);
+            totalTime -= oldTime;
+
+            // Store updated values
+            prefs.edit()
+                .putLong(PREF_TOTAL_CHARGE_TIME, totalTime)
+                .putLong(PREF_MEAN_CHARGE_RATE, Double.doubleToRawLongBits(newMean))
+                .apply();
+        } else {
+            // If we're removing all the time, reset to zero
+            prefs.edit()
+                .putLong(PREF_TOTAL_CHARGE_TIME, 0)
+                .putLong(PREF_MEAN_CHARGE_RATE, 0)
+                .apply();
+        }
+    }
+
+    /**
+     * Updates all-time mean discharge rate and total discharge time.
+     * Calculates weighted mean: (oldMean * oldTime + newRate * newTime) / (oldTime + newTime)
+     *
+     * @param newRate The new discharge rate in %/hour (positive value)
+     * @param newTime The time duration for this rate in milliseconds
+     */
+    public static void updateDischargeStats(Context context, double newRate, long newTime) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        long totalTime = prefs.getLong(PREF_TOTAL_DISCHARGE_TIME, 0);
+        double meanRate = Double.longBitsToDouble(prefs.getLong(PREF_MEAN_DISCHARGE_RATE, 0));
+
+        // Calculate new weighted mean
+        double newMean;
+        if (totalTime == 0) {
+            newMean = newRate;
+        } else {
+            newMean = (meanRate * totalTime + newRate * newTime) / (totalTime + newTime);
+        }
+
+        totalTime += newTime;
+
+        // Store updated values
+        prefs.edit()
+            .putLong(PREF_TOTAL_DISCHARGE_TIME, totalTime)
+            .putLong(PREF_MEAN_DISCHARGE_RATE, Double.doubleToRawLongBits(newMean))
+            .apply();
+    }
+
+    /**
+     * Removes a previous discharge rate contribution from the statistics.
+     * Used when correcting the mean after replacing a data point.
+     *
+     * @param oldRate The old discharge rate to remove in %/hour (positive value)
+     * @param oldTime The time duration to remove in milliseconds
+     */
+    public static void removeDischargeStats(Context context, double oldRate, long oldTime) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+
+        long totalTime = prefs.getLong(PREF_TOTAL_DISCHARGE_TIME, 0);
+        double meanRate = Double.longBitsToDouble(prefs.getLong(PREF_MEAN_DISCHARGE_RATE, 0));
+
+        // Calculate new weighted mean by removing the old contribution
+        if (totalTime > oldTime) {
+            double newMean = (meanRate * totalTime - oldRate * oldTime) / (totalTime - oldTime);
+            totalTime -= oldTime;
+
+            // Store updated values
+            prefs.edit()
+                .putLong(PREF_TOTAL_DISCHARGE_TIME, totalTime)
+                .putLong(PREF_MEAN_DISCHARGE_RATE, Double.doubleToRawLongBits(newMean))
+                .apply();
+        } else {
+            // If we're removing all the time, reset to zero
+            prefs.edit()
+                .putLong(PREF_TOTAL_DISCHARGE_TIME, 0)
+                .putLong(PREF_MEAN_DISCHARGE_RATE, 0)
+                .apply();
+        }
+    }
+
+    /**
+     * Gets the all-time mean charge rate
+     * @return Mean charge rate in %/hour
+     */
+    public static double getMeanChargeRate(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return Double.longBitsToDouble(prefs.getLong(PREF_MEAN_CHARGE_RATE, 0));
+    }
+
+    /**
+     * Gets the all-time mean discharge rate
+     * @return Mean discharge rate in %/hour (positive value)
+     */
+    public static double getMeanDischargeRate(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return Double.longBitsToDouble(prefs.getLong(PREF_MEAN_DISCHARGE_RATE, 0));
+    }
+
+    /**
+     * Gets the total charge time
+     * @return Total charge time in milliseconds
+     */
+    public static long getTotalChargeTime(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getLong(PREF_TOTAL_CHARGE_TIME, 0);
+    }
+
+    /**
+     * Gets the total discharge time
+     * @return Total discharge time in milliseconds
+     */
+    public static long getTotalDischargeTime(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getLong(PREF_TOTAL_DISCHARGE_TIME, 0);
+    }
+
+    /**
+     * Resets all statistics to zero
+     */
+    public static void resetStats(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        prefs.edit()
+            .putLong(PREF_TOTAL_CHARGE_TIME, 0)
+            .putLong(PREF_TOTAL_DISCHARGE_TIME, 0)
+            .putLong(PREF_MEAN_CHARGE_RATE, 0)
+            .putLong(PREF_MEAN_DISCHARGE_RATE, 0)
+            .apply();
     }
 }

@@ -60,9 +60,9 @@
     <string name="grid_horizontal_interval_summary">Battery percentage interval for horizontal grid lines</string>
     <string name="display_settings_title">Display and colors settings</string>
     <string name="display_settings_summary">Configure colors and threshold level values</string>
-    <string name="view_event_log_title">View event log</string>
+    <string name="view_event_log_title">View log</string>
     <string name="view_event_log_summary">View battery level and status change history</string>
-    <string name="event_log_dialog_title">Battery event log</string>
+    <string name="event_log_dialog_title">Battery log</string>
     <string name="event_log_clear">Clear log</string>
     <string name="event_log_empty">No events logged yet</string>
     <string name="clear_preferences_title">Clear app preferences</string>
