@@ -144,7 +144,7 @@ public class BatteryMonitorService extends Service {
                 contentText = timeEstimate + " Last " + calculationDuration;
             }
 
-            // Since max charge
+            // Since max charge or All-time stats
             String usageRateSinceMax = values.get("usage_rate_since_max");
             String hoursToSinceMax = values.get("hours_to_since_max");
             String timeToSinceMax = values.get("time_to_since_max");
@@ -155,7 +155,13 @@ public class BatteryMonitorService extends Service {
                 if (!contentText.isEmpty()) {
                     contentText += "\n";
                 }
-                contentText += timeEstimate + " Since max";
+                
+                // Determine label based on estimation source preference
+                android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(this);
+                String estimationSource = prefs.getString("estimation_source", "max_charge");
+                String label = "all_time_stats".equals(estimationSource) ? "All-time" : "Since max";
+                
+                contentText += timeEstimate + " " + label;
             }
         } else {
             contentTitle = "Battery Monitor";

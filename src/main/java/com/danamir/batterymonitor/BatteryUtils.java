@@ -448,6 +448,7 @@ public class BatteryUtils {
         int maxDuration = prefs.getInt("usage_calculation_time", 15);
         int minDuration = Math.min(maxDuration, 10);
         boolean rounded = prefs.getBoolean("rounded_time_estimates", true);
+        String estimationSource = prefs.getString("estimation_source", "max_charge");
         values.put("calculation_duration", maxDuration+"m");
 
         // Get up-to-date data points
@@ -503,8 +504,27 @@ public class BatteryUtils {
         }
 
         if (includeSinceMax) {
-            // Calculate usage rate since max
-            Double usageRateValueSinceMax = calculateBatteryUsageRateValueSinceMax(dataPoints, minDuration, highTargetPercent);
+            Double usageRateValueSinceMax = null;
+            
+            // Check if we should use all-time stats
+            if ("all_time_stats".equals(estimationSource)) {
+                // Use all-time statistics
+                if (isCharging) {
+                    double meanChargeRate = DataProvider.getMeanChargeRate(context);
+                    if (meanChargeRate > 0) {
+                        usageRateValueSinceMax = meanChargeRate;
+                    }
+                } else {
+                    double meanDischargeRate = DataProvider.getMeanDischargeRate(context);
+                    if (meanDischargeRate > 0) {
+                        usageRateValueSinceMax = meanDischargeRate;
+                    }
+                }
+            } else {
+                // Use max charge calculation (default)
+                usageRateValueSinceMax = calculateBatteryUsageRateValueSinceMax(dataPoints, minDuration, highTargetPercent);
+            }
+            
             if (usageRateValueSinceMax != null) {
                 values.put("usage_rate_since_max", String.format(Locale.getDefault(), "%.1f", usageRateValueSinceMax));
 

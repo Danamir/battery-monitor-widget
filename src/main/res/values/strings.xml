@@ -85,6 +85,8 @@
     <string name="high_target_percent_summary">High battery target for charge time estimation</string>
     <string name="usage_calculation_time_title">Usage calculation time (minutes)</string>
     <string name="usage_calculation_time_summary">Time period in minutes used to calculate battery usage</string>
+    <string name="estimation_source_title">Long-term estimation source</string>
+    <string name="estimation_source_summary">Choose between max charge or all-time statistics for rate calculation</string>
     <string name="rounded_time_estimates_title">Round time estimates</string>
     <string name="rounded_time_estimates_summary">Rounded time display to nearest 15min for 6h+, 30min for 12h+, 1h for 24h+</string>
     <string name="battery_text_size_title">Battery level text size</string>
@@ -110,8 +112,8 @@
     <string name="show_estimation_summary">Display battery charge duration estimation</string>
     <string name="show_time_estimation_title">Time estimation</string>
     <string name="show_time_estimation_summary">Display time and date estimation</string>
-    <string name="use_max_level_title">Use max level</string>
-    <string name="use_max_level_summary">Display usage since maximum charge level instead of using calculation time</string>
+    <string name="use_max_level_title">Use long-term estimation</string>
+    <string name="use_max_level_summary">Display long-term estimation (max charge or all-time stats) instead of short-term one</string>
     <string name="fill_options_title">Fill options</string>
     <string name="usage_rate_fill_title">Usage rate fill</string>
     <string name="usage_rate_fill_summary">Use usage rate colors for fill</string>
@@ -119,4 +121,14 @@
     <string name="usage_rate_line_summary">Blend usage rate colors with line color</string>
     <string name="fill_with_line_color_title">Fill with line color</string>
     <string name="fill_with_line_color_summary">Use line color for fill area</string>
+
+    <!-- Estimation source options -->
+    <string-array name="estimation_source_entries">
+        <item>Max charge</item>
+        <item>All-time stats</item>
+    </string-array>
+    <string-array name="estimation_source_values">
+        <item>max_charge</item>
+        <item>all_time_stats</item>
+    </string-array>
 </resources>
