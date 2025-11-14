@@ -153,6 +153,11 @@
         android:key="category_data">
 
         <Preference
+            android:key="reset_statistics"
+            android:title="@string/reset_statistics_title"
+            android:summary="@string/reset_statistics_summary" />
+
+        <Preference
             android:key="clear_preferences"
             android:title="@string/clear_preferences_title"
             android:summary="@string/clear_preferences_summary" />

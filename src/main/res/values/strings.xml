@@ -65,6 +65,8 @@
     <string name="event_log_dialog_title">Battery log</string>
     <string name="event_log_clear">Clear log</string>
     <string name="event_log_empty">No events logged yet</string>
+    <string name="reset_statistics_title">Reset all-time statistics</string>
+    <string name="reset_statistics_summary">Clear all-time charge/discharge rates and times</string>
     <string name="clear_preferences_title">Clear app preferences</string>
     <string name="clear_preferences_summary">Reset all settings to default (keeps battery data)</string>
     <string name="low_usage_threshold_title">Low usage (%/h)</string>

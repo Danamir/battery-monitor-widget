@@ -223,6 +223,14 @@ public class SettingsActivity extends AppCompatActivity {
                 });
             }
 
+            androidx.preference.Preference resetStatsPref = findPreference("reset_statistics");
+            if (resetStatsPref != null) {
+                resetStatsPref.setOnPreferenceClickListener(preference -> {
+                    showResetStatisticsDialog();
+                    return true;
+                });
+            }
+
             androidx.preference.Preference clearPrefsPref = findPreference("clear_preferences");
             if (clearPrefsPref != null) {
                 clearPrefsPref.setOnPreferenceClickListener(preference -> {
@@ -334,6 +342,18 @@ public class SettingsActivity extends AppCompatActivity {
                                 .setNegativeButton("Cancel", null)
                                 .show();
                     })
+                    .show();
+        }
+
+        private void showResetStatisticsDialog() {
+            new AlertDialog.Builder(getContext())
+                    .setTitle("Reset All-Time Statistics")
+                    .setMessage("This will reset all-time charge/discharge rates and times to zero.\n\nAre you sure?")
+                    .setPositiveButton("Reset", (dialog, which) -> {
+                        DataProvider.resetStats(getContext());
+                        android.widget.Toast.makeText(getContext(), "Statistics reset", android.widget.Toast.LENGTH_SHORT).show();
+                    })
+                    .setNegativeButton("Cancel", null)
                     .show();
         }
 
