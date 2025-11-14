@@ -277,4 +277,53 @@ public class BatteryDataManager {
     public synchronized void clearEventLog() {
         EventLogManager.getInstance(context).clearEventLog();
     }
+
+    /**
+     * Recalculates all-time statistics from existing battery data.
+     * This goes through all stored data points and rebuilds the charge/discharge statistics.
+     * For consecutive entries with the same battery level, only uses the last entry.
+     */
+    public synchronized void recalculateStatistics() {
+        // Reset statistics first
+        DataProvider.resetStats(context);
+
+        // Process all data points to rebuild statistics
+        if (dataPoints.size() < 2) {
+            return; // Need at least 2 points to calculate rates
+        }
+
+        // Track the reference point (when level last changed)
+        BatteryData referencePoint = dataPoints.get(0);
+
+        for (int i = 1; i < dataPoints.size(); i++) {
+            BatteryData currPoint = dataPoints.get(i);
+
+            int levelDelta = currPoint.getLevel() - referencePoint.getLevel();
+            boolean chargingStateChanged = currPoint.isCharging() != referencePoint.isCharging();
+
+            // Only calculate rate if level changed OR charging state changed
+            if (levelDelta != 0 || chargingStateChanged) {
+                // Calculate time and rate from reference point to current point
+                long timeDelta = currPoint.getTimestamp() - referencePoint.getTimestamp();
+
+                if (timeDelta > 0 && levelDelta != 0) {
+                    double rate = Math.abs((double) levelDelta / timeDelta * 3600000);
+
+                    // Update appropriate statistics based on charging state
+                    if (referencePoint.isCharging() && levelDelta > 0) {
+                        // Was charging and level increased
+                        DataProvider.updateChargeStats(context, rate, timeDelta);
+                    } else if (!referencePoint.isCharging() && levelDelta < 0) {
+                        // Was discharging and level decreased
+                        DataProvider.updateDischargeStats(context, rate, timeDelta);
+                    }
+                }
+
+                // Update reference point to current point
+                referencePoint = currPoint;
+            }
+            // If level and charging state haven't changed, don't update reference point
+            // This effectively uses the last entry for each battery level
+        }
+    }
 }

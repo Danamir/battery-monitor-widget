@@ -347,11 +347,12 @@ public class SettingsActivity extends AppCompatActivity {
 
         private void showResetStatisticsDialog() {
             new AlertDialog.Builder(getContext())
-                    .setTitle("Reset All-Time Statistics")
-                    .setMessage("This will reset all-time charge/discharge rates and times to zero.\n\nAre you sure?")
-                    .setPositiveButton("Reset", (dialog, which) -> {
-                        DataProvider.resetStats(getContext());
-                        android.widget.Toast.makeText(getContext(), "Statistics reset", android.widget.Toast.LENGTH_SHORT).show();
+                    .setTitle("Recalculate All-Time Statistics")
+                    .setMessage("This will recalculate all-time charge/discharge rates and times from your stored battery data.\n\nAre you sure?")
+                    .setPositiveButton("Recalculate", (dialog, which) -> {
+                        BatteryDataManager dataManager = BatteryDataManager.getInstance(getContext());
+                        dataManager.recalculateStatistics();
+                        android.widget.Toast.makeText(getContext(), "Statistics recalculated", android.widget.Toast.LENGTH_SHORT).show();
                     })
                     .setNegativeButton("Cancel", null)
                     .show();
