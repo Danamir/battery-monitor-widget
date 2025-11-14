@@ -65,11 +65,13 @@
 
             <TextView
                 android:id="@+id/seekbar_value"
-                android:layout_width="40dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:minWidth="40dp"
                 android:layout_marginStart="8dp"
                 android:textAppearance="?android:attr/textAppearanceListItem"
-                android:gravity="end" />
+                android:gravity="end"
+                android:singleLine="true" />
         </LinearLayout>
     </LinearLayout>
 

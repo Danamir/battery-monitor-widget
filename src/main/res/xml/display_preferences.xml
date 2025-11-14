@@ -85,9 +85,9 @@
         app:showSeekBarValue="true" />
 
     <com.danamir.batterymonitor.FloatSeekBarPreference
-        android:key="normal_usage_threshold"
-        android:title="@string/normal_usage_threshold_title"
-        android:summary="@string/normal_usage_threshold_summary"
+        android:key="low_usage_threshold"
+        android:title="@string/low_usage_threshold_title"
+        android:summary="@string/low_usage_threshold_summary"
         app:defaultFloatValue="1.0"
         app:minFloatValue="0.0"
         app:maxFloatValue="10.0"
@@ -124,10 +124,11 @@
         android:key="blend_curve"
         android:title="@string/blend_curve_title"
         android:summary="@string/blend_curve_summary"
-        app:defaultFloatValue="1.0"
+        app:defaultFloatValue="2.0"
         app:minFloatValue="1.0"
         app:maxFloatValue="100.0"
-        app:floatStepSize="0.1" />
+        app:floatStepSize="0.1"
+        app:useLogScale="true" />
 
     <PreferenceCategory
             android:title="@string/battery_night_colors_title" />

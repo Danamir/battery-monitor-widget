@@ -15,6 +15,7 @@ public class FloatSeekBarPreference extends Preference {
     private float mMinValue = 0.0f;
     private float mMaxValue = 10.0f;
     private float mStepSize = 0.1f;
+    private boolean mUseLogScale = false;
 
     public FloatSeekBarPreference(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
@@ -46,6 +47,7 @@ public class FloatSeekBarPreference extends Preference {
                 mMinValue = a.getFloat(R.styleable.FloatSeekBarPreference_minFloatValue, 0.0f);
                 mMaxValue = a.getFloat(R.styleable.FloatSeekBarPreference_maxFloatValue, 10.0f);
                 mStepSize = a.getFloat(R.styleable.FloatSeekBarPreference_floatStepSize, 0.1f);
+                mUseLogScale = a.getBoolean(R.styleable.FloatSeekBarPreference_useLogScale, false);
             } finally {
                 a.recycle();
             }
@@ -64,6 +66,35 @@ public class FloatSeekBarPreference extends Preference {
         }
     }
 
+    /**
+     * Converts a linear progress value to a logarithmic value
+     * @param progress Linear progress from 0 to max
+     * @param maxProgress Maximum progress value
+     * @return Logarithmic value between mMinValue and mMaxValue
+     */
+    private float progressToLogValue(int progress, int maxProgress) {
+        if (maxProgress == 0) return mMinValue;
+        float ratio = (float) progress / maxProgress;
+        float logMin = (float) Math.log(mMinValue + 1);
+        float logMax = (float) Math.log(mMaxValue + 1);
+        float logValue = logMin + ratio * (logMax - logMin);
+        return (float) Math.exp(logValue) - 1;
+    }
+
+    /**
+     * Converts a logarithmic value to a linear progress value
+     * @param value Logarithmic value between mMinValue and mMaxValue
+     * @param maxProgress Maximum progress value
+     * @return Linear progress from 0 to max
+     */
+    private int logValueToProgress(float value, int maxProgress) {
+        float logMin = (float) Math.log(mMinValue + 1);
+        float logMax = (float) Math.log(mMaxValue + 1);
+        float logValue = (float) Math.log(value + 1);
+        float ratio = (logValue - logMin) / (logMax - logMin);
+        return Math.round(ratio * maxProgress);
+    }
+
     @Override
     public void onBindViewHolder(PreferenceViewHolder holder) {
         super.onBindViewHolder(holder);
@@ -78,11 +109,21 @@ public class FloatSeekBarPreference extends Preference {
 
         // Setup SeekBar
         if (seekBar != null && seekBarValue != null) {
-            // Convert float range to integer range for SeekBar
-            int steps = (int) ((mMaxValue - mMinValue) / mStepSize);
-            seekBar.setMax(steps);
+            int steps;
+            int currentProgress;
 
-            int currentProgress = (int) ((mCurrentValue - mMinValue) / mStepSize);
+            if (mUseLogScale) {
+                // For log scale, use a fixed number of steps for smooth progression
+                steps = 1000;
+                seekBar.setMax(steps);
+                currentProgress = logValueToProgress(mCurrentValue, steps);
+            } else {
+                // Convert float range to integer range for SeekBar (linear)
+                steps = (int) ((mMaxValue - mMinValue) / mStepSize);
+                seekBar.setMax(steps);
+                currentProgress = (int) ((mCurrentValue - mMinValue) / mStepSize);
+            }
+
             seekBar.setProgress(currentProgress);
             seekBarValue.setText(String.format("%.1f", mCurrentValue));
 
@@ -90,7 +131,17 @@ public class FloatSeekBarPreference extends Preference {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                     if (fromUser) {
-                        float value = mMinValue + (progress * mStepSize);
+                        float value;
+                        if (mUseLogScale) {
+                            value = progressToLogValue(progress, seekBar.getMax());
+                            // Round to step size
+                            value = Math.round(value / mStepSize) * mStepSize;
+                            // Clamp to min/max
+                            value = Math.max(mMinValue, Math.min(mMaxValue, value));
+                        } else {
+                            value = mMinValue + (progress * mStepSize);
+                        }
+
                         seekBarValue.setText(String.format("%.1f", value));
                         mCurrentValue = value;
 

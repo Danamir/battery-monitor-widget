@@ -51,5 +51,6 @@
         <attr name="minFloatValue" format="float" />
         <attr name="maxFloatValue" format="float" />
         <attr name="floatStepSize" format="float" />
+        <attr name="useLogScale" format="boolean" />
     </declare-styleable>
 </resources>
