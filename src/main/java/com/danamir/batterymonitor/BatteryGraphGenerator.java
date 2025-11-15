@@ -558,21 +558,22 @@ public class BatteryGraphGenerator {
                 // Draw grid lines at specified intervals
                 while (cal.getTimeInMillis() <= now) {
                     long gridTime = cal.getTimeInMillis();
+
+                    // Draw interval subdivision lines (even for intervals before startTime)
+                    if (subGridPaint != null) {
+                        long subIntervalMillis = intervalMillis / intervalSubdivisionCount;
+                        for (int j = 1; j < intervalSubdivisionCount; j++) {
+                            long subGridTime = gridTime + j * subIntervalMillis;
+                            if (subGridTime >= startTime && subGridTime <= now) {
+                                float subX = paddingHorizontal + (width - 2 * paddingHorizontal) * (subGridTime - startTime) / (float) timeRange;
+                                canvas.drawLine(subX, paddingVertical, subX, height - paddingVertical, subGridPaint);
+                            }
+                        }
+                    }
+
                     if (gridTime >= startTime) {
                         float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (gridTime - startTime) / (float) timeRange;
                         canvas.drawLine(x, paddingVertical, x, height - paddingVertical, gridPaint);
-
-                        // Draw interval subdivision lines
-                        if (subGridPaint != null) {
-                            long subIntervalMillis = intervalMillis / intervalSubdivisionCount;
-                            for (int j = 1; j < intervalSubdivisionCount; j++) {
-                                long subGridTime = gridTime + j * subIntervalMillis;
-                                if (subGridTime >= startTime && subGridTime <= now) {
-                                    float subX = paddingHorizontal + (width - 2 * paddingHorizontal) * (subGridTime - startTime) / (float) timeRange;
-                                    canvas.drawLine(subX, paddingVertical, subX, height - paddingVertical, subGridPaint);
-                                }
-                            }
-                        }
                     }
                     cal.add(java.util.Calendar.HOUR_OF_DAY, intervalHours);
                 }
@@ -583,21 +584,21 @@ public class BatteryGraphGenerator {
 
                 // Draw grid lines at specified intervals
                 for (long gridTime = alignedTime; gridTime <= now; gridTime += intervalMillis) {
+                    // Draw interval subdivision lines (even for intervals before startTime)
+                    if (subGridPaint != null) {
+                        long subIntervalMillis = intervalMillis / intervalSubdivisionCount;
+                        for (int j = 1; j < intervalSubdivisionCount; j++) {
+                            long subGridTime = gridTime + j * subIntervalMillis;
+                            if (subGridTime >= startTime && subGridTime <= now) {
+                                float subX = paddingHorizontal + (width - 2 * paddingHorizontal) * (subGridTime - startTime) / (float) timeRange;
+                                canvas.drawLine(subX, paddingVertical, subX, height - paddingVertical, subGridPaint);
+                            }
+                        }
+                    }
+
                     if (gridTime >= startTime) {
                         float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (gridTime - startTime) / (float) timeRange;
                         canvas.drawLine(x, paddingVertical, x, height - paddingVertical, gridPaint);
-
-                        // Draw interval subdivision lines
-                        if (subGridPaint != null) {
-                            long subIntervalMillis = intervalMillis / intervalSubdivisionCount;
-                            for (int j = 1; j < intervalSubdivisionCount; j++) {
-                                long subGridTime = gridTime + j * subIntervalMillis;
-                                if (subGridTime >= startTime && subGridTime <= now) {
-                                    float subX = paddingHorizontal + (width - 2 * paddingHorizontal) * (subGridTime - startTime) / (float) timeRange;
-                                    canvas.drawLine(subX, paddingVertical, subX, height - paddingVertical, subGridPaint);
-                                }
-                            }
-                        }
                     }
                 }
             }
