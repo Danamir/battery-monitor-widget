@@ -734,23 +734,36 @@ public class BatteryGraphGenerator {
                     long rangeMillis = highUsageRangeMinutes * 60 * 1000L;
                     long rangeStartTime = data.getTimestamp() - rangeMillis;
 
+                    // Calculate current usage rate (between previous and current point)
+                    float currentUsageRate = 0.0f;
+                    long timeDelta = data.getTimestamp() - prevData.getTimestamp();
+                    if (timeDelta > 0) {
+                        int levelDelta = prevData.getLevel() - data.getLevel();
+                        currentUsageRate = levelDelta / (timeDelta / 3600000.0f);
+                    }
+
                     // Collect all usage rates within the time range
                     List<Float> usageRates = new ArrayList<>();
-                    for (int j = i - 1; j >= 0; j--) {
-                        BatteryData currentPoint = dataPoints.get(j);
-                        if (currentPoint.getTimestamp() < rangeStartTime) {
-                            if (!usageRates.isEmpty()) { // Select at least one usage rate
+
+                    // Always add the current usage rate
+                    usageRates.add(currentUsageRate);
+
+                    // If highUsageRangeMinutes > 0, also collect historical rates
+                    if (highUsageRangeMinutes > 0) {
+                        for (int j = i - 1; j >= 0; j--) {
+                            BatteryData currentPoint = dataPoints.get(j);
+                            if (currentPoint.getTimestamp() < rangeStartTime) {
                                 break; // Past the range
                             }
-                        }
 
-                        if (j > 0) {
-                            BatteryData previousPoint = dataPoints.get(j - 1);
-                            long timeDelta = currentPoint.getTimestamp() - previousPoint.getTimestamp();
-                            if (timeDelta > 0) {
-                                int levelDelta = previousPoint.getLevel() - currentPoint.getLevel();
-                                float rate = levelDelta / (timeDelta / 3600000.0f);
-                                usageRates.add(rate);
+                            if (j > 0) {
+                                BatteryData previousPoint = dataPoints.get(j - 1);
+                                long timeDeltaJ = currentPoint.getTimestamp() - previousPoint.getTimestamp();
+                                if (timeDeltaJ > 0) {
+                                    int levelDelta = previousPoint.getLevel() - currentPoint.getLevel();
+                                    float rate = levelDelta / (timeDeltaJ / 3600000.0f);
+                                    usageRates.add(rate);
+                                }
                             }
                         }
                     }
@@ -762,14 +775,6 @@ public class BatteryGraphGenerator {
                             sum += rate;
                         }
                         float meanUsage = sum / usageRates.size();
-
-                        // Calculate current usage rate (between previous and current point)
-                        float currentUsageRate = 0.0f;
-                        long timeDelta = data.getTimestamp() - prevData.getTimestamp();
-                        if (timeDelta > 0) {
-                            int levelDelta = prevData.getLevel() - data.getLevel();
-                            currentUsageRate = levelDelta / (timeDelta / 3600000.0f);
-                        }
 
                         // Use the higher of current rate or mean rate
                         batteryUsage = Math.max(currentUsageRate, meanUsage);
