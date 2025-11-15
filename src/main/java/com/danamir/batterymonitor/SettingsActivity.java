@@ -364,8 +364,26 @@ public class SettingsActivity extends AppCompatActivity {
                     .setMessage("This will reset all settings to their default values. Battery data will be preserved.\n\nAre you sure?")
                     .setPositiveButton("Clear", (dialog, which) -> {
                         android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(getContext());
+                        
+                        // Save data that should be preserved
+                        String batteryData = prefs.getString("battery_data", "[]");
+                        String eventLog = prefs.getString("battery_event_log", "[]");
+                        long totalChargeTime = prefs.getLong("total_charge_time", 0);
+                        long totalDischargeTime = prefs.getLong("total_discharge_time", 0);
+                        long meanChargeRate = prefs.getLong("mean_charge_rate", 0);
+                        long meanDischargeRate = prefs.getLong("mean_discharge_rate", 0);
+                        
+                        // Clear all preferences
                         android.content.SharedPreferences.Editor editor = prefs.edit();
                         editor.clear();
+                        
+                        // Restore preserved data
+                        editor.putString("battery_data", batteryData);
+                        editor.putString("battery_event_log", eventLog);
+                        editor.putLong("total_charge_time", totalChargeTime);
+                        editor.putLong("total_discharge_time", totalDischargeTime);
+                        editor.putLong("mean_charge_rate", meanChargeRate);
+                        editor.putLong("mean_discharge_rate", meanDischargeRate);
                         editor.apply();
 
                         // Refresh the preference screen
