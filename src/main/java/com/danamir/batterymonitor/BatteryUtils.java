@@ -434,10 +434,10 @@ public class BatteryUtils {
      * This method fetches up-to-date data and settings to ensure consistency.
      *
      * @param context         The application context
-     * @param includeSinceMax Whether to include usage rate calculations since max charge level
+     * @param includeLongTerm Whether to include long-term usage rate
      * @return Map with keys: "usage_rate", "charging", "hours_to", "time_to"
      */
-    public static Map<String, String> calculateValues(Context context, boolean includeSinceMax) {
+    public static Map<String, String> calculateValues(Context context, boolean includeLongTerm) {
         Map<String, String> values = new HashMap<>();
 
         // Get preferences
@@ -448,7 +448,7 @@ public class BatteryUtils {
         int maxDuration = prefs.getInt("usage_calculation_time", 15);
         int minDuration = Math.min(maxDuration, 10);
         boolean rounded = prefs.getBoolean("rounded_time_estimates", true);
-        String estimationSource = prefs.getString("estimation_source", "max_charge");
+        String estimationSource = prefs.getString("estimation_source", "all_time_stats");
         values.put("calculation_duration", maxDuration+"m");
 
         // Get up-to-date data points
@@ -503,8 +503,8 @@ public class BatteryUtils {
             values.put("time_to", "");
         }
 
-        if (includeSinceMax) {
-            Double usageRateValueSinceMax = null;
+        if (includeLongTerm) {
+            Double usageRateValueLongTerm = null;
             
             // When charging, always use all-time stats (since max is not relevant)
             // When discharging, use the preference setting
@@ -513,26 +513,26 @@ public class BatteryUtils {
                 if (isCharging) {
                     double meanChargeRate = DataProvider.getMeanChargeRate(context);
                     if (meanChargeRate > 0) {
-                        usageRateValueSinceMax = meanChargeRate;
+                        usageRateValueLongTerm = meanChargeRate;
                     }
                 } else {
                     double meanDischargeRate = DataProvider.getMeanDischargeRate(context);
                     if (meanDischargeRate > 0) {
-                        usageRateValueSinceMax = meanDischargeRate;
+                        usageRateValueLongTerm = meanDischargeRate;
                     }
                 }
             } else {
                 // Use max charge calculation (default, only when discharging)
-                usageRateValueSinceMax = calculateBatteryUsageRateValueSinceMax(dataPoints, minDuration, highTargetPercent);
+                usageRateValueLongTerm = calculateBatteryUsageRateValueSinceMax(dataPoints, minDuration, highTargetPercent);
             }
             
             // If no short-term rate available and we have long-term rate, it will be used by the display logic
             
-            if (usageRateValueSinceMax != null) {
-                values.put("usage_rate_long_term", String.format(Locale.getDefault(), "%.1f", usageRateValueSinceMax));
+            if (usageRateValueLongTerm != null) {
+                values.put("usage_rate_long_term", String.format(Locale.getDefault(), "%.1f", usageRateValueLongTerm));
 
                 // Calculate time estimates
-                double hoursToLevel = Math.abs(currentBatteryLevel - targetPercent) / usageRateValueSinceMax;
+                double hoursToLevel = Math.abs(currentBatteryLevel - targetPercent) / usageRateValueLongTerm;
                 String hoursTo = formatTimeEstimate(hoursToLevel, targetPercent, rounded);
                 String timeTo = formatDurationEndTime(hoursToLevel, rounded);
 

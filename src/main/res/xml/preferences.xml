@@ -65,7 +65,7 @@
             android:summary="@string/estimation_source_summary"
             android:entries="@array/estimation_source_entries"
             android:entryValues="@array/estimation_source_values"
-            android:defaultValue="max_charge" />
+            android:defaultValue="all_time_stats" />
 
         <SwitchPreferenceCompat
             android:key="rounded_time_estimates"
