@@ -88,6 +88,16 @@ cd battery-monitor-widget
 
 ## Usage
 
+**IMPORTANT**: You have to manually exclude the application from battery optimization for the data to be reliable.
+
+### Steps to Disable Battery Optimization:
+1. Open **Settings** on your Android device
+2. Navigate to **Apps** (or **Applications**)
+3. Find and tap **Battery Monitor Widget**
+4. Tap **Battery** (or **Battery usage**)
+5. Select **Unrestricted** (or **Don't optimize**)
+
+### Using the Widget:
 1. **Add Widget**: Long-press on your home screen → Widgets → Battery Monitor Widget
 2. **Configure**: Tap the widget to open settings
 3. **Customize**: Adjust colors, thresholds, and display options to your preference
