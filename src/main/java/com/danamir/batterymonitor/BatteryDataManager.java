@@ -34,6 +34,30 @@ public class BatteryDataManager {
         return instance;
     }
 
+    /**
+     * Determines if a battery level change should be excluded from statistics calculation.
+     * Excludes data points at or near specific charge levels that may be affected by
+     * Android's battery optimization behavior.
+     *
+     * @param startLevel The starting battery level
+     * @param endLevel The ending battery level
+     * @param isCharging True if charging, false if discharging
+     * @param targetCharge The target charge percentage setting
+     * @return True if this data should be excluded from statistics
+     */
+    private boolean shouldExcludeFromStats(int startLevel, int endLevel, boolean isCharging, int targetCharge) {
+        if (isCharging) {
+            // Exclude if either level is at target charge, >= 95%, or at 100%
+            return startLevel == targetCharge || endLevel == targetCharge
+                    || startLevel >= 95 || endLevel >= 95
+                    || startLevel == 100 || endLevel == 100;
+        } else {
+            // Exclude if either level is at target charge or at 100%
+            return startLevel == targetCharge || endLevel == targetCharge
+                    || startLevel == 100 || endLevel == 100;
+        }
+    }
+
     public synchronized void addDataPoint(int level, boolean isCharging) {
         long timestamp = System.currentTimeMillis();
         boolean shouldAddPoint = true;
@@ -86,12 +110,17 @@ public class BatteryDataManager {
                     int oldLevelDelta = lastPoint.getLevel() - secondLastPoint.getLevel();
 
                     if (oldTimeDelta > 0 && oldLevelDelta != 0) {
+                        // Get target charge percent from preferences
+                        int highTargetPercent = prefs.getInt("high_target_percent", 80);
+
                         // Remove the old (faster) rate calculation
                         double oldRate = Math.abs((double) oldLevelDelta / oldTimeDelta * 3600000);
 
-                        if (secondLastPoint.isCharging() && oldLevelDelta > 0) {
+                        if (secondLastPoint.isCharging() && oldLevelDelta > 0
+                                && !shouldExcludeFromStats(secondLastPoint.getLevel(), lastPoint.getLevel(), true, highTargetPercent)) {
                             DataProvider.removeChargeStats(context, oldRate, oldTimeDelta);
-                        } else if (!secondLastPoint.isCharging() && oldLevelDelta < 0) {
+                        } else if (!secondLastPoint.isCharging() && oldLevelDelta < 0
+                                && !shouldExcludeFromStats(lastPoint.getLevel(), secondLastPoint.getLevel(), false, highTargetPercent)) {
                             DataProvider.removeDischargeStats(context, oldRate, oldTimeDelta);
                         }
 
@@ -99,9 +128,11 @@ public class BatteryDataManager {
                         long newTimeDelta = timestamp - secondLastPoint.getTimestamp();
                         double newRate = Math.abs((double) oldLevelDelta / newTimeDelta * 3600000);
 
-                        if (secondLastPoint.isCharging() && oldLevelDelta > 0) {
+                        if (secondLastPoint.isCharging() && oldLevelDelta > 0
+                                && !shouldExcludeFromStats(secondLastPoint.getLevel(), level, true, highTargetPercent)) {
                             DataProvider.updateChargeStats(context, newRate, newTimeDelta);
-                        } else if (!secondLastPoint.isCharging() && oldLevelDelta < 0) {
+                        } else if (!secondLastPoint.isCharging() && oldLevelDelta < 0
+                                && !shouldExcludeFromStats(level, secondLastPoint.getLevel(), false, highTargetPercent)) {
                             DataProvider.updateDischargeStats(context, newRate, newTimeDelta);
                         }
                     }
@@ -109,15 +140,20 @@ public class BatteryDataManager {
                     // Remove the last point before adding the new one
                     dataPoints.remove(dataPoints.size() - 1);
                 } else if (timeDelta > 0 && levelDelta != 0) {
+                    // Get target charge percent from preferences
+                    int highTargetPercent = prefs.getInt("high_target_percent", 80);
+
                     // Level changed - calculate and record statistics
                     // Calculate rate in %/hour
                     double rate = Math.abs((double) levelDelta / timeDelta * 3600000);
 
                     // Update appropriate statistics based on charging state
-                    if (lastPoint.isCharging() && levelDelta > 0) {
+                    if (lastPoint.isCharging() && levelDelta > 0
+                            && !shouldExcludeFromStats(lastPoint.getLevel(), level, true, highTargetPercent)) {
                         // Was charging and level increased
                         DataProvider.updateChargeStats(context, rate, timeDelta);
-                    } else if (!lastPoint.isCharging() && levelDelta < 0) {
+                    } else if (!lastPoint.isCharging() && levelDelta < 0
+                            && !shouldExcludeFromStats(level, lastPoint.getLevel(), false, highTargetPercent)) {
                         // Was discharging and level decreased
                         DataProvider.updateDischargeStats(context, rate, timeDelta);
                     }
@@ -130,14 +166,19 @@ public class BatteryDataManager {
 
                 // Only update stats if there's a meaningful time and level change
                 if (timeDelta > 0 && levelDelta != 0) {
+                    // Get target charge percent from preferences
+                    int highTargetPercent = prefs.getInt("high_target_percent", 80);
+
                     // Calculate rate in %/hour
                     double rate = Math.abs((double) levelDelta / timeDelta * 3600000);
 
                     // Update appropriate statistics based on charging state
-                    if (lastPoint.isCharging() && levelDelta > 0) {
+                    if (lastPoint.isCharging() && levelDelta > 0
+                            && !shouldExcludeFromStats(lastPoint.getLevel(), level, true, highTargetPercent)) {
                         // Was charging and level increased
                         DataProvider.updateChargeStats(context, rate, timeDelta);
-                    } else if (!lastPoint.isCharging() && levelDelta < 0) {
+                    } else if (!lastPoint.isCharging() && levelDelta < 0
+                            && !shouldExcludeFromStats(level, lastPoint.getLevel(), false, highTargetPercent)) {
                         // Was discharging and level decreased
                         DataProvider.updateDischargeStats(context, rate, timeDelta);
                     }
@@ -292,6 +333,9 @@ public class BatteryDataManager {
             return; // Need at least 2 points to calculate rates
         }
 
+        // Get target charge percent from preferences
+        int highTargetPercent = prefs.getInt("high_target_percent", 80);
+
         // Track the reference point (when level last changed)
         BatteryData referencePoint = dataPoints.get(0);
 
@@ -310,10 +354,12 @@ public class BatteryDataManager {
                     double rate = Math.abs((double) levelDelta / timeDelta * 3600000);
 
                     // Update appropriate statistics based on charging state
-                    if (referencePoint.isCharging() && levelDelta > 0) {
+                    if (referencePoint.isCharging() && levelDelta > 0
+                            && !shouldExcludeFromStats(referencePoint.getLevel(), currPoint.getLevel(), true, highTargetPercent)) {
                         // Was charging and level increased
                         DataProvider.updateChargeStats(context, rate, timeDelta);
-                    } else if (!referencePoint.isCharging() && levelDelta < 0) {
+                    } else if (!referencePoint.isCharging() && levelDelta < 0
+                            && !shouldExcludeFromStats(currPoint.getLevel(), referencePoint.getLevel(), false, highTargetPercent)) {
                         // Was discharging and level decreased
                         DataProvider.updateDischargeStats(context, rate, timeDelta);
                     }
