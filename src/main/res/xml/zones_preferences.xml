@@ -31,7 +31,7 @@
         android:summary="%s"
         android:entries="@array/click_action_entries"
         android:entryValues="@array/click_action_values"
-        android:defaultValue="open_preferences" />
+        android:defaultValue="switch_estimation_source" />
 
     <ListPreference
         android:key="zone_action_center"
@@ -47,7 +47,7 @@
         android:summary="%s"
         android:entries="@array/click_action_entries"
         android:entryValues="@array/click_action_values"
-        android:defaultValue="open_preferences" />
+        android:defaultValue="toggle_zoom" />
 
     <ListPreference
         android:key="zone_action_bottom_left"
@@ -55,7 +55,7 @@
         android:summary="%s"
         android:entries="@array/click_action_entries"
         android:entryValues="@array/click_action_values"
-        android:defaultValue="open_preferences" />
+        android:defaultValue="switch_estimation_source" />
 
     <ListPreference
         android:key="zone_action_bottom"
@@ -63,7 +63,7 @@
         android:summary="%s"
         android:entries="@array/click_action_entries"
         android:entryValues="@array/click_action_values"
-        android:defaultValue="open_preferences" />
+        android:defaultValue="toggle_date_estimation" />
 
     <ListPreference
         android:key="zone_action_bottom_right"
@@ -71,6 +71,6 @@
         android:summary="%s"
         android:entries="@array/click_action_entries"
         android:entryValues="@array/click_action_values"
-        android:defaultValue="open_preferences" />
+        android:defaultValue="toggle_zoom" />
 
 </PreferenceScreen>

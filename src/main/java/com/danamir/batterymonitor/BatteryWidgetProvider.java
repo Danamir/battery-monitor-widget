@@ -168,6 +168,21 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
         }
     }
 
+    private String getDefaultActionForZone(String zoneName) {
+        switch (zoneName) {
+            case "left":
+            case "bottom_left":
+                return "switch_estimation_source";
+            case "bottom":
+                return "toggle_date_estimation";
+            case "right":
+            case "bottom_right":
+                return "toggle_zoom";
+            default:
+                return "open_preferences";
+        }
+    }
+
     private void handleWidgetClick(Context context, String clickZone) {
         // Log the click event
         EventLogManager eventLogManager = EventLogManager.getInstance(context);
@@ -176,7 +191,7 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
         // Get the action for this zone
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         String zoneKey = "zone_action_" + clickZone;
-        String action = prefs.getString(zoneKey, "open_preferences");
+        String action = prefs.getString(zoneKey, getDefaultActionForZone(clickZone));
 
         // Execute action based on zone setting
         boolean needsUpdate = false;
