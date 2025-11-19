@@ -14,6 +14,10 @@ import androidx.preference.PreferenceManager;
 
 public class BatteryWidgetProvider extends AppWidgetProvider {
 
+    // Click action constants
+    private static final String ACTION_WIDGET_CLICK = "com.danamir.batterymonitor.WIDGET_CLICK";
+    private static final String EXTRA_CLICK_ZONE = "click_zone";
+
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         for (int appWidgetId : appWidgetIds) {
@@ -114,13 +118,66 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
         // Set the bitmap to the ImageView
         views.setImageViewBitmap(R.id.battery_graph, bitmap);
 
-        // Set up click intent to open settings
-        Intent intent = new Intent(context, SettingsActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        views.setOnClickPendingIntent(R.id.battery_graph, pendingIntent);
+        // Set up click intents for each zone
+        setupClickZone(context, views, R.id.click_zone_top_left, "top_left");
+        setupClickZone(context, views, R.id.click_zone_top, "top");
+        setupClickZone(context, views, R.id.click_zone_top_right, "top_right");
+        setupClickZone(context, views, R.id.click_zone_left, "left");
+        setupClickZone(context, views, R.id.click_zone_center, "center");
+        setupClickZone(context, views, R.id.click_zone_right, "right");
+        setupClickZone(context, views, R.id.click_zone_bottom_left, "bottom_left");
+        setupClickZone(context, views, R.id.click_zone_bottom, "bottom");
+        setupClickZone(context, views, R.id.click_zone_bottom_right, "bottom_right");
 
         // Update the widget
         appWidgetManager.updateAppWidget(appWidgetId, views);
+    }
+
+    private static void setupClickZone(Context context, RemoteViews views, int viewId, String zoneName) {
+        Intent intent = new Intent(context, BatteryWidgetProvider.class);
+        intent.setAction(ACTION_WIDGET_CLICK);
+        intent.putExtra(EXTRA_CLICK_ZONE, zoneName);
+
+        // Use unique request code for each zone to ensure different PendingIntents
+        int requestCode = zoneName.hashCode();
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+            context,
+            requestCode,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        views.setOnClickPendingIntent(viewId, pendingIntent);
+    }
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        super.onReceive(context, intent);
+
+        if (ACTION_WIDGET_CLICK.equals(intent.getAction())) {
+            String clickZone = intent.getStringExtra(EXTRA_CLICK_ZONE);
+            handleWidgetClick(context, clickZone);
+        }
+    }
+
+    private void handleWidgetClick(Context context, String clickZone) {
+        // Log the click event
+        EventLogManager eventLogManager = EventLogManager.getInstance(context);
+        eventLogManager.logEvent("Widget clicked: " + clickZone);
+
+        // Default action: open settings
+        // You can customize this behavior based on the click zone
+        android.widget.Toast.makeText(
+            context,
+            "Clicked on: " + clickZone,
+            android.widget.Toast.LENGTH_SHORT
+        ).show();
+
+        // Open settings activity
+        Intent settingsIntent = new Intent(context, SettingsActivity.class);
+        settingsIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        settingsIntent.putExtra(EXTRA_CLICK_ZONE, clickZone);
+        context.startActivity(settingsIntent);
     }
 
     public static void updateAllWidgets(Context context) {
