@@ -74,9 +74,14 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
         // Get display hours from preferences
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean zoomedDisplay = prefs.getBoolean("zoomed_display", false);
-        String displayLengthKey = zoomedDisplay ? "display_length_zoomed_hours" : "display_length_hours";
-        String defaultValue = zoomedDisplay ? "2" : "48";
-        int displayHours = Integer.parseInt(prefs.getString(displayLengthKey, defaultValue));
+        int displayHours = Integer.parseInt(prefs.getString("display_length_hours", "48"));
+
+        // Apply zoom multiplier if zoomed display is enabled
+        if (zoomedDisplay) {
+            int zoomMult = prefs.getInt("display_zoom_mult", 10);
+            displayHours = displayHours / zoomMult;
+            if (displayHours < 1) displayHours = 1; // Ensure at least 1 hour
+        }
 
         // Get battery data
         BatteryDataManager dataManager = BatteryDataManager.getInstance(context);

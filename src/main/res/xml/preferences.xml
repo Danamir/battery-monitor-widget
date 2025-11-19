@@ -35,12 +35,15 @@
             android:defaultValue="48"
             android:inputType="number" />
 
-        <EditTextPreference
-            android:key="display_length_zoomed_hours"
-            android:title="@string/display_length_zoomed_title"
-            android:summary="@string/display_length_zoomed_summary"
-            android:defaultValue="2"
-            android:inputType="number" />
+        <SeekBarPreference
+            android:key="display_zoom_mult"
+            android:title="@string/display_zoom_mult_title"
+            android:summary="@string/display_zoom_mult_summary"
+            android:defaultValue="10"
+            android:max="50"
+            android:min="1"
+            app:showSeekBarValue="true"
+            app:seekBarIncrement="1" />
 
         <SeekBarPreference
             android:key="low_target_percent"

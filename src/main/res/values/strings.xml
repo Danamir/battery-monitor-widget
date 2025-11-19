@@ -5,8 +5,8 @@
     <string name="settings_title">Settings</string>
     <string name="display_length_title">Display length (hours)</string>
     <string name="display_length_summary">How many hours of battery history to display</string>
-    <string name="display_length_zoomed_title">Display length zoomed (hours)</string>
-    <string name="display_length_zoomed_summary">How many hours of battery history to display when zoomed</string>
+    <string name="display_zoom_mult_title">Display zoom multiplier</string>
+    <string name="display_zoom_mult_summary">Zoom level multiplier</string>
     <string name="horizontal_padding_title">Horizontal padding</string>
     <string name="horizontal_padding_summary">Left and right padding for the graph</string>
     <string name="vertical_padding_title">Vertical padding</string>
