@@ -19,6 +19,13 @@
         android:layout="@layout/preference_color" />
 
     <com.danamir.batterymonitor.ColorPreference
+        android:key="text_color_long_term"
+        android:title="@string/text_color_long_term_title"
+        android:summary="@string/text_color_long_term_summary"
+        android:defaultValue="0xFFD7FFD7"
+        android:layout="@layout/preference_color" />
+
+    <com.danamir.batterymonitor.ColorPreference
         android:key="grid_color"
         android:title="@string/grid_color_title"
         android:summary="@string/grid_color_summary"

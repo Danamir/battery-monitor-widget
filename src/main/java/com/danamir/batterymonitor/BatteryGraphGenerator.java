@@ -342,6 +342,7 @@ public class BatteryGraphGenerator {
 
         // Get custom colors or use auto-calculated ones
         int textColor = prefs.getInt("text_color", 0xFFFFFFFF);
+        int textColorLongTerm = prefs.getInt("text_color_long_term", 0xFFD7FFD7);
         int gridColor = prefs.getInt("grid_color", 0x33CCCCCC);
 
         // Initialize paints
@@ -1035,6 +1036,8 @@ public class BatteryGraphGenerator {
                         levelText += BatteryUtils.TEXT_SEPARATOR;
                     }
 
+                    levelText += "<span style=\"color: "+BatteryUtils.colorToHex(textColorLongTerm, true)+"\">";
+
                     if (showUseRate) {
                         levelText += String.format(usageRateLongTerm + "%%/h");
                     }
@@ -1057,12 +1060,14 @@ public class BatteryGraphGenerator {
                             levelText += timeEstimate;
                         }
                     }
+
+                    levelText += "</span>";
                 }
             }
 
             // Create and configure TextView
             TextView textView = new TextView(context);
-            textView.setText(levelText);
+            textView.setText(BatteryUtils.parseHtmlFormatting(levelText));
             float adjustedTextSize = configureTextView(textView, context, batteryTextSize, textColor, density, prefs);
 
             // Save canvas state and translate to drawing position
@@ -1080,14 +1085,10 @@ public class BatteryGraphGenerator {
 
         // Display mode indicator
         boolean zoomedDisplay = prefs.getBoolean("zoomed_display", false);
-        boolean useLongTerm = prefs.getBoolean("use_long_term", false);
 
         String displayModeText = "";
         if (zoomedDisplay) {
             displayModeText += "🔍";
-        }
-        if (useLongTerm) {
-            displayModeText += "📅";
         }
 
         if (!displayModeText.isEmpty()) {

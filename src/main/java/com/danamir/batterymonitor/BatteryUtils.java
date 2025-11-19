@@ -1,6 +1,11 @@
 package com.danamir.batterymonitor;
 
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -13,6 +18,216 @@ public class BatteryUtils {
     public static final String TEXT_SEPARATOR = "  •  ";
     public static final String TEXT_SEPARATOR_ALT = "  —  ";
     // public static final String TEXT_SEPARATOR = "  |  ";
+
+    /**
+     * Parse a string with basic HTML formatting tags and convert it to a SpannableString.
+     * Supports <b>, <i>, and <span style="color: #ffffffff;"> tags for bold, italic, and color formatting.
+     *
+     * @param text The text containing HTML tags like "<b>bold</b> and <i>italic</i> and <span style=\"color: #ff0000;\">red</span>"
+     * @return A SpannableString with the appropriate StyleSpan and ForegroundColorSpan formatting applied
+     */
+    public static SpannableString parseHtmlFormatting(String text) {
+        if (text == null) {
+            return new SpannableString("");
+        }
+
+        // Remove all HTML tags to get the plain text
+        StringBuilder plainText = new StringBuilder();
+        int textIndex = 0;
+        int i = 0;
+
+        // Track spans to apply
+        java.util.List<SpanInfo> spans = new java.util.ArrayList<>();
+        java.util.Stack<TagInfo> tagStack = new java.util.Stack<>();
+
+        while (i < text.length()) {
+            if (text.charAt(i) == '<') {
+                // Find the end of the tag
+                int tagEnd = text.indexOf('>', i);
+                if (tagEnd == -1) {
+                    // No closing '>', treat as plain text
+                    plainText.append(text.charAt(i));
+                    textIndex++;
+                    i++;
+                    continue;
+                }
+
+                String tag = text.substring(i + 1, tagEnd);
+                boolean isClosingTag = tag.trim().startsWith("/");
+                String tagName = isClosingTag ? tag.trim().substring(1).toLowerCase() : tag.trim().toLowerCase();
+
+                if (tagName.equals("b") || tagName.equals("i")) {
+                    if (isClosingTag) {
+                        // Closing tag - pop from stack and create span
+                        if (!tagStack.isEmpty()) {
+                            TagInfo tagInfo = tagStack.pop();
+                            if (tagInfo.name.equals(tagName)) {
+                                spans.add(new SpanInfo(tagInfo.startIndex, textIndex, tagInfo.style, tagInfo.color));
+                            }
+                        }
+                    } else {
+                        // Opening tag - push to stack
+                        int style = tagName.equals("b") ? Typeface.BOLD : Typeface.ITALIC;
+                        tagStack.push(new TagInfo(tagName, textIndex, style, null));
+                    }
+                } else if (tagName.startsWith("span")) {
+                    if (isClosingTag) {
+                        // Closing span tag - pop from stack and create span
+                        if (!tagStack.isEmpty()) {
+                            TagInfo tagInfo = tagStack.pop();
+                            if (tagInfo.name.equals("span")) {
+                                spans.add(new SpanInfo(tagInfo.startIndex, textIndex, tagInfo.style, tagInfo.color));
+                            }
+                        }
+                    } else {
+                        // Opening span tag - parse style attribute for color
+                        Integer color = parseColorFromStyle(tag);
+                        tagStack.push(new TagInfo("span", textIndex, -1, color));
+                    }
+                }
+
+                i = tagEnd + 1;
+            } else {
+                plainText.append(text.charAt(i));
+                textIndex++;
+                i++;
+            }
+        }
+
+        // Create SpannableString from plain text
+        SpannableString spannable = new SpannableString(plainText.toString());
+
+        // Apply all spans
+        for (SpanInfo span : spans) {
+            if (span.start < span.end && span.end <= spannable.length()) {
+                if (span.style >= 0) {
+                    spannable.setSpan(new StyleSpan(span.style), span.start, span.end, 0);
+                }
+                if (span.color != null) {
+                    spannable.setSpan(new ForegroundColorSpan(span.color), span.start, span.end, 0);
+                }
+            }
+        }
+
+        return spannable;
+    }
+
+    /**
+     * Convert an int color value to a hex color string.
+     *
+     * @param color The color as an integer (e.g., 0xBBFFFFFF)
+     * @param includeAlpha Whether to include alpha channel (ARGB) or just RGB
+     * @return Hex color string like "#BBFFFFFF" (ARGB) or "#FFFFFF" (RGB)
+     */
+    public static String colorToHex(int color, boolean includeAlpha) {
+        if (includeAlpha) {
+            return String.format("#%08X", color);
+        } else {
+            return String.format("#%06X", color & 0xFFFFFF);
+        }
+    }
+
+    /**
+     * Parse color value from style attribute in a span tag.
+     * Supports formats like: style="color: #ff0000;" or style="color:#ff0000"
+     *
+     * @param tag The full tag string (e.g., "span style=\"color: #ff0000;\"")
+     * @return The parsed color as an Integer, or null if no valid color found
+     */
+    private static Integer parseColorFromStyle(String tag) {
+        // Look for style="..." or style='...'
+        int styleStart = tag.toLowerCase().indexOf("style");
+        if (styleStart == -1) {
+            return null;
+        }
+
+        // Find the quote after style=
+        int quoteStart = -1;
+        char quoteChar = 0;
+        for (int i = styleStart + 5; i < tag.length(); i++) {
+            if (tag.charAt(i) == '"' || tag.charAt(i) == '\'') {
+                quoteStart = i;
+                quoteChar = tag.charAt(i);
+                break;
+            }
+        }
+
+        if (quoteStart == -1) {
+            return null;
+        }
+
+        // Find the closing quote
+        int quoteEnd = tag.indexOf(quoteChar, quoteStart + 1);
+        if (quoteEnd == -1) {
+            return null;
+        }
+
+        String styleValue = tag.substring(quoteStart + 1, quoteEnd);
+
+        // Look for color: #...
+        int colorStart = styleValue.toLowerCase().indexOf("color");
+        if (colorStart == -1) {
+            return null;
+        }
+
+        // Find the # character
+        int hashStart = styleValue.indexOf('#', colorStart);
+        if (hashStart == -1) {
+            return null;
+        }
+
+        // Extract color value (up to semicolon, quote, or end of string)
+        StringBuilder colorValue = new StringBuilder("#");
+        for (int i = hashStart + 1; i < styleValue.length(); i++) {
+            char c = styleValue.charAt(i);
+            if (Character.isLetterOrDigit(c)) {
+                colorValue.append(c);
+            } else {
+                break;
+            }
+        }
+
+        // Parse the color
+        try {
+            return Color.parseColor(colorValue.toString());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Helper class to track tag information during parsing.
+     */
+    private static class TagInfo {
+        String name;
+        int startIndex;
+        int style;
+        Integer color;
+
+        TagInfo(String name, int startIndex, int style, Integer color) {
+            this.name = name;
+            this.startIndex = startIndex;
+            this.style = style;
+            this.color = color;
+        }
+    }
+
+    /**
+     * Helper class to store span information.
+     */
+    private static class SpanInfo {
+        int start;
+        int end;
+        int style;
+        Integer color;
+
+        SpanInfo(int start, int end, int style, Integer color) {
+            this.start = start;
+            this.end = end;
+            this.style = style;
+            this.color = color;
+        }
+    }
 
     /**
      * Format duration in milliseconds to a human-readable string.

@@ -27,7 +27,7 @@ public class DisplaySettings extends PreferenceFragmentCompat {
         // Register a global preference change listener for immediate updates
         preferenceChangeListener = (sharedPreferences, key) -> {
             BatteryWidgetProvider.updateAllWidgets(getContext());
-            if ("main_color".equals(key) || "text_color".equals(key) || "grid_color".equals(key) ||
+            if ("main_color".equals(key) || "text_color".equals(key) || "text_color_long_term".equals(key) || "grid_color".equals(key) ||
                 "graph_line_color".equals(key) || "graph_fill_color".equals(key) ||
                 "graph_night_fill_color".equals(key) || "night_start".equals(key) || "night_end".equals(key) ||
                 "charging_line_color".equals(key) || "battery_low_color".equals(key) ||
@@ -53,6 +53,15 @@ public class DisplaySettings extends PreferenceFragmentCompat {
             updateColorPreferenceSummary(textColorPref, "text_color");
             textColorPref.setOnPreferenceClickListener(preference -> {
                 showColorPickerDialog("text_color", "Text Color");
+                return true;
+            });
+        }
+
+        androidx.preference.Preference textColorLongTermPref = findPreference("text_color_long_term");
+        if (textColorLongTermPref != null) {
+            updateColorPreferenceSummary(textColorLongTermPref, "text_color_long_term");
+            textColorLongTermPref.setOnPreferenceClickListener(preference -> {
+                showColorPickerDialog("text_color_long_term", "Long-term text Color");
                 return true;
             });
         }

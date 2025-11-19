@@ -70,7 +70,7 @@ public class SettingsActivity extends AppCompatActivity {
                     return;
                 }
                 BatteryWidgetProvider.updateAllWidgets(getContext());
-                if ("main_color".equals(key) || "text_color".equals(key) || "grid_color".equals(key)) {
+                if ("main_color".equals(key) || "text_color".equals(key) || "text_color_long_term".equals(key) || "grid_color".equals(key)) {
                     updateColorPreview();
                 }
                 // Update notification for relevant settings
@@ -206,6 +206,15 @@ public class SettingsActivity extends AppCompatActivity {
                 });
             }
 
+            androidx.preference.Preference textColorLongTermPref = findPreference("text_color_long_term");
+            if (textColorLongTermPref != null) {
+                updateColorPreferenceSummary(textColorLongTermPref, "text_color_long_term");
+                textColorLongTermPref.setOnPreferenceClickListener(preference -> {
+                    showColorPickerDialog("text_color_long_term", "Long-term text Color");
+                    return true;
+                });
+            }
+
             androidx.preference.Preference gridColorPref = findPreference("grid_color");
             if (gridColorPref != null) {
                 updateColorPreferenceSummary(gridColorPref, "grid_color");
@@ -248,6 +257,7 @@ public class SettingsActivity extends AppCompatActivity {
             // Update all color preferences
             androidx.preference.Preference mainColorPref = findPreference("main_color");
             androidx.preference.Preference textColorPref = findPreference("text_color");
+            androidx.preference.Preference textColorLongTermPref = findPreference("text_color_long_term");
             androidx.preference.Preference gridColorPref = findPreference("grid_color");
 
             if (mainColorPref != null) {
@@ -259,6 +269,11 @@ public class SettingsActivity extends AppCompatActivity {
                 getPreferenceScreen().removePreference(textColorPref);
                 getPreferenceScreen().addPreference(textColorPref);
                 updateColorPreferenceSummary(textColorPref, "text_color");
+            }
+            if (textColorLongTermPref != null) {
+                getPreferenceScreen().removePreference(textColorLongTermPref);
+                getPreferenceScreen().addPreference(textColorLongTermPref);
+                updateColorPreferenceSummary(textColorLongTermPref, "text_color_long_term");
             }
             if (gridColorPref != null) {
                 getPreferenceScreen().removePreference(gridColorPref);

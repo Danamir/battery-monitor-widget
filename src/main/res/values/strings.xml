@@ -15,6 +15,8 @@
     <string name="main_color_summary">Widget background color</string>
     <string name="text_color_title">Text color</string>
     <string name="text_color_summary">Text color</string>
+    <string name="text_color_long_term_title">Long-term text color</string>
+    <string name="text_color_long_term_summary">Long-term text color</string>
     <string name="grid_color_title">Grid color</string>
     <string name="grid_color_summary">Grid line color</string>
     <string name="graph_line_color_title">Line color</string>
