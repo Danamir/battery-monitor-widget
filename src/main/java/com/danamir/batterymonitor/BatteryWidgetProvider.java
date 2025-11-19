@@ -167,11 +167,6 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
 
         // Default action: open settings
         // You can customize this behavior based on the click zone
-        android.widget.Toast.makeText(
-            context,
-            "Clicked on: " + clickZone,
-            android.widget.Toast.LENGTH_SHORT
-        ).show();
 
         // Open settings activity
         Intent settingsIntent = new Intent(context, SettingsActivity.class);

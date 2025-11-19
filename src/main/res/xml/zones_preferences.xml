@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <ListPreference
+        android:key="zone_action_top_left"
+        android:title="@string/zone_top_left_title"
+        android:summary="%s"
+        android:entries="@array/click_action_entries"
+        android:entryValues="@array/click_action_values"
+        android:defaultValue="open_preferences" />
+
+    <ListPreference
+        android:key="zone_action_top"
+        android:title="@string/zone_top_title"
+        android:summary="%s"
+        android:entries="@array/click_action_entries"
+        android:entryValues="@array/click_action_values"
+        android:defaultValue="open_preferences" />
+
+    <ListPreference
+        android:key="zone_action_top_right"
+        android:title="@string/zone_top_right_title"
+        android:summary="%s"
+        android:entries="@array/click_action_entries"
+        android:entryValues="@array/click_action_values"
+        android:defaultValue="open_preferences" />
+
+    <ListPreference
+        android:key="zone_action_left"
+        android:title="@string/zone_left_title"
+        android:summary="%s"
+        android:entries="@array/click_action_entries"
+        android:entryValues="@array/click_action_values"
+        android:defaultValue="open_preferences" />
+
+    <ListPreference
+        android:key="zone_action_center"
+        android:title="@string/zone_center_title"
+        android:summary="%s"
+        android:entries="@array/click_action_entries"
+        android:entryValues="@array/click_action_values"
+        android:defaultValue="open_preferences" />
+
+    <ListPreference
+        android:key="zone_action_right"
+        android:title="@string/zone_right_title"
+        android:summary="%s"
+        android:entries="@array/click_action_entries"
+        android:entryValues="@array/click_action_values"
+        android:defaultValue="open_preferences" />
+
+    <ListPreference
+        android:key="zone_action_bottom_left"
+        android:title="@string/zone_bottom_left_title"
+        android:summary="%s"
+        android:entries="@array/click_action_entries"
+        android:entryValues="@array/click_action_values"
+        android:defaultValue="open_preferences" />
+
+    <ListPreference
+        android:key="zone_action_bottom"
+        android:title="@string/zone_bottom_title"
+        android:summary="%s"
+        android:entries="@array/click_action_entries"
+        android:entryValues="@array/click_action_values"
+        android:defaultValue="open_preferences" />
+
+    <ListPreference
+        android:key="zone_action_bottom_right"
+        android:title="@string/zone_bottom_right_title"
+        android:summary="%s"
+        android:entries="@array/click_action_entries"
+        android:entryValues="@array/click_action_values"
+        android:defaultValue="open_preferences" />
+
+</PreferenceScreen>

@@ -122,6 +122,31 @@
     <string name="fill_with_line_color_title">Fill with line color</string>
     <string name="fill_with_line_color_summary">Use line color for fill area</string>
 
+    <!-- Zones -->
+    <string name="zones_settings_title">Zones</string>
+    <string name="zones_settings_summary">Configure actions for widget zones</string>
+    <string name="zone_top_left_title">Top-left zone</string>
+    <string name="zone_top_title">Top zone</string>
+    <string name="zone_top_right_title">Top-right zone</string>
+    <string name="zone_left_title">Left zone</string>
+    <string name="zone_center_title">Center zone</string>
+    <string name="zone_right_title">Right zone</string>
+    <string name="zone_bottom_left_title">Bottom-left zone</string>
+    <string name="zone_bottom_title">Bottom zone</string>
+    <string name="zone_bottom_right_title">Bottom-right zone</string>
+
+    <!-- Click action options -->
+    <string-array name="click_action_entries">
+        <item>Open preferences</item>
+        <item>Switch estimation source</item>
+        <item>Toggle date estimation</item>
+    </string-array>
+    <string-array name="click_action_values">
+        <item>open_preferences</item>
+        <item>switch_estimation_source</item>
+        <item>toggle_date_estimation</item>
+    </string-array>
+
     <!-- Estimation source options -->
     <string-array name="estimation_source_entries">
         <item>All-time stats</item>

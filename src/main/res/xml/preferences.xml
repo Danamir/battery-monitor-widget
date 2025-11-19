@@ -16,6 +16,12 @@
             android:summary="@string/battery_text_settings_summary"
             android:fragment="com.danamir.batterymonitor.BatteryTextPreference" />
 
+        <PreferenceScreen
+            android:key="zones_settings"
+            android:title="@string/zones_settings_title"
+            android:summary="@string/zones_settings_summary"
+            android:fragment="com.danamir.batterymonitor.ZonesPreference" />
+
     </PreferenceCategory>
 
     <PreferenceCategory
@@ -62,7 +68,7 @@
         <ListPreference
             android:key="estimation_source"
             android:title="@string/estimation_source_title"
-            android:summary="@string/estimation_source_summary"
+            android:summary="%s"
             android:entries="@array/estimation_source_entries"
             android:entryValues="@array/estimation_source_values"
             android:defaultValue="all_time_stats" />
