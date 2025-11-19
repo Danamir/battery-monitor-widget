@@ -28,6 +28,9 @@ The widget offers extensive customization through settings:
 - **Battery thresholds**: Configurable percentage levels for different color zones
 - **Time estimates**: Adjustable target battery percentage for predictions
 - **Graph appearance**: Customizable colors (including alpha), and grid intervals
+- **Customizable action zones**: 3x3 widget zones, supporting user-defined actions
+  - Available actions: "Open preferences", "Switch estimation source", "Toggle date estimation", "Toggle zoom display"
+- **Adjustable zoom multiplier**: Configurable zoom multiplier for fine-grained control over display scaling
 - **Night time**: Display night-time on the graph background
 
 ## Screenshots
