@@ -165,14 +165,42 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
         EventLogManager eventLogManager = EventLogManager.getInstance(context);
         eventLogManager.logEvent("Widget clicked: " + clickZone);
 
-        // Default action: open settings
-        // You can customize this behavior based on the click zone
+        // Get the action for this zone
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String zoneKey = "zone_action_" + clickZone;
+        String action = prefs.getString(zoneKey, "open_preferences");
 
-        // Open settings activity
-        Intent settingsIntent = new Intent(context, SettingsActivity.class);
-        settingsIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        settingsIntent.putExtra(EXTRA_CLICK_ZONE, clickZone);
-        context.startActivity(settingsIntent);
+        // Execute action based on zone setting
+        boolean needsUpdate = false;
+        switch (action) {
+            case "switch_estimation_source":
+                // Toggle use_long_term preference
+                boolean useLongTerm = prefs.getBoolean("use_long_term", false);
+                prefs.edit().putBoolean("use_long_term", !useLongTerm).apply();
+                needsUpdate = true;
+                break;
+
+            case "toggle_date_estimation":
+                // Toggle show_time_estimation preference
+                boolean showTimeEstimation = prefs.getBoolean("show_time_estimation", false);
+                prefs.edit().putBoolean("show_time_estimation", !showTimeEstimation).apply();
+                needsUpdate = true;
+                break;
+
+            case "open_preferences":
+            default:
+                // Open settings activity
+                Intent settingsIntent = new Intent(context, SettingsActivity.class);
+                settingsIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                settingsIntent.putExtra(EXTRA_CLICK_ZONE, clickZone);
+                context.startActivity(settingsIntent);
+                break;
+        }
+
+        // Update all widgets if needed
+        if (needsUpdate) {
+            updateAllWidgets(context);
+        }
     }
 
     public static void updateAllWidgets(Context context) {

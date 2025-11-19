@@ -110,8 +110,8 @@
     <string name="show_use_rate_summary">Display battery usage rate</string>
     <string name="show_estimation_title">Estimation</string>
     <string name="show_estimation_summary">Display battery charge duration estimation</string>
-    <string name="show_time_estimation_title">Time estimation</string>
-    <string name="show_time_estimation_summary">Display time and date estimation</string>
+    <string name="show_time_estimation_title">Date and time estimation</string>
+    <string name="show_time_estimation_summary">Display date and time estimation</string>
     <string name="use_long_term_title">Use long-term estimation</string>
     <string name="use_long_term_summary">Display long-term estimation (all-time or since max charge) instead of short-term one</string>
     <string name="fill_options_title">Fill options</string>
