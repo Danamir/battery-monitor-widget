@@ -10,12 +10,47 @@ import android.graphics.Picture;
 import android.graphics.Typeface;
 import android.widget.TextView;
 
-import androidx.core.content.ContextCompat;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class BatteryGraphGenerator {
+
+    /**
+     * Configure a TextView with orientation-aware sizing and styling.
+     * @return The adjusted text size after orientation calculation
+     */
+    private static float configureTextView(TextView textView, Context context, float baseTextSize,
+                                          int textColor, float density, android.content.SharedPreferences prefs) {
+        android.util.DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
+        int orientation = context.getResources().getConfiguration().orientation;
+
+        float adjustedTextSize = baseTextSize;
+        if (orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
+            adjustedTextSize = baseTextSize * (float) displayMetrics.widthPixels / displayMetrics.heightPixels;
+        }
+
+        textView.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, adjustedTextSize);
+        textView.setTextColor(textColor);
+        textView.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
+
+        // Make text wider
+        float batteryWidthScale = prefs.getFloat("batteryWidthScale", 1.5f);
+        if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+            textView.setTextScaleX(batteryWidthScale);
+        } else {
+            textView.setTextScaleX(1.0f/batteryWidthScale);
+        }
+
+        // Add shadow: radius, dx, dy, color
+        textView.setShadowLayer(2 * density, 1 * density, 1 * density, Color.BLACK);
+
+        // Measure and layout the TextView
+        int spec = android.view.View.MeasureSpec.makeMeasureSpec(0, android.view.View.MeasureSpec.UNSPECIFIED);
+        textView.measure(spec, spec);
+        textView.layout(0, 0, textView.getMeasuredWidth(), textView.getMeasuredHeight());
+
+        return adjustedTextSize;
+    }
 
     /**
      * Calculate a contrasting text color based on the background color.
@@ -1025,39 +1060,10 @@ public class BatteryGraphGenerator {
                 }
             }
 
-            // Check display orientation
-            android.util.DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
-            int orientation = context.getResources().getConfiguration().orientation;
-
-            float adjustedTextSize = batteryTextSize;
-            if (orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
-                adjustedTextSize = batteryTextSize * (float) displayMetrics.widthPixels / displayMetrics.heightPixels;
-            }
-
             // Create and configure TextView
             TextView textView = new TextView(context);
             textView.setText(levelText);
-            textView.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, adjustedTextSize);
-            textView.setTextColor(textColor);
-
-            // Use system default UI font
-            textView.setTypeface(Typeface.create("sans-serif", Typeface.NORMAL));
-
-            // Make text wider
-            float batteryWidthScale = prefs.getFloat("batteryWidthScale", 1.5f);
-            if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                textView.setTextScaleX(batteryWidthScale);
-            } else {
-                textView.setTextScaleX(1.0f/batteryWidthScale);
-            }
-
-            // Add shadow: radius, dx, dy, color
-            textView.setShadowLayer(2 * density, 1 * density, 1 * density, Color.BLACK);
-
-            // Measure and layout the TextView
-            int spec = android.view.View.MeasureSpec.makeMeasureSpec(0, android.view.View.MeasureSpec.UNSPECIFIED);
-            textView.measure(spec, spec);
-            textView.layout(0, 0, textView.getMeasuredWidth(), textView.getMeasuredHeight());
+            float adjustedTextSize = configureTextView(textView, context, batteryTextSize, textColor, density, prefs);
 
             // Save canvas state and translate to drawing position
             canvas.save();
@@ -1069,6 +1075,31 @@ public class BatteryGraphGenerator {
             textView.draw(canvas);
 
             // Restore canvas state
+            canvas.restore();
+        }
+
+        // Display mode indicator
+        boolean zoomedDisplay = prefs.getBoolean("zoomed_display", false);
+        boolean useLongTerm = prefs.getBoolean("use_long_term", false);
+
+        String displayModeText = "";
+        if (zoomedDisplay) {
+            displayModeText += "🔍";
+        }
+        if (useLongTerm) {
+            displayModeText += "📅";
+        }
+
+        if (!displayModeText.isEmpty()) {
+            TextView modeTextView = new TextView(context);
+            modeTextView.setText(displayModeText);
+            float adjustedTextSize = configureTextView(modeTextView, context, batteryTextSize * 0.8f, textColor, density, prefs);
+
+            canvas.save();
+            float xPos = paddingHorizontal + adjustedTextSize + (showYAxisLabels ? labelTextSize * 3 : 0);
+            float yPos = paddingVertical + batteryTextSize * 0.8f;
+            canvas.translate(xPos, yPos);
+            modeTextView.draw(canvas);
             canvas.restore();
         }
     }
