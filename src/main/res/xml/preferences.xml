@@ -35,6 +35,13 @@
             android:defaultValue="48"
             android:inputType="number" />
 
+        <EditTextPreference
+            android:key="display_length_zoomed_hours"
+            android:title="@string/display_length_zoomed_title"
+            android:summary="@string/display_length_zoomed_summary"
+            android:defaultValue="2"
+            android:inputType="number" />
+
         <SeekBarPreference
             android:key="low_target_percent"
             android:title="@string/low_target_percent_title"

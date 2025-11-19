@@ -5,6 +5,8 @@
     <string name="settings_title">Settings</string>
     <string name="display_length_title">Display length (hours)</string>
     <string name="display_length_summary">How many hours of battery history to display</string>
+    <string name="display_length_zoomed_title">Display length zoomed (hours)</string>
+    <string name="display_length_zoomed_summary">How many hours of battery history to display when zoomed</string>
     <string name="horizontal_padding_title">Horizontal padding</string>
     <string name="horizontal_padding_summary">Left and right padding for the graph</string>
     <string name="vertical_padding_title">Vertical padding</string>
@@ -140,11 +142,13 @@
         <item>Open preferences</item>
         <item>Switch estimation source</item>
         <item>Toggle date estimation</item>
+        <item>Toggle zoom display</item>
     </string-array>
     <string-array name="click_action_values">
         <item>open_preferences</item>
         <item>switch_estimation_source</item>
         <item>toggle_date_estimation</item>
+        <item>toggle_zoom</item>
     </string-array>
 
     <!-- Estimation source options -->
