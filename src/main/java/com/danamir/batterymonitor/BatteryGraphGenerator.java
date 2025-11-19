@@ -953,7 +953,7 @@ public class BatteryGraphGenerator {
             boolean showUseRate = prefs.getBoolean("show_use_rate", true);
             boolean showEstimation = prefs.getBoolean("show_estimation", true);
             boolean showTimeEstimation = prefs.getBoolean("show_time_estimation", false);
-            boolean useMaxLevel = prefs.getBoolean("use_max_level", false);
+            boolean useLongTerm = prefs.getBoolean("use_long_term", false);
 
             java.util.Map<String, String> values = BatteryUtils.calculateValues(context, true);
 
@@ -968,7 +968,7 @@ public class BatteryGraphGenerator {
             String timeToLongTerm = values.get("time_to_long_term");
 
             if (showUseRate || showEstimation || showTimeEstimation) {
-                if (!usageRate.isEmpty() && !useMaxLevel) {
+                if (!usageRate.isEmpty() && !useLongTerm) {
                     if(showBatteryPercentage) {
                         levelText += BatteryUtils.TEXT_SEPARATOR;
                     }

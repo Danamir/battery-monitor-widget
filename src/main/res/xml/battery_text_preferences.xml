@@ -49,9 +49,9 @@
             android:defaultValue="false" />
 
         <SwitchPreferenceCompat
-            android:key="use_max_level"
-            android:title="@string/use_max_level_title"
-            android:summary="@string/use_max_level_summary"
+            android:key="use_long_term"
+            android:title="@string/use_long_term_title"
+            android:summary="@string/use_long_term_summary"
             android:defaultValue="false" />
 
     </PreferenceCategory>
