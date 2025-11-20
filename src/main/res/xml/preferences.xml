@@ -28,12 +28,15 @@
         android:title="@string/category_general_title"
         android:key="category_general">
 
-        <EditTextPreference
+        <com.danamir.batterymonitor.CustomSeekBarPreference
             android:key="display_length_hours"
             android:title="@string/display_length_title"
             android:summary="@string/display_length_summary"
             android:defaultValue="48"
-            android:inputType="number" />
+            android:min="1"
+            android:max="168"
+            app:showSeekBarValue="true"
+            app:seekBarIncrement="1" />
 
         <com.danamir.batterymonitor.CustomSeekBarPreference
             android:key="display_zoom_mult"

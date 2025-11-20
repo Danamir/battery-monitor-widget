@@ -659,7 +659,7 @@ public class BatteryUtils {
         android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
         int lowTargetPercent = prefs.getInt("low_target_percent", 20);
         int highTargetPercent = prefs.getInt("high_target_percent", 80);
-        int displayLengthHours = Integer.parseInt(prefs.getString("display_length_hours", "48"));
+        int displayLengthHours = getDisplayLengthHours(prefs, 48);
         int maxDuration = prefs.getInt("usage_calculation_time", 15);
         int minDuration = Math.min(maxDuration, 10);
         boolean rounded = prefs.getBoolean("rounded_time_estimates", true);
@@ -761,5 +761,32 @@ public class BatteryUtils {
         }
 
         return values;
+    }
+
+    /**
+     * Gets display length hours from preferences, handling migration from string to int
+     * @param prefs SharedPreferences instance
+     * @param defaultValue Default value to use if preference is not set or invalid
+     * @return The display length hours value
+     */
+    public static int getDisplayLengthHours(android.content.SharedPreferences prefs, int defaultValue) {
+        // Try to get as int first (new format)
+        if (prefs.contains("display_length_hours")) {
+            try {
+                return prefs.getInt("display_length_hours", defaultValue);
+            } catch (ClassCastException e) {
+                // Old format (string), migrate to int
+                try {
+                    String stringValue = prefs.getString("display_length_hours", String.valueOf(defaultValue));
+                    int intValue = Integer.parseInt(stringValue);
+                    // Migrate to int format
+                    prefs.edit().putInt("display_length_hours", intValue).apply();
+                    return intValue;
+                } catch (NumberFormatException ex) {
+                    return defaultValue;
+                }
+            }
+        }
+        return defaultValue;
     }
 }

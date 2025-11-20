@@ -82,79 +82,12 @@ public class SettingsActivity extends AppCompatActivity {
             prefs.registerOnSharedPreferenceChangeListener(preferenceChangeListener);
 
             // Setup preference listeners
-            androidx.preference.EditTextPreference displayLengthPref =
-                    findPreference("display_length_hours");
-            CustomSeekBarPreference horizontalPaddingPref =
-                    findPreference("horizontal_padding");
-            CustomSeekBarPreference verticalPaddingPref =
-                    findPreference("vertical_padding");
             CustomSeekBarPreference subdivisionPref =
                     findPreference("gridVerticalIntervalSubdivisionPref");
             androidx.preference.Preference backgroundColorPref =
                     findPreference("main_color");
             CustomSeekBarPreference usageCalculationTimePref =
                     findPreference("usage_calculation_time");
-
-            if (displayLengthPref != null) {
-                displayLengthPref.setOnPreferenceChangeListener((preference, newValue) -> {
-                    try {
-                        int hours = Integer.parseInt((String) newValue);
-                        if (hours < 1 || hours > 168) {
-                            // Limit to 1-168 hours (1 week)
-                            return false;
-                        }
-
-                        return true;
-                    } catch (NumberFormatException e) {
-                        return false;
-                    }
-                });
-            }
-
-            if (horizontalPaddingPref != null) {
-                horizontalPaddingPref.setOnPreferenceChangeListener((preference, newValue) -> {
-                    try {
-                        CustomSeekBarPreference seekBarPreference = (CustomSeekBarPreference) preference;
-                        int increment = seekBarPreference.getSeekBarIncrement();
-                        if (increment > 1) {
-                            float floatValue = (int) newValue;
-                            int rounded = Math.round(floatValue / increment);
-                            int finalValue = rounded * increment;
-
-                            if (finalValue != floatValue) {
-                                seekBarPreference.setValue(finalValue);
-                                return false;
-                            }
-                        }
-                        return true;
-                    } catch (NumberFormatException e) {
-                        return false;
-                    }
-                });
-            }
-
-            if (verticalPaddingPref != null) {
-                verticalPaddingPref.setOnPreferenceChangeListener((preference, newValue) -> {
-                    try {
-                        CustomSeekBarPreference seekBarPreference = (CustomSeekBarPreference) preference;
-                        int increment = seekBarPreference.getSeekBarIncrement();
-                        if(increment > 1) {
-                            float floatValue = (int) newValue;
-                            int rounded = Math.round(floatValue / increment);
-                            int finalValue = rounded * increment;
-
-                            if (finalValue != floatValue) {
-                                seekBarPreference.setValue(finalValue);
-                                return false;
-
-                            }
-                        }
-                        return true;
-                    } catch (NumberFormatException e) {
-                        return false;
-                    }
-                });
-            }
 
             if (subdivisionPref != null) {
                 // Ensure current value is at least 1

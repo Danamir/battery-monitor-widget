@@ -62,11 +62,27 @@ public class CustomSeekBarPreference extends Preference {
     protected void onSetInitialValue(Object defaultValue) {
         SharedPreferences prefs = getSharedPreferences();
         if (prefs != null) {
-            // Initialize value if not set
             if (!prefs.contains(getKey())) {
+                // Initialize value if not set
                 prefs.edit().putInt(getKey(), mDefaultValue).apply();
+                mCurrentValue = mDefaultValue;
+            } else {
+                // Try to get as int first (new format)
+                try {
+                    mCurrentValue = prefs.getInt(getKey(), mDefaultValue);
+                } catch (ClassCastException e) {
+                    // Old format (string), migrate to int
+                    try {
+                        String stringValue = prefs.getString(getKey(), String.valueOf(mDefaultValue));
+                        mCurrentValue = Integer.parseInt(stringValue);
+                        // Migrate to int format
+                        prefs.edit().putInt(getKey(), mCurrentValue).apply();
+                    } catch (NumberFormatException ex) {
+                        mCurrentValue = mDefaultValue;
+                        prefs.edit().putInt(getKey(), mDefaultValue).apply();
+                    }
+                }
             }
-            mCurrentValue = prefs.getInt(getKey(), mDefaultValue);
         }
     }
 
