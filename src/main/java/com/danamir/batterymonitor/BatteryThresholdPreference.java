@@ -7,10 +7,13 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.text.InputType;
 import android.util.AttributeSet;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import androidx.appcompat.app.AlertDialog;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceViewHolder;
 
@@ -18,6 +21,8 @@ public class BatteryThresholdPreference extends Preference {
 
     private int mDefaultColorValue = 0x80000000;
     private int mDefaultThresholdValue = 50;
+    private int mMinThreshold = 0;
+    private int mMaxThreshold = 100;
     private String mColorKey;
     private String mThresholdKey;
     private int mCurrentThreshold;
@@ -55,6 +60,8 @@ public class BatteryThresholdPreference extends Preference {
                 mThresholdKey = a.getString(R.styleable.BatteryThresholdPreference_thresholdKey);
                 mDefaultColorValue = a.getInteger(R.styleable.BatteryThresholdPreference_defaultColor, 0x80000000);
                 mDefaultThresholdValue = a.getInteger(R.styleable.BatteryThresholdPreference_defaultThreshold, 50);
+                mMinThreshold = a.getInteger(R.styleable.BatteryThresholdPreference_minThreshold, 0);
+                mMaxThreshold = a.getInteger(R.styleable.BatteryThresholdPreference_maxThreshold, 100);
             } finally {
                 a.recycle();
             }
@@ -119,20 +126,25 @@ public class BatteryThresholdPreference extends Preference {
 
         // Setup SeekBar
         if (seekBar != null && seekBarValue != null) {
-            seekBar.setMax(100);
-            seekBar.setProgress(mCurrentThreshold);
+            int range = mMaxThreshold - mMinThreshold;
+            seekBar.setMax(range);
+            seekBar.setProgress(mCurrentThreshold - mMinThreshold);
             seekBarValue.setText(String.valueOf(mCurrentThreshold));
+
+            // Add click listener to value TextView for direct numeric input
+            seekBarValue.setOnClickListener(v -> showNumericInputDialog(seekBar, seekBarValue));
 
             seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                     if (fromUser) {
-                        seekBarValue.setText(String.valueOf(progress));
-                        mCurrentThreshold = progress;
+                        int value = mMinThreshold + progress;
+                        seekBarValue.setText(String.valueOf(value));
+                        mCurrentThreshold = value;
 
                         SharedPreferences prefs = getSharedPreferences();
                         if (prefs != null) {
-                            prefs.edit().putInt(mThresholdKey, progress).apply();
+                            prefs.edit().putInt(mThresholdKey, value).apply();
                         }
 
                         // Notify widget to update
@@ -173,5 +185,46 @@ public class BatteryThresholdPreference extends Preference {
         BitmapDrawable drawable = new BitmapDrawable(getContext().getResources(), bitmap);
         drawable.setTileModeXY(android.graphics.Shader.TileMode.REPEAT, android.graphics.Shader.TileMode.REPEAT);
         return drawable;
+    }
+
+    /**
+     * Shows a dialog allowing direct numeric input of the threshold value
+     */
+    private void showNumericInputDialog(SeekBar seekBar, TextView seekBarValue) {
+        EditText input = new EditText(getContext());
+        input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
+        input.setText(String.valueOf(mCurrentThreshold));
+        input.setSelectAllOnFocus(true);
+
+        new AlertDialog.Builder(getContext())
+                .setTitle(getTitle())
+                .setMessage(String.format("Enter value (%d - %d):", mMinThreshold, mMaxThreshold))
+                .setView(input)
+                .setPositiveButton("OK", (dialog, which) -> {
+                    try {
+                        int value = Integer.parseInt(input.getText().toString());
+                        
+                        // Clamp to min/max
+                        value = Math.max(mMinThreshold, Math.min(mMaxThreshold, value));
+                        
+                        // Update UI
+                        mCurrentThreshold = value;
+                        seekBarValue.setText(String.valueOf(value));
+                        seekBar.setProgress(value - mMinThreshold);
+                        
+                        // Save to preferences
+                        SharedPreferences prefs = getSharedPreferences();
+                        if (prefs != null) {
+                            prefs.edit().putInt(mThresholdKey, value).apply();
+                        }
+                        
+                        // Notify widget to update
+                        BatteryWidgetProvider.updateAllWidgets(getContext());
+                    } catch (NumberFormatException e) {
+                        // Invalid input, ignore
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 }

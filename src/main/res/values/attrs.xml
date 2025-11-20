@@ -32,6 +32,8 @@
         <attr name="thresholdKey" format="string" />
         <attr name="defaultColor" format="integer" />
         <attr name="defaultThreshold" format="integer" />
+        <attr name="minThreshold" format="integer" />
+        <attr name="maxThreshold" format="integer" />
     </declare-styleable>
 
     <!-- FloatBatteryThresholdPreference attributes -->

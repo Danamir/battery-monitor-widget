@@ -7,10 +7,13 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.text.InputType;
 import android.util.AttributeSet;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import androidx.appcompat.app.AlertDialog;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceViewHolder;
 
@@ -133,6 +136,9 @@ public class FloatBatteryThresholdPreference extends Preference {
             seekBar.setProgress(currentProgress);
             seekBarValue.setText(String.format("%.1f", mCurrentThreshold));
 
+            // Add click listener to value TextView for direct numeric input
+            seekBarValue.setOnClickListener(v -> showNumericInputDialog(seekBar, seekBarValue));
+
             seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
                 @Override
                 public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -184,5 +190,52 @@ public class FloatBatteryThresholdPreference extends Preference {
         BitmapDrawable drawable = new BitmapDrawable(getContext().getResources(), bitmap);
         drawable.setTileModeXY(android.graphics.Shader.TileMode.REPEAT, android.graphics.Shader.TileMode.REPEAT);
         return drawable;
+    }
+
+    /**
+     * Shows a dialog allowing direct numeric input of the threshold value
+     */
+    private void showNumericInputDialog(SeekBar seekBar, TextView seekBarValue) {
+        EditText input = new EditText(getContext());
+        input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL | InputType.TYPE_NUMBER_FLAG_SIGNED);
+        input.setText(String.valueOf(mCurrentThreshold));
+        input.setSelectAllOnFocus(true);
+
+        new AlertDialog.Builder(getContext())
+                .setTitle(getTitle())
+                .setMessage(String.format("Enter value (%.1f - %.1f):", mMinValue, mMaxValue))
+                .setView(input)
+                .setPositiveButton("OK", (dialog, which) -> {
+                    try {
+                        float value = Float.parseFloat(input.getText().toString());
+                        
+                        // Clamp to min/max
+                        value = Math.max(mMinValue, Math.min(mMaxValue, value));
+                        
+                        // Round to step size
+                        value = Math.round(value / mStepSize) * mStepSize;
+                        
+                        // Update UI
+                        mCurrentThreshold = value;
+                        seekBarValue.setText(String.format("%.1f", value));
+                        
+                        // Update SeekBar position
+                        int progress = (int) ((value - mMinValue) / mStepSize);
+                        seekBar.setProgress(progress);
+                        
+                        // Save to preferences
+                        SharedPreferences prefs = getSharedPreferences();
+                        if (prefs != null) {
+                            prefs.edit().putFloat(mThresholdKey, value).apply();
+                        }
+                        
+                        // Notify widget to update
+                        BatteryWidgetProvider.updateAllWidgets(getContext());
+                    } catch (NumberFormatException e) {
+                        // Invalid input, ignore
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 }
