@@ -82,7 +82,7 @@
         app:defaultColor="0xFFFF3B1B"
         app:defaultThreshold="20" />
 
-    <SeekBarPreference
+    <com.danamir.batterymonitor.CustomSeekBarPreference
         android:key="battery_blend_value"
         android:title="@string/battery_blend_value_title"
         android:summary="@string/battery_blend_value_summary"
@@ -111,7 +111,7 @@
         app:maxValue="20.0"
         app:stepSize="0.1" />
 
-    <SeekBarPreference
+    <com.danamir.batterymonitor.CustomSeekBarPreference
         android:key="high_usage_range"
         android:title="@string/high_usage_range_title"
         android:summary="@string/high_usage_range_summary"

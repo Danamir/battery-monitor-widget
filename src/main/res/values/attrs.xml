@@ -53,4 +53,12 @@
         <attr name="floatStepSize" format="float" />
         <attr name="useLogScale" format="boolean" />
     </declare-styleable>
+
+    <!-- CustomSeekBarPreference attributes -->
+    <declare-styleable name="CustomSeekBarPreference">
+        <attr name="android:defaultValue" />
+        <attr name="android:min" />
+        <attr name="android:max" />
+        <attr name="seekBarIncrement" format="integer" />
+    </declare-styleable>
 </resources>

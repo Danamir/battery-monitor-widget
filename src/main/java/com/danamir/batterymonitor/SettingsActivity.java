@@ -6,7 +6,6 @@ import android.util.Log;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceFragmentCompat;
-import androidx.preference.SeekBarPreference;
 
 import java.util.List;
 
@@ -85,15 +84,15 @@ public class SettingsActivity extends AppCompatActivity {
             // Setup preference listeners
             androidx.preference.EditTextPreference displayLengthPref =
                     findPreference("display_length_hours");
-            androidx.preference.SeekBarPreference horizontalPaddingPref =
+            CustomSeekBarPreference horizontalPaddingPref =
                     findPreference("horizontal_padding");
-            androidx.preference.SeekBarPreference verticalPaddingPref =
+            CustomSeekBarPreference verticalPaddingPref =
                     findPreference("vertical_padding");
-            androidx.preference.SeekBarPreference subdivisionPref =
+            CustomSeekBarPreference subdivisionPref =
                     findPreference("gridVerticalIntervalSubdivisionPref");
             androidx.preference.Preference backgroundColorPref =
                     findPreference("main_color");
-            androidx.preference.SeekBarPreference usageCalculationTimePref =
+            CustomSeekBarPreference usageCalculationTimePref =
                     findPreference("usage_calculation_time");
 
             if (displayLengthPref != null) {
@@ -115,7 +114,7 @@ public class SettingsActivity extends AppCompatActivity {
             if (horizontalPaddingPref != null) {
                 horizontalPaddingPref.setOnPreferenceChangeListener((preference, newValue) -> {
                     try {
-                        SeekBarPreference seekBarPreference = (SeekBarPreference) preference;
+                        CustomSeekBarPreference seekBarPreference = (CustomSeekBarPreference) preference;
                         int increment = seekBarPreference.getSeekBarIncrement();
                         if (increment > 1) {
                             float floatValue = (int) newValue;
@@ -137,7 +136,7 @@ public class SettingsActivity extends AppCompatActivity {
             if (verticalPaddingPref != null) {
                 verticalPaddingPref.setOnPreferenceChangeListener((preference, newValue) -> {
                     try {
-                        SeekBarPreference seekBarPreference = (SeekBarPreference) preference;
+                        CustomSeekBarPreference seekBarPreference = (CustomSeekBarPreference) preference;
                         int increment = seekBarPreference.getSeekBarIncrement();
                         if(increment > 1) {
                             float floatValue = (int) newValue;

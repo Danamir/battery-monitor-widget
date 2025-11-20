@@ -5,7 +5,7 @@
         android:title="@string/category_battery_text_display_title"
         android:key="category_battery_text_display">
 
-        <SeekBarPreference
+        <com.danamir.batterymonitor.CustomSeekBarPreference
             android:key="batteryTextSize"
             android:title="@string/battery_text_size_title"
             android:summary="@string/battery_text_size_summary"

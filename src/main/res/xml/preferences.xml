@@ -35,7 +35,7 @@
             android:defaultValue="48"
             android:inputType="number" />
 
-        <SeekBarPreference
+        <com.danamir.batterymonitor.CustomSeekBarPreference
             android:key="display_zoom_mult"
             android:title="@string/display_zoom_mult_title"
             android:summary="@string/display_zoom_mult_summary"
@@ -45,7 +45,7 @@
             app:showSeekBarValue="true"
             app:seekBarIncrement="1" />
 
-        <SeekBarPreference
+        <com.danamir.batterymonitor.CustomSeekBarPreference
             android:key="low_target_percent"
             android:title="@string/low_target_percent_title"
             android:summary="@string/low_target_percent_summary"
@@ -55,7 +55,7 @@
             app:showSeekBarValue="true"
             app:seekBarIncrement="1" />
 
-        <SeekBarPreference
+        <com.danamir.batterymonitor.CustomSeekBarPreference
             android:key="high_target_percent"
             android:title="@string/high_target_percent_title"
             android:summary="@string/high_target_percent_summary"
@@ -65,7 +65,7 @@
             app:showSeekBarValue="true"
             app:seekBarIncrement="1" />
 
-        <SeekBarPreference
+        <com.danamir.batterymonitor.CustomSeekBarPreference
             android:key="usage_calculation_time"
             android:title="@string/usage_calculation_time_title"
             android:summary="@string/usage_calculation_time_summary"
@@ -118,7 +118,7 @@
             android:inputType="text"
             android:maxLength="16" />
 
-        <SeekBarPreference
+        <com.danamir.batterymonitor.CustomSeekBarPreference
             android:key="gridVerticalIntervalSubdivisionPref"
             android:title="@string/grid_vertical_interval_subdivision_title"
             android:summary="@string/grid_vertical_interval_subdivision_summary"
@@ -128,7 +128,7 @@
             app:showSeekBarValue="true"
             app:seekBarIncrement="1" />
 
-        <SeekBarPreference
+        <com.danamir.batterymonitor.CustomSeekBarPreference
             android:key="gridHorizontalIntervalPref"
             android:title="@string/grid_horizontal_interval_title"
             android:summary="@string/grid_horizontal_interval_summary"
@@ -144,7 +144,7 @@
         android:title="@string/category_layout_title"
         android:key="category_layout">
 
-        <SeekBarPreference
+        <com.danamir.batterymonitor.CustomSeekBarPreference
             android:key="horizontal_padding"
             android:title="@string/horizontal_padding_title"
             android:summary="@string/horizontal_padding_summary"
@@ -154,7 +154,7 @@
             app:showSeekBarValue="true"
             app:seekBarIncrement="1" />
 
-        <SeekBarPreference
+        <com.danamir.batterymonitor.CustomSeekBarPreference
             android:key="vertical_padding"
             android:title="@string/vertical_padding_title"
             android:summary="@string/vertical_padding_summary"
