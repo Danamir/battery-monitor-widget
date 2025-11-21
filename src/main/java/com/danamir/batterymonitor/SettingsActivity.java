@@ -90,8 +90,8 @@ public class SettingsActivity extends AppCompatActivity {
                     findPreference("usage_calculation_time");
 
             if (subdivisionPref != null) {
-                // Ensure current value is at least 1
-                if (subdivisionPref.getValue() < 1) {
+                // Only enforce minimum if a value is actually stored (not using default)
+                if (prefs.contains("gridVerticalIntervalSubdivisionPref") && subdivisionPref.getValue() < 1) {
                     subdivisionPref.setValue(1);
                 }
 
@@ -106,8 +106,8 @@ public class SettingsActivity extends AppCompatActivity {
             }
 
             if (usageCalculationTimePref != null) {
-                // Ensure current value is at least 1
-                if (usageCalculationTimePref.getValue() < 1) {
+                // Only enforce minimum if a value is actually stored (not using default)
+                if (prefs.contains("usage_calculation_time") && usageCalculationTimePref.getValue() < 1) {
                     usageCalculationTimePref.setValue(1);
                 }
 

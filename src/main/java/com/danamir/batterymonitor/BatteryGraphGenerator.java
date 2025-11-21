@@ -404,6 +404,18 @@ public class BatteryGraphGenerator {
         int lowTargetPercent = prefs.getInt("low_target_percent", 20);
         int highTargetPercent = prefs.getInt("high_target_percent", 80);
 
+        // Get custom Y-axis range
+        int minY = prefs.getInt("min_y_axis", 0);
+        int maxY = prefs.getInt("max_y_axis", 100);
+
+        // Ensure minY is less than maxY
+        if (minY >= maxY) {
+            minY = 0;
+            maxY = 100;
+        }
+
+        final int yRange = maxY - minY;
+
         // Get base colors for blending
         int normalColor = prefs.getInt("graph_line_color", 0xFF00D505);
         int lowColor = prefs.getInt("battery_low_color", 0xFFFFFF23);
@@ -519,14 +531,16 @@ public class BatteryGraphGenerator {
 
         // Draw horizontal grid lines at specified percentage intervals
         for (int percentage = 0; percentage <= 100; percentage += horizontalInterval) {
-            float y = paddingVertical + (height - 2 * paddingVertical) * (100 - percentage) / 100f;
-            canvas.drawLine(paddingHorizontal, y, width - paddingHorizontal, y, gridPaint);
+            if (percentage >= minY && percentage <= maxY) {
+                float y = paddingVertical + (height - 2 * paddingVertical) * (maxY - percentage) / (float) yRange;
+                canvas.drawLine(paddingHorizontal, y, width - paddingHorizontal, y, gridPaint);
 
-            // Draw percentage labels (right-aligned) if enabled
-            if (showYAxisLabels) {
-                String label = String.valueOf(percentage);
-                float labelWidth = textPaint.measureText(label);
-                canvas.drawText(label, paddingHorizontal + labelWidth + 5, y + 5, textPaint);
+                // Draw percentage labels (right-aligned) if enabled
+                if (showYAxisLabels) {
+                    String label = String.valueOf(percentage);
+                    float labelWidth = textPaint.measureText(label);
+                    canvas.drawText(label, paddingHorizontal + labelWidth + 5, y + 5, textPaint);
+                }
             }
         }
 
@@ -677,7 +691,7 @@ public class BatteryGraphGenerator {
                         float timeRatio = (float)(startTime - beforeStartData.getTimestamp()) / timeDelta;
                         int interpolatedLevel = (int)(beforeStartData.getLevel() +
                             (firstVisibleData.getLevel() - beforeStartData.getLevel()) * timeRatio);
-                        interpolatedStartY = paddingVertical + (height - 2 * paddingVertical) * (100 - interpolatedLevel) / 100f;
+                        interpolatedStartY = paddingVertical + (height - 2 * paddingVertical) * (maxY - interpolatedLevel) / (float) yRange;
 
                         // Start fill path at left edge
                         fillPath.moveTo(paddingHorizontal, height - paddingVertical);
@@ -692,7 +706,7 @@ public class BatteryGraphGenerator {
                     if (data.getTimestamp() < startTime) continue;
 
                     float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (data.getTimestamp() - startTime) / (float) timeRange;
-                    float y = paddingVertical + (height - 2 * paddingVertical) * (100 - data.getLevel()) / 100f;
+                    float y = paddingVertical + (height - 2 * paddingVertical) * (maxY - data.getLevel()) / (float) yRange;
 
                     if (firstPoint) {
                         fillPath.moveTo(x, height - paddingVertical);
@@ -741,7 +755,7 @@ public class BatteryGraphGenerator {
                     float timeRatio = (float)(startTime - beforeStartData.getTimestamp()) / timeDelta;
                     int interpolatedLevel = (int)(beforeStartData.getLevel() +
                         (firstVisibleData.getLevel() - beforeStartData.getLevel()) * timeRatio);
-                    interpolatedStartY = paddingVertical + (height - 2 * paddingVertical) * (100 - interpolatedLevel) / 100f;
+                    interpolatedStartY = paddingVertical + (height - 2 * paddingVertical) * (maxY - interpolatedLevel) / (float) yRange;
 
                     // Set up the interpolated first point at the left edge of the graph
                     prevX = (float) paddingHorizontal;
@@ -762,7 +776,7 @@ public class BatteryGraphGenerator {
                 }
 
                 float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (data.getTimestamp() - startTime) / (float) timeRange;
-                float y = paddingVertical + (height - 2 * paddingVertical) * (100 - data.getLevel()) / 100f;
+                float y = paddingVertical + (height - 2 * paddingVertical) * (maxY - data.getLevel()) / (float) yRange;
 
                 // Draw line segment from previous point to current point with blended color
                 if (prevX != null && prevY != null && prevData != null) {

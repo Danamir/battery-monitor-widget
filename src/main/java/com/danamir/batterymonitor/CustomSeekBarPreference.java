@@ -17,7 +17,7 @@ import androidx.preference.PreferenceViewHolder;
 public class CustomSeekBarPreference extends Preference {
 
     private int mDefaultValue = 0;
-    private int mCurrentValue;
+    private int mCurrentValue = 0;
     private int mMinValue = 0;
     private int mMaxValue = 100;
     private int mSeekBarIncrement = 1;
@@ -48,7 +48,10 @@ public class CustomSeekBarPreference extends Preference {
         if (attrs != null) {
             android.content.res.TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CustomSeekBarPreference);
             try {
-                mDefaultValue = a.getInt(R.styleable.CustomSeekBarPreference_android_defaultValue, 0);
+                // Read default value - handle both integer and string formats
+                if (a.hasValue(R.styleable.CustomSeekBarPreference_android_defaultValue)) {
+                    mDefaultValue = a.getInt(R.styleable.CustomSeekBarPreference_android_defaultValue, 0);
+                }
                 mMinValue = a.getInt(R.styleable.CustomSeekBarPreference_android_min, 0);
                 mMaxValue = a.getInt(R.styleable.CustomSeekBarPreference_android_max, 100);
                 mSeekBarIncrement = a.getInt(R.styleable.CustomSeekBarPreference_seekBarIncrement, 1);
@@ -60,6 +63,19 @@ public class CustomSeekBarPreference extends Preference {
 
     @Override
     protected void onSetInitialValue(Object defaultValue) {
+        // Use the default value passed by the framework if available
+        if (defaultValue != null) {
+            if (defaultValue instanceof Integer) {
+                mDefaultValue = (Integer) defaultValue;
+            } else if (defaultValue instanceof String) {
+                try {
+                    mDefaultValue = Integer.parseInt((String) defaultValue);
+                } catch (NumberFormatException e) {
+                    // Keep the default from init()
+                }
+            }
+        }
+
         SharedPreferences prefs = getSharedPreferences();
         if (prefs != null) {
             if (!prefs.contains(getKey())) {
