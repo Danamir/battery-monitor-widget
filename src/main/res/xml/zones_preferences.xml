@@ -7,7 +7,7 @@
         android:summary="%s"
         android:entries="@array/click_action_entries"
         android:entryValues="@array/click_action_values"
-        android:defaultValue="open_preferences" />
+        android:defaultValue="toggle_unzoom" />
 
     <ListPreference
         android:key="zone_action_top"

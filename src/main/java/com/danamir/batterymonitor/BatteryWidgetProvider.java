@@ -74,6 +74,7 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
         // Get display hours from preferences
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
         boolean zoomedDisplay = prefs.getBoolean("zoomed_display", false);
+        boolean unzoomedDisplay = prefs.getBoolean("unzoomed_display", false);
         int displayHours = BatteryUtils.getDisplayLengthHours(prefs, 48);
 
         // Apply zoom multiplier if zoomed display is enabled
@@ -81,6 +82,9 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
             int zoomMult = prefs.getInt("display_zoom_mult", 10);
             displayHours = displayHours / zoomMult;
             if (displayHours < 1) displayHours = 1; // Ensure at least 1 hour
+        } else if (unzoomedDisplay) {
+            // Use unzoom display length
+            displayHours = prefs.getInt("display_unzoom_hours", 168);
         }
 
         // Get battery data
@@ -170,6 +174,8 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
 
     private String getDefaultActionForZone(String zoneName) {
         switch (zoneName) {
+            case "top_left":
+                return "toggle_unzoom";
             case "left":
             case "bottom_left":
                 return "switch_estimation_source";
@@ -213,7 +219,20 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
             case "toggle_zoom":
                 // Toggle zoomed_display preference
                 boolean zoomedDisplay = prefs.getBoolean("zoomed_display", false);
-                prefs.edit().putBoolean("zoomed_display", !zoomedDisplay).apply();
+                prefs.edit()
+                    .putBoolean("zoomed_display", !zoomedDisplay)
+                    .putBoolean("unzoomed_display", false)  // Reset unzoom when toggling zoom
+                    .apply();
+                needsUpdate = true;
+                break;
+
+            case "toggle_unzoom":
+                // Toggle unzoomed_display preference
+                boolean unzoomedDisplay = prefs.getBoolean("unzoomed_display", false);
+                prefs.edit()
+                    .putBoolean("unzoomed_display", !unzoomedDisplay)
+                    .putBoolean("zoomed_display", false)  // Reset zoom when toggling unzoom
+                    .apply();
                 needsUpdate = true;
                 break;
 

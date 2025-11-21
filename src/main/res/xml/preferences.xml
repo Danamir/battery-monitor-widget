@@ -49,6 +49,16 @@
             app:seekBarIncrement="1" />
 
         <com.danamir.batterymonitor.CustomSeekBarPreference
+            android:key="display_unzoom_hours"
+            android:title="@string/display_unzoom_hours_title"
+            android:summary="@string/display_unzoom_hours_summary"
+            android:defaultValue="168"
+            android:min="1"
+            android:max="240"
+            app:showSeekBarValue="true"
+            app:seekBarIncrement="1" />
+
+        <com.danamir.batterymonitor.CustomSeekBarPreference
             android:key="low_target_percent"
             android:title="@string/low_target_percent_title"
             android:summary="@string/low_target_percent_summary"

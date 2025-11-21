@@ -408,6 +408,7 @@ public class BatteryGraphGenerator {
 
         // Get zoomed status
         boolean zoomedDisplay = prefs.getBoolean("zoomed_display", false);
+        boolean unzoomedDisplay = prefs.getBoolean("unzoomed_display", false);
         int zoomMult = prefs.getInt("display_zoom_mult", 10);
 
         // Get custom Y-axis range
@@ -1165,9 +1166,10 @@ public class BatteryGraphGenerator {
         }
 
         // Display mode indicator
-        if (zoomedDisplay) {
-            Drawable magnifyingGlass = ContextCompat.getDrawable(context, R.drawable.ic_magnifying_glass);
-            if (magnifyingGlass != null) {
+        if (zoomedDisplay || unzoomedDisplay) {
+            int iconResourceId = zoomedDisplay ? R.drawable.ic_magnifying_glass : R.drawable.ic_graph;
+            Drawable modeIcon = ContextCompat.getDrawable(context, iconResourceId);
+            if (modeIcon != null) {
                 float batteryWidthScale = prefs.getFloat("batteryWidthScale", 1.5f);
                 int iconHeight = (int) (batteryTextSize * 0.9f);
                 int iconWidth = (int) (iconHeight * batteryWidthScale);
@@ -1177,9 +1179,9 @@ public class BatteryGraphGenerator {
 
                 canvas.save();
                 canvas.translate(xPos, yPos);
-                magnifyingGlass.setBounds(0, 0, iconWidth, iconHeight);
-                magnifyingGlass.setTint(textColor);
-                magnifyingGlass.draw(canvas);
+                modeIcon.setBounds(0, 0, iconWidth, iconHeight);
+                modeIcon.setTint(textColor);
+                modeIcon.draw(canvas);
                 canvas.restore();
             }
         }
