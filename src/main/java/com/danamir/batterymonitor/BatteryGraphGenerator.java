@@ -8,7 +8,9 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Picture;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.widget.TextView;
+import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -1163,22 +1165,23 @@ public class BatteryGraphGenerator {
         }
 
         // Display mode indicator
-        String displayModeText = "";
         if (zoomedDisplay) {
-            displayModeText += "🔍";
-        }
+            Drawable magnifyingGlass = ContextCompat.getDrawable(context, R.drawable.ic_magnifying_glass);
+            if (magnifyingGlass != null) {
+                float batteryWidthScale = prefs.getFloat("batteryWidthScale", 1.5f);
+                int iconHeight = (int) (batteryTextSize * 0.9f);
+                int iconWidth = (int) (iconHeight * batteryWidthScale);
+                float iconPadding = 8 * density; // Additional padding for rounded corners
+                float xPos = paddingHorizontal + iconPadding + (showYAxisLabels ? labelTextSize * 3 : 0);
+                float yPos = paddingVertical + iconPadding;
 
-        if (!displayModeText.isEmpty()) {
-            TextView modeTextView = new TextView(context);
-            modeTextView.setText(displayModeText);
-            float adjustedTextSize = configureTextView(modeTextView, context, batteryTextSize * 0.8f, textColor, density, prefs);
-
-            canvas.save();
-            float xPos = paddingHorizontal + adjustedTextSize + (showYAxisLabels ? labelTextSize * 3 : 0);
-            float yPos = paddingVertical + batteryTextSize * 0.8f;
-            canvas.translate(xPos, yPos);
-            modeTextView.draw(canvas);
-            canvas.restore();
+                canvas.save();
+                canvas.translate(xPos, yPos);
+                magnifyingGlass.setBounds(0, 0, iconWidth, iconHeight);
+                magnifyingGlass.setTint(textColor);
+                magnifyingGlass.draw(canvas);
+                canvas.restore();
+            }
         }
     }
 }
