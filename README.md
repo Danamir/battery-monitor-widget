@@ -14,6 +14,10 @@ An advanced battery monitoring widget for Android that provides detailed battery
   - Visual markers for charging sessions and screen on/off events
   - Background grid with customizable time intervals
   - Night-time markers
+- **Zooming & History**: 
+  - **Zoom**: Configurable zoom to inspect recent battery changes
+  - **Zoomed vertical axis**: Automatic adjustment based on active battery levels and tendency
+  - **History display**: Display a longer battery history range
 
 ### Notification
 - **Persistent notification** with detailed battery information:
@@ -29,8 +33,8 @@ The widget offers extensive customization through settings:
 - **Time estimates**: Adjustable target battery percentage for predictions
 - **Graph appearance**: Customizable colors (including alpha), and grid intervals
 - **Customizable action zones**: 3x3 widget zones, supporting user-defined actions
-  - Available actions: "Open preferences", "Switch estimation source", "Toggle date estimation", "Toggle zoom display"
-- **Adjustable zoom multiplier**: Configurable zoom multiplier for fine-grained control over display scaling
+  - Available actions: "Open preferences", "Switch estimation source", "Toggle date estimation", "Zoom display", "History display"
+- **Adjustable zoom factor**: Configurable zoom factor for display scaling
 - **Night time**: Display night-time on the graph background
 
 ## Screenshots
