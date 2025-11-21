@@ -404,6 +404,10 @@ public class BatteryGraphGenerator {
         int lowTargetPercent = prefs.getInt("low_target_percent", 20);
         int highTargetPercent = prefs.getInt("high_target_percent", 80);
 
+        // Get zoomed status
+        boolean zoomedDisplay = prefs.getBoolean("zoomed_display", false);
+        int zoomMult = prefs.getInt("display_zoom_mult", 10);
+
         // Get custom Y-axis range
         int minY = prefs.getInt("min_y_axis", 0);
         int maxY = prefs.getInt("max_y_axis", 100);
@@ -412,6 +416,67 @@ public class BatteryGraphGenerator {
         if (minY >= maxY) {
             minY = 0;
             maxY = 100;
+        }
+
+        // Apply vertical zoom if zoomed display is enabled
+        if (zoomedDisplay && zoomMult > 1 && dataPoints != null && !dataPoints.isEmpty()) {
+            // Calculate the new Y range (divided by zoom multiplicator)
+            int originalRange = maxY - minY;
+            int newRange = Math.max(1, originalRange / zoomMult);
+
+            // Find min and max battery levels in the visible data points
+            int minBatteryLevel = 100;
+            int maxBatteryLevel = 0;
+            for (BatteryData data : dataPoints) {
+                if (data.getLevel() < minBatteryLevel) minBatteryLevel = data.getLevel();
+                if (data.getLevel() > maxBatteryLevel) maxBatteryLevel = data.getLevel();
+            }
+
+            // Determine if battery is rising (charging) or falling (discharging)
+            // Compare first and last data points
+            boolean isRising = false;
+            if (dataPoints.size() >= 2) {
+                int firstLevel = dataPoints.get(0).getLevel();
+                int lastLevel = dataPoints.get(dataPoints.size() - 1).getLevel();
+                isRising = lastLevel > firstLevel;
+            }
+
+            if (isRising) {
+                // Battery is charging - align maximum near the top
+                // Add a small margin (10% of new range) above the max value
+                int margin = Math.max(1, newRange / 10);
+                maxY = Math.min(100, maxBatteryLevel + margin);
+                minY = maxY - newRange;
+            } else {
+                // Battery is discharging - align minimum near the bottom
+                // Add a small margin (10% of new range) below the min value
+                int margin = Math.max(1, newRange / 10);
+                minY = Math.max(0, minBatteryLevel - margin);
+                maxY = minY + newRange;
+            }
+
+            // Ensure the range stays within valid bounds (0-100)
+            if (minY < 0) {
+                maxY = maxY + (0 - minY);
+                minY = 0;
+            }
+            if (maxY > 100) {
+                minY = minY - (maxY - 100);
+                maxY = 100;
+            }
+
+            // Final clamp to ensure valid bounds
+            minY = Math.max(0, minY);
+            maxY = Math.min(100, maxY);
+
+            // Ensure minY is still less than maxY after adjustments
+            if (minY >= maxY) {
+                if (isRising) {
+                    minY = Math.max(0, maxY - 1);
+                } else {
+                    maxY = Math.min(100, minY + 1);
+                }
+            }
         }
 
         final int yRange = maxY - minY;
@@ -1098,8 +1163,6 @@ public class BatteryGraphGenerator {
         }
 
         // Display mode indicator
-        boolean zoomedDisplay = prefs.getBoolean("zoomed_display", false);
-
         String displayModeText = "";
         if (zoomedDisplay) {
             displayModeText += "🔍";
