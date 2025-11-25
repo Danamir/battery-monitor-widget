@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Picture;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 import androidx.preference.PreferenceManager;
 
 public class BatteryWidgetProvider extends AppWidgetProvider {
@@ -234,6 +235,26 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
                     .putBoolean("zoomed_display", false)  // Reset zoom when toggling unzoom
                     .apply();
                 needsUpdate = true;
+                break;
+
+            case "show_precise_battery":
+                // Show precise battery percentage in a Toast
+                PreciseBatteryCalculator calculator = new PreciseBatteryCalculator();
+                double preciseBattery = calculator.getCalibratedBatteryPercentage(context);
+                double estimatedCapacity = calculator.getEstimatedCapacityMah();
+                int sampleCount = calculator.getSampleCount();
+
+                // Format message
+                String message = String.format("Precise Battery: %.2f%%\nEstimated Capacity: %.0f mAh\nSamples: %d",
+                    preciseBattery, estimatedCapacity, sampleCount);
+
+                // Show Toast
+                Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+
+                // Log to EventLog
+                String logMessage = String.format("Precise battery: %.2f%% (capacity: %.0f mAh, samples: %d)",
+                    preciseBattery, estimatedCapacity, sampleCount);
+                eventLogManager.logEvent(logMessage);
                 break;
 
             case "open_preferences":

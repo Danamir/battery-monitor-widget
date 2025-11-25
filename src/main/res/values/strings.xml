@@ -148,6 +148,7 @@
         <item>Toggle date estimation</item>
         <item>Zoom display</item>
         <item>History display</item>
+        <item>Show precise battery</item>
     </string-array>
     <string-array name="click_action_values">
         <item>open_preferences</item>
@@ -155,6 +156,7 @@
         <item>toggle_date_estimation</item>
         <item>toggle_zoom</item>
         <item>toggle_unzoom</item>
+        <item>show_precise_battery</item>
     </string-array>
 
     <!-- Estimation source options -->
