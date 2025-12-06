@@ -34,6 +34,14 @@ public class BatteryReceiver extends BroadcastReceiver {
                 BatteryDataManager dataManager = BatteryDataManager.getInstance(context);
                 dataManager.addDataPoint(batteryPct, isCharging);
 
+                // Additionally update precise battery data if enabled
+                android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
+                if (prefs.getBoolean("use_precise_battery", false)) {
+                    PreciseBatteryCalculator calculator = new PreciseBatteryCalculator();
+                    float preciseLevel = (float) calculator.getCalibratedBatteryPercentage(context);
+                    PreciseBatteryDataManager.getInstance(context).addDataPoint(preciseLevel, isCharging);
+                }
+
                 return new int[]{batteryPct, isCharging ? 1 : 0};
             }
         }
@@ -113,6 +121,14 @@ public class BatteryReceiver extends BroadcastReceiver {
                 // Store the battery data
                 BatteryDataManager dataManager = BatteryDataManager.getInstance(context);
                 dataManager.addDataPoint(batteryPct, isCharging);
+
+                // Additionally update precise battery data if enabled
+                android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
+                if (prefs.getBoolean("use_precise_battery", false)) {
+                    PreciseBatteryCalculator calculator = new PreciseBatteryCalculator();
+                    float preciseLevel = (float) calculator.getCalibratedBatteryPercentage(context);
+                    PreciseBatteryDataManager.getInstance(context).addDataPoint(preciseLevel, isCharging);
+                }
 
                 // Update all widgets
                 BatteryWidgetProvider.updateAllWidgets(context);

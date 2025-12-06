@@ -308,7 +308,9 @@ public class BatteryGraphGenerator {
         Picture picture = new Picture();
         Canvas canvas = picture.beginRecording(width, height);
 
-        drawGraph(context, canvas, dataPoints, null, displayHours, width, height);
+        // Convert to hybrid data for unified handling
+        List<PreciseBatteryDataManager.HybridBatteryData> hybridData = convertToHybridData(dataPoints);
+        drawGraph(context, canvas, hybridData, null, displayHours, width, height);
 
         picture.endRecording();
         return picture;
@@ -318,13 +320,45 @@ public class BatteryGraphGenerator {
         Picture picture = new Picture();
         Canvas canvas = picture.beginRecording(width, height);
 
-        drawGraph(context, canvas, dataPoints, statusData, displayHours, width, height);
+        // Convert to hybrid data for unified handling
+        List<PreciseBatteryDataManager.HybridBatteryData> hybridData = convertToHybridData(dataPoints);
+        drawGraph(context, canvas, hybridData, statusData, displayHours, width, height);
 
         picture.endRecording();
         return picture;
     }
 
-    private static void drawGraph(Context context, Canvas canvas, List<BatteryData> dataPoints, List<StatusData> statusData, int displayHours, int width, int height) {
+    /**
+     * Generate graph with hybrid battery data (precise or integer)
+     */
+    public static Picture generateGraphAsPictureWithHybridData(Context context, List<PreciseBatteryDataManager.HybridBatteryData> hybridData, List<StatusData> statusData, int displayHours, int width, int height) {
+        Picture picture = new Picture();
+        Canvas canvas = picture.beginRecording(width, height);
+
+        drawGraph(context, canvas, hybridData, statusData, displayHours, width, height);
+
+        picture.endRecording();
+        return picture;
+    }
+
+    /**
+     * Convert List<BatteryData> to hybrid format for backward compatibility
+     */
+    private static List<PreciseBatteryDataManager.HybridBatteryData> convertToHybridData(List<BatteryData> dataPoints) {
+        List<PreciseBatteryDataManager.HybridBatteryData> result = new ArrayList<>();
+        for (BatteryData data : dataPoints) {
+            result.add(new PreciseBatteryDataManager.HybridBatteryData(
+                data.getTimestamp(),
+                data.getLevel(),
+                (float) data.getLevel(),
+                data.isCharging(),
+                false
+            ));
+        }
+        return result;
+    }
+
+    private static void drawGraph(Context context, Canvas canvas, List<PreciseBatteryDataManager.HybridBatteryData> dataPoints, List<StatusData> statusData, int displayHours, int width, int height) {
         // Get padding and colors from preferences
         android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
         boolean usageRateFill = prefs.getBoolean("usage_rate_fill", true);
@@ -428,19 +462,19 @@ public class BatteryGraphGenerator {
             int newRange = Math.max(1, originalRange / zoomMult);
 
             // Find min and max battery levels in the visible data points
-            int minBatteryLevel = 100;
-            int maxBatteryLevel = 0;
-            for (BatteryData data : dataPoints) {
-                if (data.getLevel() < minBatteryLevel) minBatteryLevel = data.getLevel();
-                if (data.getLevel() > maxBatteryLevel) maxBatteryLevel = data.getLevel();
+            float minBatteryLevel = 100;
+            float maxBatteryLevel = 0;
+            for (PreciseBatteryDataManager.HybridBatteryData data : dataPoints) {
+                if (data.getPreciseLevel() < minBatteryLevel) minBatteryLevel = data.getPreciseLevel();
+                if (data.getPreciseLevel() > maxBatteryLevel) maxBatteryLevel = data.getPreciseLevel();
             }
 
             // Determine if battery is rising (charging) or falling (discharging)
             // Compare first and last data points
             boolean isRising = false;
             if (dataPoints.size() >= 2) {
-                int firstLevel = dataPoints.get(0).getLevel();
-                int lastLevel = dataPoints.get(dataPoints.size() - 1).getLevel();
+                float firstLevel = dataPoints.get(0).getPreciseLevel();
+                float lastLevel = dataPoints.get(dataPoints.size() - 1).getPreciseLevel();
                 isRising = lastLevel > firstLevel;
             }
 
@@ -448,13 +482,13 @@ public class BatteryGraphGenerator {
                 // Battery is charging - align maximum near the top
                 // Add a small margin (10% of new range) above the max value
                 int margin = Math.max(1, newRange / 10);
-                maxY = Math.min(100, maxBatteryLevel + margin);
+                maxY = Math.min(100, (int) Math.ceil(maxBatteryLevel + margin));
                 minY = maxY - newRange;
             } else {
                 // Battery is discharging - align minimum near the bottom
                 // Add a small margin (10% of new range) below the min value
                 int margin = Math.max(1, newRange / 10);
-                minY = Math.max(0, minBatteryLevel - margin);
+                minY = Math.max(0, (int) Math.floor(minBatteryLevel - margin));
                 maxY = minY + newRange;
             }
 
@@ -730,7 +764,7 @@ public class BatteryGraphGenerator {
 
             // Check if the first point is before startTime (for interpolation)
             // If getDataPoints was called with getPreviousPoint=true, the first point might be before startTime
-            BatteryData beforeStartData = null;
+            PreciseBatteryDataManager.HybridBatteryData beforeStartData = null;
             int firstVisibleIndex = -1;
 
             // Check if first point is before the time range
@@ -753,12 +787,12 @@ public class BatteryGraphGenerator {
 
                 // Calculate interpolated starting point if we have a point before the range
                 if (beforeStartData != null && firstVisibleIndex >= 0) {
-                    BatteryData firstVisibleData = dataPoints.get(firstVisibleIndex);
+                    PreciseBatteryDataManager.HybridBatteryData firstVisibleData = dataPoints.get(firstVisibleIndex);
                     long timeDelta = firstVisibleData.getTimestamp() - beforeStartData.getTimestamp();
                     if (timeDelta > 0) {
                         float timeRatio = (float)(startTime - beforeStartData.getTimestamp()) / timeDelta;
-                        int interpolatedLevel = (int)(beforeStartData.getLevel() +
-                            (firstVisibleData.getLevel() - beforeStartData.getLevel()) * timeRatio);
+                        float interpolatedLevel = beforeStartData.getPreciseLevel() +
+                            (firstVisibleData.getPreciseLevel() - beforeStartData.getPreciseLevel()) * timeRatio;
                         interpolatedStartY = paddingVertical + (height - 2 * paddingVertical) * (maxY - interpolatedLevel) / (float) yRange;
 
                         // Start fill path at left edge
@@ -769,12 +803,12 @@ public class BatteryGraphGenerator {
                 }
 
                 for (int i = 0; i < dataPoints.size(); i++) {
-                    BatteryData data = dataPoints.get(i);
+                    PreciseBatteryDataManager.HybridBatteryData data = dataPoints.get(i);
 
                     if (data.getTimestamp() < startTime) continue;
 
                     float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (data.getTimestamp() - startTime) / (float) timeRange;
-                    float y = paddingVertical + (height - 2 * paddingVertical) * (maxY - data.getLevel()) / (float) yRange;
+                    float y = paddingVertical + (height - 2 * paddingVertical) * (maxY - data.getPreciseLevel()) / (float) yRange;
 
                     if (firstPoint) {
                         fillPath.moveTo(x, height - paddingVertical);
@@ -787,7 +821,7 @@ public class BatteryGraphGenerator {
 
                 // Close the path
                 if (!firstPoint) {
-                    BatteryData lastData = dataPoints.get(dataPoints.size() - 1);
+                    PreciseBatteryDataManager.HybridBatteryData lastData = dataPoints.get(dataPoints.size() - 1);
                     float lastX = paddingHorizontal + (width - 2 * paddingHorizontal) * (lastData.getTimestamp() - startTime) / (float) timeRange;
                     fillPath.lineTo(lastX, height - paddingVertical);
                     fillPath.close();
@@ -812,17 +846,17 @@ public class BatteryGraphGenerator {
             // Draw line segments with blended colors
             Float prevX = null;
             Float prevY = null;
-            BatteryData prevData = null;
+            PreciseBatteryDataManager.HybridBatteryData prevData = null;
             Float interpolatedStartY = null;
 
             // Use the interpolated starting point if available
             if (beforeStartData != null && firstVisibleIndex >= 0) {
-                BatteryData firstVisibleData = dataPoints.get(firstVisibleIndex);
+                PreciseBatteryDataManager.HybridBatteryData firstVisibleData = dataPoints.get(firstVisibleIndex);
                 long timeDelta = firstVisibleData.getTimestamp() - beforeStartData.getTimestamp();
                 if (timeDelta > 0) {
                     float timeRatio = (float)(startTime - beforeStartData.getTimestamp()) / timeDelta;
-                    int interpolatedLevel = (int)(beforeStartData.getLevel() +
-                        (firstVisibleData.getLevel() - beforeStartData.getLevel()) * timeRatio);
+                    float interpolatedLevel = beforeStartData.getPreciseLevel() +
+                        (firstVisibleData.getPreciseLevel() - beforeStartData.getPreciseLevel()) * timeRatio;
                     interpolatedStartY = paddingVertical + (height - 2 * paddingVertical) * (maxY - interpolatedLevel) / (float) yRange;
 
                     // Set up the interpolated first point at the left edge of the graph
@@ -831,12 +865,12 @@ public class BatteryGraphGenerator {
 
                     // Create a virtual data point for the interpolated position
                     // Use the charging state of the first visible point
-                    prevData = new BatteryData(startTime, interpolatedLevel, firstVisibleData.isCharging());
+                    prevData = new PreciseBatteryDataManager.HybridBatteryData(startTime, (int) Math.round(interpolatedLevel), interpolatedLevel, firstVisibleData.isCharging(), firstVisibleData.isPrecise());
                 }
             }
 
             for (int i = 0; i < dataPoints.size(); i++) {
-                BatteryData data = dataPoints.get(i);
+                PreciseBatteryDataManager.HybridBatteryData data = dataPoints.get(i);
 
                 // Skip points before startTime
                 if (data.getTimestamp() < startTime) {
@@ -844,7 +878,7 @@ public class BatteryGraphGenerator {
                 }
 
                 float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (data.getTimestamp() - startTime) / (float) timeRange;
-                float y = paddingVertical + (height - 2 * paddingVertical) * (maxY - data.getLevel()) / (float) yRange;
+                float y = paddingVertical + (height - 2 * paddingVertical) * (maxY - data.getPreciseLevel()) / (float) yRange;
 
                 // Draw line segment from previous point to current point with blended color
                 if (prevX != null && prevY != null && prevData != null) {
@@ -857,7 +891,7 @@ public class BatteryGraphGenerator {
                     float currentUsageRate = 0.0f;
                     long timeDelta = data.getTimestamp() - prevData.getTimestamp();
                     if (timeDelta > 0) {
-                        int levelDelta = prevData.getLevel() - data.getLevel();
+                        float levelDelta = prevData.getPreciseLevel() - data.getPreciseLevel();
                         currentUsageRate = levelDelta / (timeDelta / 3600000.0f);
                     }
 
@@ -870,16 +904,16 @@ public class BatteryGraphGenerator {
                     // If highUsageRangeMinutes > 0, also collect historical rates
                     if (highUsageRangeMinutes > 0) {
                         for (int j = i - 1; j >= 0; j--) {
-                            BatteryData currentPoint = dataPoints.get(j);
+                            PreciseBatteryDataManager.HybridBatteryData currentPoint = dataPoints.get(j);
                             if (currentPoint.getTimestamp() < rangeStartTime) {
                                 break; // Past the range
                             }
 
                             if (j > 0) {
-                                BatteryData previousPoint = dataPoints.get(j - 1);
+                                PreciseBatteryDataManager.HybridBatteryData previousPoint = dataPoints.get(j - 1);
                                 long timeDeltaJ = currentPoint.getTimestamp() - previousPoint.getTimestamp();
                                 if (timeDeltaJ > 0) {
-                                    int levelDelta = previousPoint.getLevel() - currentPoint.getLevel();
+                                    float levelDelta = previousPoint.getPreciseLevel() - currentPoint.getPreciseLevel();
                                     float rate = levelDelta / (timeDeltaJ / 3600000.0f);
                                     usageRates.add(rate);
                                 }

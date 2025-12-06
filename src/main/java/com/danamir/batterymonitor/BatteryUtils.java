@@ -261,6 +261,80 @@ public class BatteryUtils {
     }
 
     /**
+     * Calculate the battery discharge rate in percent per hour using hybrid data.
+     * Analyzes the most recent continuous discharge period. Uses precise levels for better accuracy.
+     *
+     * @param hybridDataPoints List of hybrid battery data points (precise or integer)
+     * @param minDuration Minimum duration to do the calculation
+     * @param maxDuration Maximum duration to do the calculation (optional)
+     * @return Battery usage rate in %/h, or null if insufficient data
+     */
+    public static Double calculateBatteryUsageRateValueHybrid(List<PreciseBatteryDataManager.HybridBatteryData> hybridDataPoints, int minDuration, Integer maxDuration) {
+        if (hybridDataPoints == null || hybridDataPoints.size() < 2) {
+            return null;
+        }
+
+        // Check if the last data point is charging
+        PreciseBatteryDataManager.HybridBatteryData lastPoint = hybridDataPoints.get(hybridDataPoints.size() - 1);
+        boolean isChargingPeriod = lastPoint.isCharging();
+        int differentPeriodsAllowed = 1;
+        if (maxDuration != null) {
+            // Give more leeway to find a concurrent dataPoints period if maxDuration is defined
+            differentPeriodsAllowed = 10;
+        }
+
+        // Find the most recent continuous discharge or charge period
+        PreciseBatteryDataManager.HybridBatteryData endPoint = null;
+        PreciseBatteryDataManager.HybridBatteryData startPoint = null;
+
+        for (int i = hybridDataPoints.size() - 1; i >= 0; i--) {
+            PreciseBatteryDataManager.HybridBatteryData point = hybridDataPoints.get(i);
+
+            if (endPoint == null && point.isCharging() == isChargingPeriod) {
+                endPoint = point;
+            } else if (endPoint != null && point.isCharging() == isChargingPeriod) {
+                startPoint = point;
+                // Check if we've reached maxDuration
+                long currentTimeDiff = endPoint.getTimestamp() - startPoint.getTimestamp();
+                if (maxDuration != null && currentTimeDiff >= maxDuration * 60 * 1000) {
+                    break;
+                }
+            } else if (endPoint != null && point.isCharging() != isChargingPeriod) {
+                differentPeriodsAllowed--;
+                if (differentPeriodsAllowed < 0) {
+                    break;
+                }
+            }
+        }
+
+        if (startPoint == null || endPoint == null) {
+            return null;
+        }
+
+        long timeDiffMs = endPoint.getTimestamp() - startPoint.getTimestamp();
+        float levelDiff;
+
+        if (isChargingPeriod) {
+            // For charging, level increases over time
+            levelDiff = endPoint.getPreciseLevel() - startPoint.getPreciseLevel();
+        } else {
+            // For discharging, level decreases over time
+            levelDiff = startPoint.getPreciseLevel() - endPoint.getPreciseLevel();
+        }
+
+        // Need at least that many minutes of data for reasonable calculation
+        if (timeDiffMs < minDuration * 60 * 1000 || levelDiff <= 0) {
+            return null;
+        }
+
+        // Calculate rate per hour
+        double hours = timeDiffMs / 3600000.0;
+        double ratePerHour = levelDiff / hours;
+
+        return ratePerHour;
+    }
+
+    /**
      * Calculate the battery discharge rate in percent per hour.
      * Analyzes the most recent continuous discharge period.
      *
@@ -666,11 +740,11 @@ public class BatteryUtils {
         String estimationSource = prefs.getString("estimation_source", "all_time_stats");
         values.put("calculation_duration", maxDuration+"m");
 
-        // Get up-to-date data points
-        BatteryDataManager dataManager = BatteryDataManager.getInstance(context);
-        List<BatteryData> dataPoints = dataManager.getDataPoints(displayLengthHours);
+        // Get up-to-date data points - use hybrid data for short-term calculation
+        List<PreciseBatteryDataManager.HybridBatteryData> hybridDataPoints =
+            PreciseBatteryDataManager.getHybridDataPoints(context, displayLengthHours, false);
 
-        if (dataPoints == null || dataPoints.isEmpty()) {
+        if (hybridDataPoints == null || hybridDataPoints.isEmpty()) {
             // No data available
             values.put("usage_rate", "");
             values.put("charging", "false");
@@ -686,27 +760,33 @@ public class BatteryUtils {
         }
 
         // Get the last data point for current status
-        BatteryData lastPoint = dataPoints.get(dataPoints.size() - 1);
+        PreciseBatteryDataManager.HybridBatteryData lastPoint = hybridDataPoints.get(hybridDataPoints.size() - 1);
         int currentBatteryLevel = lastPoint.getLevel();
+        float preciseBatteryLevel = lastPoint.getPreciseLevel();
         boolean isCharging = lastPoint.isCharging();
         if (isCharging) {
             minDuration = 1;
         }
 
         values.put("current_level", String.valueOf(currentBatteryLevel));
-        values.put("current_percent", currentBatteryLevel + "%");
+        // Display precise percentage if available and different from integer
+        if (lastPoint.isPrecise() && Math.abs(preciseBatteryLevel - currentBatteryLevel) > 0.05) {
+            values.put("current_percent", String.format(Locale.getDefault(), "%.1f", preciseBatteryLevel) + "%");
+        } else {
+            values.put("current_percent", currentBatteryLevel + "%");
+        }
         values.put("charging", String.valueOf(isCharging));
 
         // Calculate target percent
         int targetPercent = getTargetPercent(lowTargetPercent, highTargetPercent, currentBatteryLevel, isCharging);
 
-        // Calculate usage rate
-        Double usageRateValue = calculateBatteryUsageRateValue(dataPoints, minDuration, maxDuration);
+        // Calculate usage rate using hybrid data (more accurate with precise levels)
+        Double usageRateValue = calculateBatteryUsageRateValueHybrid(hybridDataPoints, minDuration, maxDuration);
         if (usageRateValue != null) {
             values.put("usage_rate", String.format(Locale.getDefault(), "%.1f", usageRateValue));
 
-            // Calculate time estimates
-            double hoursToLevel = Math.abs(currentBatteryLevel - targetPercent) / usageRateValue;
+            // Calculate time estimates using precise level
+            double hoursToLevel = Math.abs(preciseBatteryLevel - targetPercent) / usageRateValue;
             String hoursTo = formatTimeEstimate(hoursToLevel, targetPercent, rounded);
             String timeTo = formatDurationEndTime(hoursToLevel, rounded);
 
@@ -738,7 +818,10 @@ public class BatteryUtils {
                 }
             } else {
                 // Use max charge calculation (default, only when discharging)
-                usageRateValueLongTerm = calculateBatteryUsageRateValueSinceMax(dataPoints, minDuration, highTargetPercent);
+                // Get integer data for long-term calculation
+                BatteryDataManager dataManager = BatteryDataManager.getInstance(context);
+                List<BatteryData> integerDataPoints = dataManager.getDataPoints(displayLengthHours);
+                usageRateValueLongTerm = calculateBatteryUsageRateValueSinceMax(integerDataPoints, minDuration, highTargetPercent);
             }
             
             // If no short-term rate available and we have long-term rate, it will be used by the display logic

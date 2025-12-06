@@ -13,6 +13,8 @@ import android.widget.RemoteViews;
 import android.widget.Toast;
 import androidx.preference.PreferenceManager;
 
+import java.util.List;
+
 public class BatteryWidgetProvider extends AppWidgetProvider {
 
     // Click action constants
@@ -109,10 +111,14 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
         if (width < 100) width = (int) (250 * density);
         if (height < 100) height = (int) (40 * density);
 
+        // Get hybrid data (precise if enabled, integer otherwise)
+        List<PreciseBatteryDataManager.HybridBatteryData> hybridData =
+            PreciseBatteryDataManager.getHybridDataPoints(context, displayHours, true);
+
         // Generate as Picture for resolution-independent rendering
-        Picture picture = BatteryGraphGenerator.generateGraphAsPicture(
+        Picture picture = BatteryGraphGenerator.generateGraphAsPictureWithHybridData(
             context,
-            dataManager.getDataPoints(displayHours, true),
+            hybridData,
             statusData,
             displayHours,
             width,
@@ -245,14 +251,14 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
                 int sampleCount = calculator.getSampleCount();
 
                 // Format message
-                String message = String.format("Precise Battery: %.2f%%\nEstimated Capacity: %.0f mAh\nSamples: %d",
+                String message = String.format("Precise Battery: %.1f%%\nEstimated Capacity: %.0f mAh\nSamples: %d",
                     preciseBattery, estimatedCapacity, sampleCount);
 
                 // Show Toast
                 Toast.makeText(context, message, Toast.LENGTH_LONG).show();
 
                 // Log to EventLog
-                String logMessage = String.format("Precise battery: %.2f%% (capacity: %.0f mAh, samples: %d)",
+                String logMessage = String.format("Precise battery: %.1f%% (capacity: %.0f mAh, samples: %d)",
                     preciseBattery, estimatedCapacity, sampleCount);
                 eventLogManager.logEvent(logMessage);
                 break;
