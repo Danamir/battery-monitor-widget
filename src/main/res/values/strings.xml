@@ -95,6 +95,8 @@
     <string name="estimation_source_summary">Choose between all-time statistics or max charge for rate calculation</string>
     <string name="rounded_time_estimates_title">Round time estimates</string>
     <string name="rounded_time_estimates_summary">Rounded time display to nearest 15min for 6h+, 30min for 12h+, 1h for 24h+</string>
+    <string name="use_precise_battery_title">Precise battery display</string>
+    <string name="use_precise_battery_summary">Use precise decimal battery level for graph and short-term usage. Uses advanced Android APIs, may not work reliably on all devices.</string>
     <string name="battery_text_size_title">Battery level text size</string>
     <string name="battery_text_size_summary">Adjust the size of the battery level text</string>
     <string name="battery_width_scale_title">Battery level width scale</string>

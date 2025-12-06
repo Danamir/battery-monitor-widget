@@ -102,6 +102,12 @@
             android:summary="@string/rounded_time_estimates_summary"
             android:defaultValue="true" />
 
+        <SwitchPreferenceCompat
+            android:key="use_precise_battery"
+            android:title="@string/use_precise_battery_title"
+            android:summary="@string/use_precise_battery_summary"
+            android:defaultValue="false" />
+
     </PreferenceCategory>
 
     <PreferenceCategory
