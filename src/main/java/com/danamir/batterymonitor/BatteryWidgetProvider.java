@@ -112,11 +112,11 @@ public class BatteryWidgetProvider extends AppWidgetProvider {
         if (height < 100) height = (int) (40 * density);
 
         // Get hybrid data (precise if enabled, integer otherwise)
-        List<PreciseBatteryDataManager.HybridBatteryData> hybridData =
+        List<HybridBatteryData> hybridData =
             PreciseBatteryDataManager.getHybridDataPoints(context, displayHours, true);
 
         // Generate as Picture for resolution-independent rendering
-        Picture picture = BatteryGraphGenerator.generateGraphAsPictureWithHybridData(
+        Picture picture = BatteryGraphGenerator.generateGraphAsPicture(
             context,
             hybridData,
             statusData,

@@ -269,13 +269,13 @@ public class BatteryUtils {
      * @param maxDuration Maximum duration to do the calculation (optional)
      * @return Battery usage rate in %/h, or null if insufficient data
      */
-    public static Double calculateBatteryUsageRateValueHybrid(List<PreciseBatteryDataManager.HybridBatteryData> hybridDataPoints, int minDuration, Integer maxDuration) {
+    public static Double calculateBatteryUsageRateValueHybrid(List<HybridBatteryData> hybridDataPoints, int minDuration, Integer maxDuration) {
         if (hybridDataPoints == null || hybridDataPoints.size() < 2) {
             return null;
         }
 
         // Check if the last data point is charging
-        PreciseBatteryDataManager.HybridBatteryData lastPoint = hybridDataPoints.get(hybridDataPoints.size() - 1);
+        HybridBatteryData lastPoint = hybridDataPoints.get(hybridDataPoints.size() - 1);
         boolean isChargingPeriod = lastPoint.isCharging();
         int differentPeriodsAllowed = 1;
         if (maxDuration != null) {
@@ -284,11 +284,11 @@ public class BatteryUtils {
         }
 
         // Find the most recent continuous discharge or charge period
-        PreciseBatteryDataManager.HybridBatteryData endPoint = null;
-        PreciseBatteryDataManager.HybridBatteryData startPoint = null;
+        HybridBatteryData endPoint = null;
+        HybridBatteryData startPoint = null;
 
         for (int i = hybridDataPoints.size() - 1; i >= 0; i--) {
-            PreciseBatteryDataManager.HybridBatteryData point = hybridDataPoints.get(i);
+            HybridBatteryData point = hybridDataPoints.get(i);
 
             if (endPoint == null && point.isCharging() == isChargingPeriod) {
                 endPoint = point;
@@ -316,10 +316,10 @@ public class BatteryUtils {
 
         if (isChargingPeriod) {
             // For charging, level increases over time
-            levelDiff = endPoint.getPreciseLevel() - startPoint.getPreciseLevel();
+            levelDiff = endPoint.getBatteryLevel() - startPoint.getBatteryLevel();
         } else {
             // For discharging, level decreases over time
-            levelDiff = startPoint.getPreciseLevel() - endPoint.getPreciseLevel();
+            levelDiff = startPoint.getBatteryLevel() - endPoint.getBatteryLevel();
         }
 
         // Need at least that many minutes of data for reasonable calculation
@@ -741,7 +741,7 @@ public class BatteryUtils {
         values.put("calculation_duration", maxDuration+"m");
 
         // Get up-to-date data points - use hybrid data for short-term calculation
-        List<PreciseBatteryDataManager.HybridBatteryData> hybridDataPoints =
+        List<HybridBatteryData> hybridDataPoints =
             PreciseBatteryDataManager.getHybridDataPoints(context, displayLengthHours, false);
 
         if (hybridDataPoints == null || hybridDataPoints.isEmpty()) {
@@ -760,9 +760,9 @@ public class BatteryUtils {
         }
 
         // Get the last data point for current status
-        PreciseBatteryDataManager.HybridBatteryData lastPoint = hybridDataPoints.get(hybridDataPoints.size() - 1);
-        int currentBatteryLevel = lastPoint.getLevel();
-        float preciseBatteryLevel = lastPoint.getPreciseLevel();
+        HybridBatteryData lastPoint = hybridDataPoints.get(hybridDataPoints.size() - 1);
+        int currentBatteryLevel = lastPoint.getStandardLevel();
+        float preciseBatteryLevel = lastPoint.getBatteryLevel();
         boolean isCharging = lastPoint.isCharging();
         if (isCharging) {
             minDuration = 1;

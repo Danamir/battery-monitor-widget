@@ -167,7 +167,7 @@ public class PreciseBatteryDataManager {
      * @param context Application context
      * @param hours Number of hours to retrieve
      * @param getPreviousPoint Whether to include a point before the time range for interpolation
-     * @return List of hybrid data points (precise where available, integer otherwise)
+     * @return List of hybrid data points (precise when available and enabled, integer otherwise)
      */
     public static List<HybridBatteryData> getHybridDataPoints(Context context, int hours, boolean getPreviousPoint) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -242,44 +242,5 @@ public class PreciseBatteryDataManager {
         result.sort((a, b) -> Long.compare(a.getTimestamp(), b.getTimestamp()));
 
         return result;
-    }
-
-    /**
-     * Hybrid battery data that contains both integer and precise levels.
-     */
-    public static class HybridBatteryData {
-        private final long timestamp;
-        private final int level;
-        private final float preciseLevel;
-        private final boolean isCharging;
-        private final boolean isPrecise;
-
-        public HybridBatteryData(long timestamp, int level, float preciseLevel, boolean isCharging, boolean isPrecise) {
-            this.timestamp = timestamp;
-            this.level = level;
-            this.preciseLevel = preciseLevel;
-            this.isCharging = isCharging;
-            this.isPrecise = isPrecise;
-        }
-
-        public long getTimestamp() {
-            return timestamp;
-        }
-
-        public int getLevel() {
-            return level;
-        }
-
-        public float getPreciseLevel() {
-            return preciseLevel;
-        }
-
-        public boolean isCharging() {
-            return isCharging;
-        }
-
-        public boolean isPrecise() {
-            return isPrecise;
-        }
     }
 }
