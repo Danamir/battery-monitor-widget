@@ -121,6 +121,14 @@
         app:showSeekBarValue="true"
         app:seekBarIncrement="1" />
 
+    <ListPreference
+        android:key="high_usage_average"
+        android:title="@string/high_usage_average_title"
+        android:summary="Method used to calculate high usage average"
+        android:entries="@array/high_usage_average_entries"
+        android:entryValues="@array/high_usage_average_values"
+        android:defaultValue="hybrid" />
+
     <SwitchPreferenceCompat
         android:key="high_usage_blend"
         android:title="@string/high_usage_blend_title"

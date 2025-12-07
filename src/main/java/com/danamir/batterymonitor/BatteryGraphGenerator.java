@@ -13,6 +13,7 @@ import android.widget.TextView;
 import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class BatteryGraphGenerator {
@@ -262,7 +263,7 @@ public class BatteryGraphGenerator {
      * @param blendValue The blend range
      * @return The color to use for this battery level
      */
-    private static int getBlendedLineColor(int level, boolean isCharging,
+    private static int getBlendedLineColor(float level, boolean isCharging,
                                           int normalColor, int lowColor, int criticalColor, int chargingColor,
                                           int lowLevel, int criticalLevel, int blendValue) {
         if (isCharging) {
@@ -281,7 +282,7 @@ public class BatteryGraphGenerator {
 
             if (level <= criticalLevel + criticalBlendRange) {
                 // Within blend range - blend between critical and low colors
-                float ratio = (float)(level - criticalLevel) / criticalBlendRange;
+                float ratio = (level - criticalLevel) / criticalBlendRange;
                 return blendColors(criticalColor, lowColor, ratio);
             } else {
                 // Above blend range - pure low color
@@ -296,7 +297,7 @@ public class BatteryGraphGenerator {
 
         // Blending between low and normal (above low level)
         if (level < lowLevel + blendValue) {
-            float ratio = (float)(level - lowLevel) / blendValue;
+            float ratio = (level - lowLevel) / blendValue;
             return blendColors(lowColor, normalColor, ratio);
         }
 
@@ -335,8 +336,9 @@ public class BatteryGraphGenerator {
     }
 
     private static void drawGraph(Context context, Canvas canvas, List<HybridBatteryData> dataPoints, List<StatusData> statusData, int displayHours, int width, int height) {
-        // Get padding and colors from preferences
         android.content.SharedPreferences prefs = androidx.preference.PreferenceManager.getDefaultSharedPreferences(context);
+
+		// Get padding and colors from preferences
         boolean usageRateFill = prefs.getBoolean("usage_rate_fill", true);
         boolean usageRateLine = prefs.getBoolean("usage_rate_line", false);
         boolean fillWithLineColor = prefs.getBoolean("fill_with_line_color", false);
@@ -352,7 +354,7 @@ public class BatteryGraphGenerator {
         int batteryTextSizeDp = prefs.getInt("batteryTextSize", 16);
         float batteryTextSize = batteryTextSizeDp * density;
 
-        // Get custom colors or use auto-calculated ones
+        // Get custom colors
         int textColor = prefs.getInt("text_color", 0xFFFFFFFF);
         int textColorLongTerm = prefs.getInt("text_color_long_term", 0xFFD7FFD7);
         int gridColor = prefs.getInt("grid_color", 0x33CCCCCC);
@@ -411,10 +413,7 @@ public class BatteryGraphGenerator {
         int highUsageColor = prefs.getInt("high_usage_color", 0xBFFF00FF);
         int highUsageRangeMinutes = prefs.getInt("high_usage_range", 30);
         double blendCurve = prefs.getFloat("blend_curve", 2.0f);
-
-        // Get target percentages
-        int lowTargetPercent = prefs.getInt("low_target_percent", 20);
-        int highTargetPercent = prefs.getInt("high_target_percent", 80);
+		String highUsageAverage = prefs.getString("high_usage_average", "hybrid");
 
         // Get zoomed status
         boolean zoomedDisplay = prefs.getBoolean("zoomed_display", false);
@@ -897,21 +896,17 @@ public class BatteryGraphGenerator {
                         }
                     }
 
-                    // Calculate mean of usage rates
+                    // Calculate average of usage rates
                     if (!usageRates.isEmpty()) {
-                        float sum = 0.0f;
-                        for (float rate : usageRates) {
-                            sum += rate;
-                        }
-                        float meanUsage = sum / usageRates.size();
+						float averageUsage = getAverageUsage(highUsageAverage, usageRates);
 
-                        // Use the higher of current rate or mean rate
-                        batteryUsage = Math.max(currentUsageRate, meanUsage);
+						// Use the higher of current rate or average rate
+                        batteryUsage = Math.max(currentUsageRate, averageUsage);
                     }
 
                     // Use the color for the current battery level
                     int blendedColor = getBlendedLineColor(
-                        data.getStandardLevel(),
+                        data.getBatteryLevel(),
                         data.isCharging(),
                         normalColor,
                         lowColor,
@@ -1196,4 +1191,51 @@ public class BatteryGraphGenerator {
             }
         }
     }
+
+	/**
+	 * Calculates the average usage rate based on the specified averaging method.
+	 *
+	 * @param highUsageAverage The averaging method to use: "mean", "median", or "hybrid"
+	 * @param usageRates       List of battery usage rates to average
+	 * @return The calculated average usage rate.
+	 */
+	private static float getAverageUsage(String highUsageAverage, List<Float> usageRates) {
+		if (usageRates.size() == 1) {
+			return usageRates.get(0);
+		}
+
+		float meanUsage = 0;
+		float medianUsage = 0;
+		float averageUsage;
+
+		if (highUsageAverage.equals("mean") || highUsageAverage.equals("hybrid")) {
+			float sum = 0.0f;
+			for (float rate : usageRates) {
+				sum += rate;
+			}
+			meanUsage = sum / usageRates.size();
+		}
+
+		if (highUsageAverage.equals("median") || highUsageAverage.equals("hybrid")) {
+			List<Float> sortedRates = new ArrayList<>(usageRates);
+			Collections.sort(sortedRates);
+			int size = sortedRates.size();
+			if (size % 2 == 0) {
+				// Even number of elements: average the two middle values
+				medianUsage = (sortedRates.get(size / 2 - 1) + sortedRates.get(size / 2)) / 2.0f;
+			} else {
+				// Odd number of elements: take the middle value
+				medianUsage = sortedRates.get(size / 2);
+			}
+		}
+
+		if (highUsageAverage.equals("hybrid")) {
+			averageUsage = meanUsage * 0.3f + medianUsage * 0.7f;
+		} else if (highUsageAverage.equals("mean")) {
+			averageUsage = meanUsage;
+		} else {
+			averageUsage = medianUsage;
+		}
+		return averageUsage;
+	}
 }

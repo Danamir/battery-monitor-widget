@@ -85,6 +85,8 @@
     <string name="blend_curve_summary">Controls the blending curve log shape (1.0 = linear)</string>
     <string name="high_usage_range_title">High usage range (minutes)</string>
     <string name="high_usage_range_summary">Time range for calculating high battery usage</string>
+    <string name="high_usage_average_title">High Usage Average</string>
+    <string name="high_usage_average_summary">Method used to calculate high usage average</string>
     <string name="low_target_percent_title">Low battery target (%)</string>
     <string name="low_target_percent_summary">Low battery target for discharge time estimation</string>
     <string name="high_target_percent_title">Full battery target (%)</string>
@@ -169,5 +171,18 @@
     <string-array name="estimation_source_values">
         <item>all_time_stats</item>
         <item>max_charge</item>
+    </string-array>
+
+    <!-- High usage averaging method -->
+    <string-array name="high_usage_average_entries">
+        <item>Mean</item>
+        <item>Median</item>
+        <item>Hybrid</item>
+    </string-array>
+
+    <string-array name="high_usage_average_values">
+        <item>mean</item>
+        <item>median</item>
+        <item>hybrid</item>
     </string-array>
 </resources>
