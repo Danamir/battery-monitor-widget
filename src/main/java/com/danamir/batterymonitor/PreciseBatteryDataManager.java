@@ -15,6 +15,7 @@ import java.util.List;
 
 public class PreciseBatteryDataManager {
     private static final String PREF_PRECISE_BATTERY_DATA = "precise_battery_data";
+    private static final String COLUMN_DATA = "data";
     private static final int MAX_DATA_POINTS = 10000;
     private static PreciseBatteryDataManager instance;
     private final SharedPreferences prefs;
@@ -94,13 +95,13 @@ public class PreciseBatteryDataManager {
 
         try {
             Cursor cursor = context.getContentResolver().query(
-                DataProvider.CONTENT_URI,
+                DataProvider.PRECISE_CONTENT_URI,
                 null, null, null, null
             );
 
             if (cursor != null) {
                 if (cursor.moveToFirst()) {
-                    int dataIndex = cursor.getColumnIndex(PREF_PRECISE_BATTERY_DATA);
+                    int dataIndex = cursor.getColumnIndex(COLUMN_DATA);
                     if (dataIndex != -1) {
                         String jsonString = cursor.getString(dataIndex);
                         if (jsonString != null && !jsonString.isEmpty()) {
@@ -141,8 +142,8 @@ public class PreciseBatteryDataManager {
 
             // Use ContentProvider to save data
             ContentValues values = new ContentValues();
-            values.put(PREF_PRECISE_BATTERY_DATA, jsonString);
-            context.getContentResolver().insert(DataProvider.CONTENT_URI, values);
+            values.put(COLUMN_DATA, jsonString);
+            context.getContentResolver().insert(DataProvider.PRECISE_CONTENT_URI, values);
         } catch (JSONException e) {
             e.printStackTrace();
         }

@@ -4,6 +4,7 @@ import android.content.ContentProvider;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.MatrixCursor;
 import android.net.Uri;
@@ -12,9 +13,22 @@ import androidx.preference.PreferenceManager;
 public class DataProvider extends ContentProvider {
     public static final String AUTHORITY = "com.danamir.batterymonitor.data";
     public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/battery");
+    public static final Uri PRECISE_CONTENT_URI = Uri.parse("content://" + AUTHORITY + "/precise_battery");
 
     private static final String COLUMN_DATA = "data";
     private static final String PREF_BATTERY_DATA = "battery_data";
+    private static final String PREF_PRECISE_BATTERY_DATA = "precise_battery_data";
+
+    // URI matcher codes
+    private static final int BATTERY_DATA = 1;
+    private static final int PRECISE_BATTERY_DATA = 2;
+
+    private static final UriMatcher uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+
+    static {
+        uriMatcher.addURI(AUTHORITY, "battery", BATTERY_DATA);
+        uriMatcher.addURI(AUTHORITY, "precise_battery", PRECISE_BATTERY_DATA);
+    }
 
     // All-time statistics keys
     private static final String PREF_TOTAL_CHARGE_TIME = "total_charge_time";
@@ -35,7 +49,17 @@ public class DataProvider extends ContentProvider {
         }
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        String jsonData = prefs.getString(PREF_BATTERY_DATA, "[]");
+        String jsonData;
+
+        switch (uriMatcher.match(uri)) {
+            case PRECISE_BATTERY_DATA:
+                jsonData = prefs.getString(PREF_PRECISE_BATTERY_DATA, "[]");
+                break;
+            case BATTERY_DATA:
+            default:
+                jsonData = prefs.getString(PREF_BATTERY_DATA, "[]");
+                break;
+        }
 
         MatrixCursor cursor = new MatrixCursor(new String[]{COLUMN_DATA});
         cursor.addRow(new Object[]{jsonData});
@@ -44,7 +68,13 @@ public class DataProvider extends ContentProvider {
 
     @Override
     public String getType(Uri uri) {
-        return "vnd.android.cursor.item/vnd." + AUTHORITY + ".battery";
+        switch (uriMatcher.match(uri)) {
+            case PRECISE_BATTERY_DATA:
+                return "vnd.android.cursor.item/vnd." + AUTHORITY + ".precise_battery";
+            case BATTERY_DATA:
+            default:
+                return "vnd.android.cursor.item/vnd." + AUTHORITY + ".battery";
+        }
     }
 
     @Override
@@ -57,7 +87,19 @@ public class DataProvider extends ContentProvider {
         String jsonData = values.getAsString(COLUMN_DATA);
         if (jsonData != null) {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            prefs.edit().putString(PREF_BATTERY_DATA, jsonData).commit();
+            String prefKey;
+
+            switch (uriMatcher.match(uri)) {
+                case PRECISE_BATTERY_DATA:
+                    prefKey = PREF_PRECISE_BATTERY_DATA;
+                    break;
+                case BATTERY_DATA:
+                default:
+                    prefKey = PREF_BATTERY_DATA;
+                    break;
+            }
+
+            prefs.edit().putString(prefKey, jsonData).commit();
 
             // Notify observers that data changed
             context.getContentResolver().notifyChange(uri, null);
@@ -73,7 +115,19 @@ public class DataProvider extends ContentProvider {
         }
 
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        prefs.edit().putString(PREF_BATTERY_DATA, "[]").commit();
+        String prefKey;
+
+        switch (uriMatcher.match(uri)) {
+            case PRECISE_BATTERY_DATA:
+                prefKey = PREF_PRECISE_BATTERY_DATA;
+                break;
+            case BATTERY_DATA:
+            default:
+                prefKey = PREF_BATTERY_DATA;
+                break;
+        }
+
+        prefs.edit().putString(prefKey, "[]").commit();
 
         // Notify observers that data changed
         context.getContentResolver().notifyChange(uri, null);
