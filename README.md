@@ -29,6 +29,7 @@ An advanced battery monitoring widget for Android that provides detailed battery
 The widget offers extensive customization through settings:
 - **Display preferences**: Data length displayed (hours). Toggle graph elements, text information, and visual markers
 - **Precision mode**: Sub-percentage battery level tracking for smoother graphs and more accurate  time estimates (on supported devices)
+- **Graph smoothing**: Adjustable smoothing level (0-4) for smoother graph appearance
 - **Color customization**: Custom RGBA color picker for all graph elements (charging, battery levels, text, grid)
 - **Battery thresholds**: Configurable percentage levels for different color zones
 - **Time estimates**: Adjustable target battery percentage for predictions
