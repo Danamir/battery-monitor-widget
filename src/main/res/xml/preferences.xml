@@ -39,6 +39,16 @@
             app:seekBarIncrement="1" />
 
         <com.danamir.batterymonitor.CustomSeekBarPreference
+            android:key="smoothing_level"
+            android:title="@string/smoothing_level_title"
+            android:summary="@string/smoothing_level_summary"
+            android:defaultValue="2"
+            android:min="0"
+            android:max="4"
+            app:showSeekBarValue="true"
+            app:seekBarIncrement="1" />
+
+        <com.danamir.batterymonitor.CustomSeekBarPreference
             android:key="display_zoom_mult"
             android:title="@string/display_zoom_mult_title"
             android:summary="@string/display_zoom_mult_summary"

@@ -5,6 +5,8 @@
     <string name="settings_title">Settings</string>
     <string name="display_length_title">Display length (hours)</string>
     <string name="display_length_summary">How many battery hours to display</string>
+    <string name="smoothing_level_title">Graph smoothing level</string>
+    <string name="smoothing_level_summary">Smoother graph appearance (0 = no smoothing)</string>
     <string name="display_zoom_mult_title">Zoom factor</string>
     <string name="display_zoom_mult_summary">Adjust the zoom level for the display</string>
     <string name="display_unzoom_hours_title">History display (hours)</string>

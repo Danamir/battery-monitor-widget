@@ -415,7 +415,8 @@ public class BatteryGraphGenerator {
         double blendCurve = prefs.getFloat("blend_curve", 2.0f);
 		String highUsageAverage = prefs.getString("high_usage_average", "hybrid");
 
-        // Get zoomed status
+        // Get display settings
+		int smoothingLevel = prefs.getInt("smoothing_level", 2);
         boolean zoomedDisplay = prefs.getBoolean("zoomed_display", false);
         boolean unzoomedDisplay = prefs.getBoolean("unzoomed_display", false);
         int zoomMult = prefs.getInt("display_zoom_mult", 10);
@@ -758,9 +759,22 @@ public class BatteryGraphGenerator {
 			List<HybridBatteryData> renderPoints = dataPoints;
 			int graphWidth = width - 2 * paddingHorizontal;
 
-			if (dataPoints.size() > graphWidth && graphWidth > 0) {
-				// Only downsample if we have more points than pixels
-				renderPoints = downsampleToPixelWidth(dataPoints, graphWidth, startTime, timeRange, beforeStartData);
+			// Apply smoothing level to reduce effective graph width for downsampling
+			int effectiveGraphWidth = graphWidth;
+			if (smoothingLevel > 0 && graphWidth > 0) {
+				// Divide graph width to increase smoothing
+				// smoothing_level 1: divide by 8
+				// smoothing_level 2: divide by 16
+				// smoothing_level 3: divide by 32
+				// smoothing_level 4: divide by 64
+				// Note: the divider can be high since the downsampling method
+				// can return multiple points per bucket
+				effectiveGraphWidth = Math.max(1, graphWidth / (int) Math.pow(2, smoothingLevel + 2));
+			}
+
+			if (dataPoints.size() > effectiveGraphWidth && effectiveGraphWidth > 0) {
+				// Only downsample if we have more points than effective pixels
+				renderPoints = downsampleToPixelWidth(dataPoints, effectiveGraphWidth, startTime, timeRange, beforeStartData);
 
 				// After downsampling, update beforeStartData if it's included
 				if (!renderPoints.isEmpty() && beforeStartData != null &&
