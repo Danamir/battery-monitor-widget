@@ -731,301 +731,331 @@ public class BatteryGraphGenerator {
             }
         }
 
-        // Draw battery level graph
-        if (dataPoints.size() >= 2) {
-            now = System.currentTimeMillis();
-            timeRange = displayHours * 60 * 60 * 1000L;
-            startTime = now - timeRange;
+		// Draw battery level graph
+		if (dataPoints.size() >= 2) {
+			now = System.currentTimeMillis();
+			timeRange = displayHours * 60 * 60 * 1000L;
+			startTime = now - timeRange;
 
-            // Check if the first point is before startTime (for interpolation)
-            // If getDataPoints was called with getPreviousPoint=true, the first point might be before startTime
-            HybridBatteryData beforeStartData = null;
-            int firstVisibleIndex = -1;
+			// Check if the first point is before startTime (for interpolation)
+			// If getDataPoints was called with getPreviousPoint=true, the first point might be before startTime
+			HybridBatteryData beforeStartData = null;
+			int firstVisibleIndex = -1;
 
-            // Check if first point is before the time range
-            if (!dataPoints.isEmpty() && dataPoints.get(0).getTimestamp() < startTime) {
-                beforeStartData = dataPoints.get(0);
-                // Find the first point that's actually in the range
-                for (int i = 1; i < dataPoints.size(); i++) {
-                    if (dataPoints.get(i).getTimestamp() >= startTime) {
-                        firstVisibleIndex = i;
-                        break;
-                    }
-                }
-            }
+			// Check if first point is before the time range
+			if (!dataPoints.isEmpty() && dataPoints.get(0).getTimestamp() < startTime) {
+				beforeStartData = dataPoints.get(0);
+				// Find the first point that's actually in the range
+				for (int i = 1; i < dataPoints.size(); i++) {
+					if (dataPoints.get(i).getTimestamp() >= startTime) {
+						firstVisibleIndex = i;
+						break;
+					}
+				}
+			}
 
-            if (!usageRateFill) {
-                // Build fill path (single color)
-                Path fillPath = new Path();
-                boolean firstPoint = true;
-                Float interpolatedStartY = null;
+			// Downsample data points to match pixel width if needed
+			List<HybridBatteryData> renderPoints = dataPoints;
+			int graphWidth = width - 2 * paddingHorizontal;
 
-                // Calculate interpolated starting point if we have a point before the range
-                if (beforeStartData != null && firstVisibleIndex >= 0) {
-                    HybridBatteryData firstVisibleData = dataPoints.get(firstVisibleIndex);
-                    long timeDelta = firstVisibleData.getTimestamp() - beforeStartData.getTimestamp();
-                    if (timeDelta > 0) {
-                        float timeRatio = (float)(startTime - beforeStartData.getTimestamp()) / timeDelta;
-                        float interpolatedLevel = beforeStartData.getBatteryLevel() +
-                            (firstVisibleData.getBatteryLevel() - beforeStartData.getBatteryLevel()) * timeRatio;
-                        interpolatedStartY = paddingVertical + (height - 2 * paddingVertical) * (maxY - interpolatedLevel) / (float) yRange;
+			if (dataPoints.size() > graphWidth && graphWidth > 0) {
+				// Only downsample if we have more points than pixels
+				renderPoints = downsampleToPixelWidth(dataPoints, graphWidth, startTime, timeRange, beforeStartData);
 
-                        // Start fill path at left edge
-                        fillPath.moveTo(paddingHorizontal, height - paddingVertical);
-                        fillPath.lineTo(paddingHorizontal, interpolatedStartY);
-                        firstPoint = false;
-                    }
-                }
+				// After downsampling, update beforeStartData if it's included
+				if (!renderPoints.isEmpty() && beforeStartData != null &&
+						renderPoints.get(0).getTimestamp() < startTime) {
+					beforeStartData = renderPoints.get(0);
+					// Update firstVisibleIndex
+					firstVisibleIndex = -1;
+					for (int i = 1; i < renderPoints.size(); i++) {
+						if (renderPoints.get(i).getTimestamp() >= startTime) {
+							firstVisibleIndex = i;
+							break;
+						}
+					}
+				}
+			}
 
-                for (int i = 0; i < dataPoints.size(); i++) {
-                    HybridBatteryData data = dataPoints.get(i);
+			if (!usageRateFill) {
+				// Build fill path (single color) using renderPoints
+				Path fillPath = new Path();
+				boolean firstPoint = true;
+				Float interpolatedStartY = null;
 
-                    if (data.getTimestamp() < startTime) continue;
+				// Calculate interpolated starting point if we have a point before the range
+				if (beforeStartData != null && firstVisibleIndex >= 0) {
+					HybridBatteryData firstVisibleData = renderPoints.get(firstVisibleIndex);
+					long timeDelta = firstVisibleData.getTimestamp() - beforeStartData.getTimestamp();
+					if (timeDelta > 0) {
+						float timeRatio = (float)(startTime - beforeStartData.getTimestamp()) / timeDelta;
+						float interpolatedLevel = beforeStartData.getBatteryLevel() +
+								(firstVisibleData.getBatteryLevel() - beforeStartData.getBatteryLevel()) * timeRatio;
+						interpolatedStartY = paddingVertical + (height - 2 * paddingVertical) * (maxY - interpolatedLevel) / (float) yRange;
 
-                    float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (data.getTimestamp() - startTime) / (float) timeRange;
-                    float y = paddingVertical + (height - 2 * paddingVertical) * (maxY - data.getBatteryLevel()) / (float) yRange;
+						// Start fill path at left edge
+						fillPath.moveTo(paddingHorizontal, height - paddingVertical);
+						fillPath.lineTo(paddingHorizontal, interpolatedStartY);
+						firstPoint = false;
+					}
+				}
 
-                    if (firstPoint) {
-                        fillPath.moveTo(x, height - paddingVertical);
-                        fillPath.lineTo(x, y);
-                        firstPoint = false;
-                    } else {
-                        fillPath.lineTo(x, y);
-                    }
-                }
+				for (int i = 0; i < renderPoints.size(); i++) {
+					HybridBatteryData data = renderPoints.get(i);
 
-                // Close the path
-                if (!firstPoint) {
-                    HybridBatteryData lastData = dataPoints.get(dataPoints.size() - 1);
-                    float lastX = paddingHorizontal + (width - 2 * paddingHorizontal) * (lastData.getTimestamp() - startTime) / (float) timeRange;
-                    fillPath.lineTo(lastX, height - paddingVertical);
-                    fillPath.close();
-                }
+					if (data.getTimestamp() < startTime) continue;
 
-                // Draw fill with day color only
-                fillPaint.setColor(fillColor);
-                canvas.drawPath(fillPath, fillPaint);
-            }
+					float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (data.getTimestamp() - startTime) / (float) timeRange;
+					float y = paddingVertical + (height - 2 * paddingVertical) * (maxY - data.getBatteryLevel()) / (float) yRange;
 
-            // Create a paint for drawing line segments with blended colors
-            Paint segmentPaint = new Paint();
-            segmentPaint.setStrokeWidth(graphLineWidth * density);
-            segmentPaint.setStyle(Paint.Style.STROKE);
-            segmentPaint.setAntiAlias(true);
+					if (firstPoint) {
+						fillPath.moveTo(x, height - paddingVertical);
+						fillPath.lineTo(x, y);
+						firstPoint = false;
+					} else {
+						fillPath.lineTo(x, y);
+					}
+				}
 
-            // Create a paint for drawing usage rate fill segments
-            Paint usageRateFillPaint = new Paint();
-            usageRateFillPaint.setStyle(Paint.Style.FILL);
-            usageRateFillPaint.setAntiAlias(true);
+				// Close the path
+				if (!firstPoint) {
+					HybridBatteryData lastData = renderPoints.get(renderPoints.size() - 1);
+					float lastX = paddingHorizontal + (width - 2 * paddingHorizontal) * (lastData.getTimestamp() - startTime) / (float) timeRange;
+					fillPath.lineTo(lastX, height - paddingVertical);
+					fillPath.close();
+				}
 
-            // Draw line segments with blended colors
-            Float prevX = null;
-            Float prevY = null;
-            HybridBatteryData prevData = null;
-            Float interpolatedStartY = null;
+				// Draw fill with day color only
+				fillPaint.setColor(fillColor);
+				canvas.drawPath(fillPath, fillPaint);
+			}
 
-            // Use the interpolated starting point if available
-            if (beforeStartData != null && firstVisibleIndex >= 0) {
-                HybridBatteryData firstVisibleData = dataPoints.get(firstVisibleIndex);
-                long timeDelta = firstVisibleData.getTimestamp() - beforeStartData.getTimestamp();
-                if (timeDelta > 0) {
-                    float timeRatio = (float)(startTime - beforeStartData.getTimestamp()) / timeDelta;
-                    float interpolatedLevel = beforeStartData.getBatteryLevel() +
-                        (firstVisibleData.getBatteryLevel() - beforeStartData.getBatteryLevel()) * timeRatio;
-                    interpolatedStartY = paddingVertical + (height - 2 * paddingVertical) * (maxY - interpolatedLevel) / (float) yRange;
+			// Create a paint for drawing line segments with blended colors
+			Paint segmentPaint = new Paint();
+			segmentPaint.setStrokeWidth(graphLineWidth * density);
+			segmentPaint.setStyle(Paint.Style.STROKE);
+			segmentPaint.setAntiAlias(true);
 
-                    // Set up the interpolated first point at the left edge of the graph
-                    prevX = (float) paddingHorizontal;
-                    prevY = interpolatedStartY;
+			// Create a paint for drawing usage rate fill segments
+			Paint usageRateFillPaint = new Paint();
+			usageRateFillPaint.setStyle(Paint.Style.FILL);
+			usageRateFillPaint.setAntiAlias(true);
 
-                    // Create a virtual data point for the interpolated position
-                    // Use the charging state of the first visible point
-                    prevData = new HybridBatteryData(startTime, (int) Math.round(interpolatedLevel), interpolatedLevel, firstVisibleData.isCharging(), firstVisibleData.isPrecise());
-                }
-            }
+			// Draw line segments with blended colors - use renderPoints
+			Float prevX = null;
+			Float prevY = null;
+			HybridBatteryData prevData = null;
+			Float interpolatedStartY = null;
 
-            for (int i = 0; i < dataPoints.size(); i++) {
-                HybridBatteryData data = dataPoints.get(i);
+			// Use the interpolated starting point if available
+			if (beforeStartData != null && firstVisibleIndex >= 0) {
+				HybridBatteryData firstVisibleData = renderPoints.get(firstVisibleIndex);
+				long timeDelta = firstVisibleData.getTimestamp() - beforeStartData.getTimestamp();
+				if (timeDelta > 0) {
+					float timeRatio = (float)(startTime - beforeStartData.getTimestamp()) / timeDelta;
+					float interpolatedLevel = beforeStartData.getBatteryLevel() +
+							(firstVisibleData.getBatteryLevel() - beforeStartData.getBatteryLevel()) * timeRatio;
+					interpolatedStartY = paddingVertical + (height - 2 * paddingVertical) * (maxY - interpolatedLevel) / (float) yRange;
 
-                // Skip points before startTime
-                if (data.getTimestamp() < startTime) {
-                    continue;
-                }
+					// Set up the interpolated first point at the left edge of the graph
+					prevX = (float) paddingHorizontal;
+					prevY = interpolatedStartY;
 
-                float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (data.getTimestamp() - startTime) / (float) timeRange;
-                float y = paddingVertical + (height - 2 * paddingVertical) * (maxY - data.getBatteryLevel()) / (float) yRange;
+					// Create a virtual data point for the interpolated position
+					// Use the charging state of the first visible point
+					prevData = new HybridBatteryData(startTime, (int) Math.round(interpolatedLevel), interpolatedLevel, firstVisibleData.isCharging(), firstVisibleData.isPrecise());
+				}
+			}
 
-                // Draw line segment from previous point to current point with blended color
-                if (prevX != null && prevY != null && prevData != null) {
-                    // Calculate mean battery usage per hour over the specified time range
-                    float batteryUsage = 0.0f;
-                    long rangeMillis = highUsageRangeMinutes * 60 * 1000L;
-                    long rangeStartTime = data.getTimestamp() - rangeMillis;
+			for (int i = 0; i < renderPoints.size(); i++) {
+				HybridBatteryData data = renderPoints.get(i);
 
-                    // Calculate current usage rate (between previous and current point)
-                    float currentUsageRate = 0.0f;
-                    long timeDelta = data.getTimestamp() - prevData.getTimestamp();
-                    if (timeDelta > 0) {
-                        float levelDelta = prevData.getBatteryLevel() - data.getBatteryLevel();
-                        currentUsageRate = levelDelta / (timeDelta / 3600000.0f);
-                    }
+				// Skip points before startTime
+				if (data.getTimestamp() < startTime) {
+					continue;
+				}
 
-                    // Collect all usage rates within the time range
-                    List<Float> usageRates = new ArrayList<>();
+				float x = paddingHorizontal + (width - 2 * paddingHorizontal) * (data.getTimestamp() - startTime) / (float) timeRange;
+				float y = paddingVertical + (height - 2 * paddingVertical) * (maxY - data.getBatteryLevel()) / (float) yRange;
 
-                    // Always add the current usage rate
-                    usageRates.add(currentUsageRate);
+				// Draw line segment from previous point to current point with blended color
+				if (prevX != null && prevY != null && prevData != null) {
+					// Calculate mean battery usage per hour over the specified time range
+					float batteryUsage = 0.0f;
+					long rangeMillis = highUsageRangeMinutes * 60 * 1000L;
+					long rangeStartTime = data.getTimestamp() - rangeMillis;
 
-                    // If highUsageRangeMinutes > 0, also collect historical rates
-                    if (highUsageRangeMinutes > 0) {
-                        for (int j = i - 1; j >= 0; j--) {
-                            HybridBatteryData currentPoint = dataPoints.get(j);
-                            if (currentPoint.getTimestamp() < rangeStartTime) {
-                                break; // Past the range
-                            }
+					// Calculate current usage rate (between previous and current point)
+					float currentUsageRate = 0.0f;
+					long timeDelta = data.getTimestamp() - prevData.getTimestamp();
+					if (timeDelta > 0) {
+						float levelDelta = prevData.getBatteryLevel() - data.getBatteryLevel();
+						currentUsageRate = levelDelta / (timeDelta / 3600000.0f);
+					}
 
-                            if (j > 0) {
-                                HybridBatteryData previousPoint = dataPoints.get(j - 1);
-                                long timeDeltaJ = currentPoint.getTimestamp() - previousPoint.getTimestamp();
-                                if (timeDeltaJ > 0) {
-                                    float levelDelta = previousPoint.getBatteryLevel() - currentPoint.getBatteryLevel();
-                                    float rate = levelDelta / (timeDeltaJ / 3600000.0f);
-                                    usageRates.add(rate);
-                                }
-                            }
-                        }
-                    }
+					// Collect all usage rates within the time range
+					// NOTE: Use original dataPoints for usage calculation, not renderPoints
+					// This ensures accurate usage rate calculation from all available data
+					List<Float> usageRates = new ArrayList<>();
 
-                    // Calculate average of usage rates
-                    if (!usageRates.isEmpty()) {
+					// Always add the current usage rate
+					usageRates.add(currentUsageRate);
+
+					// If highUsageRangeMinutes > 0, also collect historical rates
+					if (highUsageRangeMinutes > 0) {
+						// Search in original dataPoints for more accurate usage calculation
+						for (int j = dataPoints.size() - 1; j >= 0; j--) {
+							HybridBatteryData currentPoint = dataPoints.get(j);
+							if (currentPoint.getTimestamp() > data.getTimestamp()) {
+								continue; // Skip future points
+							}
+							if (currentPoint.getTimestamp() < rangeStartTime) {
+								break; // Past the range
+							}
+
+							// Find previous point in original data
+							if (j > 0) {
+								HybridBatteryData previousPoint = dataPoints.get(j - 1);
+								long timeDeltaJ = currentPoint.getTimestamp() - previousPoint.getTimestamp();
+								if (timeDeltaJ > 0) {
+									float levelDelta = previousPoint.getBatteryLevel() - currentPoint.getBatteryLevel();
+									float rate = levelDelta / (timeDeltaJ / 3600000.0f);
+									usageRates.add(rate);
+								}
+							}
+						}
+					}
+
+					// Calculate average of usage rates
+					if (!usageRates.isEmpty()) {
 						float averageUsage = getAverageUsage(highUsageAverage, usageRates);
 
 						// Use the higher of current rate or average rate
-                        batteryUsage = Math.max(currentUsageRate, averageUsage);
-                    }
+						batteryUsage = Math.max(currentUsageRate, averageUsage);
+					}
 
-                    // Use the color for the current battery level
-                    int blendedColor = getBlendedLineColor(
-                        data.getBatteryLevel(),
-                        data.isCharging(),
-                        normalColor,
-                        lowColor,
-                        criticalColor,
-                        chargingColor,
-                        batteryLowLevel,
-                        batteryCriticalLevel,
-                        blendValue
-                    );
+					// Use the color for the current battery level
+					int blendedColor = getBlendedLineColor(
+							data.getBatteryLevel(),
+							data.isCharging(),
+							normalColor,
+							lowColor,
+							criticalColor,
+							chargingColor,
+							batteryLowLevel,
+							batteryCriticalLevel,
+							blendValue
+					);
 
-                    if (fillWithLineColor) {
-                        // Mode: Use blended line color as fill color (with alpha from fillColor)
-                        int fillLineColor = blendedColor;
+					if (fillWithLineColor) {
+						// Mode: Use blended line color as fill color (with alpha from fillColor)
+						int fillLineColor = blendedColor;
 
-                        // Apply high usage blending if usageRateLine is true and not charging
-                        if (data.isCharging()) {
-                            // Use charging line color when charging
-                            fillLineColor = chargingColor;
-                        } else if (usageRateFill) {
-                            if (batteryUsage >= highUsageThreshold) {
-                                // Full high usage color when above threshold
-                                fillLineColor = blendColors(fillLineColor, highUsageColor, 1.0f, false, blendCurve);
-                            } else if (batteryUsage > lowUsageThreshold) {
-                                // Blend between lowUsageThreshold and highUsageThreshold
-                                float usageRatio = (batteryUsage - lowUsageThreshold) / highUsageBlend;
-                                fillLineColor = blendColors(fillLineColor, highUsageColor, usageRatio, false, blendCurve);
-                            }
-                        }
+						// Apply high usage blending if usageRateLine is true and not charging
+						if (data.isCharging()) {
+							// Use charging line color when charging
+							fillLineColor = chargingColor;
+						} else if (usageRateFill) {
+							if (batteryUsage >= highUsageThreshold) {
+								// Full high usage color when above threshold
+								fillLineColor = blendColors(fillLineColor, highUsageColor, 1.0f, false, blendCurve);
+							} else if (batteryUsage > lowUsageThreshold) {
+								// Blend between lowUsageThreshold and highUsageThreshold
+								float usageRatio = (batteryUsage - lowUsageThreshold) / highUsageBlend;
+								fillLineColor = blendColors(fillLineColor, highUsageColor, usageRatio, false, blendCurve);
+							}
+						}
 
-                        // Extract alpha from fillColor
-                        int fillAlpha = Color.alpha(fillColor);
+						// Extract alpha from fillColor
+						int fillAlpha = Color.alpha(fillColor);
 
-                        // Create fill color from blended line color with fillColor's alpha
-                        int lineColorWithFillAlpha = Color.argb(
-                            fillAlpha,
-                            Color.red(fillLineColor),
-                            Color.green(fillLineColor),
-                            Color.blue(fillLineColor)
-                        );
+						// Create fill color from blended line color with fillColor's alpha
+						int lineColorWithFillAlpha = Color.argb(
+								fillAlpha,
+								Color.red(fillLineColor),
+								Color.green(fillLineColor),
+								Color.blue(fillLineColor)
+						);
 
-                        // Draw fill segment with line color (using fillColor alpha)
-                        Path segmentFillPath = new Path();
-                        segmentFillPath.moveTo(prevX, height - paddingVertical);
-                        segmentFillPath.lineTo(prevX, prevY);
-                        segmentFillPath.lineTo(x, y);
-                        segmentFillPath.lineTo(x, height - paddingVertical);
-                        segmentFillPath.close();
+						// Draw fill segment with line color (using fillColor alpha)
+						Path segmentFillPath = new Path();
+						segmentFillPath.moveTo(prevX, height - paddingVertical);
+						segmentFillPath.lineTo(prevX, prevY);
+						segmentFillPath.lineTo(x, y);
+						segmentFillPath.lineTo(x, height - paddingVertical);
+						segmentFillPath.close();
 
-                        usageRateFillPaint.setColor(lineColorWithFillAlpha);
-                        canvas.drawPath(segmentFillPath, usageRateFillPaint);
-                    } else if (usageRateFill) {
-                        // Mode: Usage rate as fill color
+						usageRateFillPaint.setColor(lineColorWithFillAlpha);
+						canvas.drawPath(segmentFillPath, usageRateFillPaint);
+					} else if (usageRateFill) {
+						// Mode: Usage rate as fill color
 
-                        // Calculate usage rate color for fill
-                        if (!data.isCharging()) {
-                            int usageRateFillColor = fillColor; // Default fill color
+						// Calculate usage rate color for fill
+						if (!data.isCharging()) {
+							int usageRateFillColor = fillColor; // Default fill color
 
-                            if (batteryUsage >= highUsageThreshold) {
-                                // Full high usage color when above threshold
-                                usageRateFillColor = blendColors(fillColor, highUsageColor, 1.0f, false, blendCurve);
-                            } else if (batteryUsage > lowUsageThreshold) {
-                                // Blend between lowUsageThreshold and highUsageThreshold
-                                float usageRatio = (batteryUsage - lowUsageThreshold) / highUsageBlend;
-                                usageRateFillColor = blendColors(fillColor, highUsageColor, usageRatio, false, blendCurve);
-                            }
+							if (batteryUsage >= highUsageThreshold) {
+								// Full high usage color when above threshold
+								usageRateFillColor = blendColors(fillColor, highUsageColor, 1.0f, false, blendCurve);
+							} else if (batteryUsage > lowUsageThreshold) {
+								// Blend between lowUsageThreshold and highUsageThreshold
+								float usageRatio = (batteryUsage - lowUsageThreshold) / highUsageBlend;
+								usageRateFillColor = blendColors(fillColor, highUsageColor, usageRatio, false, blendCurve);
+							}
 
-                            // Draw fill segment with usage rate color
-                            Path segmentFillPath = new Path();
-                            segmentFillPath.moveTo(prevX, height - paddingVertical);
-                            segmentFillPath.lineTo(prevX, prevY);
-                            segmentFillPath.lineTo(x, y);
-                            segmentFillPath.lineTo(x, height - paddingVertical);
-                            segmentFillPath.close();
+							// Draw fill segment with usage rate color
+							Path segmentFillPath = new Path();
+							segmentFillPath.moveTo(prevX, height - paddingVertical);
+							segmentFillPath.lineTo(prevX, prevY);
+							segmentFillPath.lineTo(x, y);
+							segmentFillPath.lineTo(x, height - paddingVertical);
+							segmentFillPath.close();
 
-                            usageRateFillPaint.setColor(usageRateFillColor);
-                            canvas.drawPath(segmentFillPath, usageRateFillPaint);
-                        } else {
-                            // For charging, use the fill color
-                            Path segmentFillPath = new Path();
-                            segmentFillPath.moveTo(prevX, height - paddingVertical);
-                            segmentFillPath.lineTo(prevX, prevY);
-                            segmentFillPath.lineTo(x, y);
-                            segmentFillPath.lineTo(x, height - paddingVertical);
-                            segmentFillPath.close();
+							usageRateFillPaint.setColor(usageRateFillColor);
+							canvas.drawPath(segmentFillPath, usageRateFillPaint);
+						} else {
+							// For charging, use the fill color
+							Path segmentFillPath = new Path();
+							segmentFillPath.moveTo(prevX, height - paddingVertical);
+							segmentFillPath.lineTo(prevX, prevY);
+							segmentFillPath.lineTo(x, y);
+							segmentFillPath.lineTo(x, height - paddingVertical);
+							segmentFillPath.close();
 
-                            usageRateFillPaint.setColor(fillColor);
-                            canvas.drawPath(segmentFillPath, usageRateFillPaint);
-                        }
-                    }
+							usageRateFillPaint.setColor(fillColor);
+							canvas.drawPath(segmentFillPath, usageRateFillPaint);
+						}
+					}
 
-                    if (usageRateLine) {
-                        // Mode: Blend line color with usage rate colors
-                        // Apply high usage blending to line color if not charging
-                        if (!data.isCharging()) {
-                            if (batteryUsage >= highUsageThreshold) {
-                                // Full high usage color when above threshold
-                                blendedColor = blendColors(blendedColor, highUsageColor, 1.0f, true, blendCurve);
-                            } else if (batteryUsage > lowUsageThreshold) {
-                                // Blend between lowUsageThreshold and highUsageThreshold
-                                float usageRatio = (batteryUsage - lowUsageThreshold) / highUsageBlend;
-                                blendedColor = blendColors(blendedColor, highUsageColor, usageRatio, true, blendCurve);
-                            }
-                            // Below lowUsageThreshold: ratio is 0.0 (no blending, keep original color)
-                        }
+					if (usageRateLine) {
+						// Mode: Blend line color with usage rate colors
+						// Apply high usage blending to line color if not charging
+						if (!data.isCharging()) {
+							if (batteryUsage >= highUsageThreshold) {
+								// Full high usage color when above threshold
+								blendedColor = blendColors(blendedColor, highUsageColor, 1.0f, true, blendCurve);
+							} else if (batteryUsage > lowUsageThreshold) {
+								// Blend between lowUsageThreshold and highUsageThreshold
+								float usageRatio = (batteryUsage - lowUsageThreshold) / highUsageBlend;
+								blendedColor = blendColors(blendedColor, highUsageColor, usageRatio, true, blendCurve);
+							}
+							// Below lowUsageThreshold: ratio is 0.0 (no blending, keep original color)
+						}
 
-                        segmentPaint.setColor(blendedColor);
-                        canvas.drawLine(prevX, prevY, x, y, segmentPaint);
-                    } else {
-                        // Keep line color pure, but use usage rate for fill
-                        segmentPaint.setColor(blendedColor);
-                        canvas.drawLine(prevX, prevY, x, y, segmentPaint);
-                    }
-                }
+						segmentPaint.setColor(blendedColor);
+						canvas.drawLine(prevX, prevY, x, y, segmentPaint);
+					} else {
+						// Keep line color pure, but use usage rate for fill
+						segmentPaint.setColor(blendedColor);
+						canvas.drawLine(prevX, prevY, x, y, segmentPaint);
+					}
+				}
 
-                prevX = x;
-                prevY = y;
-                prevData = data;
-            }
-        }
+				prevX = x;
+				prevY = y;
+				prevData = data;
+			}
+		}
 
         // Draw user_present status bar at the bottom
         if (statusData != null && !statusData.isEmpty()) {
@@ -1230,12 +1260,128 @@ public class BatteryGraphGenerator {
 		}
 
 		if (highUsageAverage.equals("hybrid")) {
-			averageUsage = meanUsage * 0.3f + medianUsage * 0.7f;
+			averageUsage = meanUsage * 0.5f + medianUsage * 0.5f;
 		} else if (highUsageAverage.equals("mean")) {
 			averageUsage = meanUsage;
 		} else {
 			averageUsage = medianUsage;
 		}
 		return averageUsage;
+	}
+
+	/**
+	 * Downsample battery data points to match pixel width for smoother rendering.
+	 * Uses min-max downsampling to preserve peaks and valleys in the data.
+	 *
+	 * @param dataPoints Original data points
+	 * @param pixelWidth Width in pixels to downsample to
+	 * @param startTime Start of time range
+	 * @param timeRange Duration of time range in milliseconds
+	 * @param beforeStartData Optional data point before the visible range for interpolation
+	 * @return Downsampled list of data points
+	 */
+	private static List<HybridBatteryData> downsampleToPixelWidth(
+			List<HybridBatteryData> dataPoints,
+			int pixelWidth,
+			long startTime,
+			long timeRange,
+			HybridBatteryData beforeStartData) {
+
+		List<HybridBatteryData> result = new ArrayList<>();
+
+		if (dataPoints.isEmpty() || pixelWidth <= 0) {
+			return result;
+		}
+
+		// Keep the point before start time if it exists
+		if (beforeStartData != null) {
+			result.add(beforeStartData);
+		}
+
+		// Group points by pixel column
+		int currentPixel = -1;
+		List<HybridBatteryData> pixelBucket = new ArrayList<>();
+
+		for (HybridBatteryData data : dataPoints) {
+			if (data.getTimestamp() < startTime) {
+				continue; // Skip points before visible range (already handled by beforeStartData)
+			}
+
+			// Calculate which pixel column this point belongs to
+			long timeSinceStart = data.getTimestamp() - startTime;
+			int pixel = (int) ((timeSinceStart * pixelWidth) / timeRange);
+
+			// Clamp to valid pixel range
+			if (pixel < 0) pixel = 0;
+			if (pixel >= pixelWidth) pixel = pixelWidth - 1;
+
+			if (pixel != currentPixel) {
+				// New pixel column - process the previous bucket
+				if (!pixelBucket.isEmpty()) {
+					result.addAll(selectRepresentativePoints(pixelBucket));
+					pixelBucket.clear();
+				}
+				currentPixel = pixel;
+			}
+
+			pixelBucket.add(data);
+		}
+
+		// Process the last bucket
+		if (!pixelBucket.isEmpty()) {
+			result.addAll(selectRepresentativePoints(pixelBucket));
+		}
+
+		return result;
+	}
+
+	/**
+	 * Select representative points from a bucket of points in the same pixel column.
+	 * Uses min-max strategy: keeps points with minimum and maximum battery levels
+	 * to preserve visual peaks and valleys.
+	 *
+	 * @param bucket List of points in the same pixel column
+	 * @return List of representative points (1-3 points depending on variation)
+	 */
+	private static List<HybridBatteryData> selectRepresentativePoints(List<HybridBatteryData> bucket) {
+		List<HybridBatteryData> selected = new ArrayList<>();
+
+		if (bucket.isEmpty()) {
+			return selected;
+		}
+
+		if (bucket.size() == 1) {
+			selected.add(bucket.get(0));
+			return selected;
+		}
+
+		// Find min and max battery levels
+		HybridBatteryData minPoint = bucket.get(0);
+		HybridBatteryData maxPoint = bucket.get(0);
+
+		for (HybridBatteryData point : bucket) {
+			if (point.getBatteryLevel() < minPoint.getBatteryLevel()) {
+				minPoint = point;
+			}
+			if (point.getBatteryLevel() > maxPoint.getBatteryLevel()) {
+				maxPoint = point;
+			}
+		}
+
+		// If min and max are different, add both in chronological order
+		if (minPoint != maxPoint) {
+			if (minPoint.getTimestamp() < maxPoint.getTimestamp()) {
+				selected.add(minPoint);
+				selected.add(maxPoint);
+			} else {
+				selected.add(maxPoint);
+				selected.add(minPoint);
+			}
+		} else {
+			// All points have same level - just use the first one
+			selected.add(bucket.get(0));
+		}
+
+		return selected;
 	}
 }
