@@ -431,6 +431,36 @@ public class BatteryGraphGenerator {
             maxY = 100;
         }
 
+        // Crop graph to target if enabled and no data above target
+        if (prefs.getBoolean("crop_to_target", false)) {
+            int highTargetPercentMargin = 2;
+            int highTargetPercent = prefs.getInt("high_target_percent", 80) + highTargetPercentMargin;
+            boolean hasDataAboveTarget = false;
+
+            if (dataPoints != null && !dataPoints.isEmpty()) {
+                long checkNow = System.currentTimeMillis();
+                long checkTimeRange = displayHours * 60 * 60 * 1000L;
+                long checkStartTime = checkNow - checkTimeRange;
+
+                for (HybridBatteryData data : dataPoints) {
+                    if (data.getTimestamp() >= checkStartTime) {
+                        if (data.getBatteryLevel() > highTargetPercent) {
+                            hasDataAboveTarget = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!hasDataAboveTarget && maxY > highTargetPercent) {
+                maxY = highTargetPercent;
+                // Re-validate minY
+                if (minY >= maxY) {
+                    minY = 0;
+                }
+            }
+        }
+
         // Apply vertical zoom if zoomed display is enabled
         if (zoomedDisplay && zoomMult > 1 && dataPoints != null && !dataPoints.isEmpty()) {
             // Calculate the new Y range (divided by zoom multiplicator)

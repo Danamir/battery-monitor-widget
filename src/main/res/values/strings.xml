@@ -93,6 +93,8 @@
     <string name="low_target_percent_summary">Low battery target for discharge time estimation</string>
     <string name="high_target_percent_title">Full battery target (%)</string>
     <string name="high_target_percent_summary">High battery target for charge time estimation</string>
+    <string name="crop_to_target_title">Crop to target level</string>
+    <string name="crop_to_target_summary">Crop graph to high battery target if no higher level is recorded</string>
     <string name="usage_calculation_time_title">Usage calculation time (minutes)</string>
     <string name="usage_calculation_time_summary">Time period in minutes used to calculate battery usage</string>
     <string name="estimation_source_title">Long-term estimation source</string>

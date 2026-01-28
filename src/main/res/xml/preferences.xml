@@ -88,6 +88,12 @@
             app:showSeekBarValue="true"
             app:seekBarIncrement="1" />
 
+        <SwitchPreferenceCompat
+            android:key="crop_to_target"
+            android:title="@string/crop_to_target_title"
+            android:summary="@string/crop_to_target_summary"
+            android:defaultValue="false" />
+
         <com.danamir.batterymonitor.CustomSeekBarPreference
             android:key="usage_calculation_time"
             android:title="@string/usage_calculation_time_title"
