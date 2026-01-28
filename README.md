@@ -33,6 +33,7 @@ The widget offers extensive customization through settings:
 - **Color customization**: Custom RGBA color picker for all graph elements (charging, battery levels, text, grid)
 - **Battery thresholds**: Configurable percentage levels for different color zones
 - **Time estimates**: Adjustable target battery percentage for predictions
+- **Crop to high target**: Automatically adjust graph height to target battery level if no data above target
 - **Graph appearance**: Customizable colors (including alpha), and grid intervals
 - **Customizable action zones**: 3x3 widget zones, supporting user-defined actions
   - Available actions: "Open preferences", "Switch estimation source", "Toggle date estimation", "Zoom display", "History display"
